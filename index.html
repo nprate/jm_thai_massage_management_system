@@ -16,7 +16,7 @@
   <!-- Font Awesome 6 -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
   
-  <!-- DataTables Bootstrap 5 CSS -->
+  <!-- DataTables Bootstrap 5 CSS & Responsive -->
   <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
   <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
   
@@ -194,7 +194,7 @@
     .header-left {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
     }
 
     .brand-title {
@@ -207,21 +207,31 @@
       text-decoration: none;
     }
 
-    .brand-title i {
+    .brand-logo-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--spa-primary) 0%, var(--spa-primary-dark) 100%);
       color: var(--spa-accent);
-      font-size: 1.35rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      box-shadow: 0 2px 8px rgba(27, 59, 54, 0.25);
+      border: 1px solid var(--spa-accent);
+      flex-shrink: 0;
     }
 
     .header-right {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
     }
 
     .user-profile-badge {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       background-color: rgba(27, 59, 54, 0.05);
       border: 1px solid rgba(27, 59, 54, 0.1);
       padding: 6px 14px;
@@ -240,6 +250,7 @@
       justify-content: center;
       font-size: 0.9rem;
       font-weight: 600;
+      flex-shrink: 0;
     }
 
     .btn-logout {
@@ -251,6 +262,10 @@
       font-size: 0.88rem;
       font-weight: 500;
       transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
     }
 
     .btn-logout:hover {
@@ -278,7 +293,7 @@
     }
 
     .sidebar-heading {
-      padding: 20px 22px 10px;
+      padding: 20px 20px 10px;
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -307,6 +322,7 @@
       font-size: 0.93rem;
       font-weight: 400;
       transition: all 0.2s;
+      cursor: pointer;
     }
 
     .sidebar-link i {
@@ -316,13 +332,15 @@
       color: var(--spa-accent);
     }
 
-    .sidebar-link:hover, .sidebar-link.active {
-      background-color: rgba(197, 160, 89, 0.18);
+    .sidebar-link:hover {
+      background-color: rgba(197, 160, 89, 0.15);
       color: #FFFFFF;
-      font-weight: 500;
     }
 
     .sidebar-link.active {
+      background-color: rgba(197, 160, 89, 0.22);
+      color: #FFFFFF;
+      font-weight: 500;
       border-left: 4px solid var(--spa-accent);
     }
 
@@ -332,6 +350,16 @@
       padding: 28px;
       background-color: var(--spa-bg);
       max-width: calc(100vw - var(--sidebar-width));
+      transition: all 0.3s;
+    }
+
+    .content-section {
+      display: none;
+      animation: fadeInDown 0.35s ease-out;
+    }
+
+    .content-section.active {
+      display: block;
     }
 
     .page-title-box {
@@ -356,11 +384,11 @@
       margin: 0;
     }
 
-    .btn-add-admin {
+    .btn-action-main {
       background: linear-gradient(135deg, var(--spa-primary) 0%, #2A564F 100%);
       color: white;
       border: 1px solid var(--spa-accent);
-      padding: 10px 20px;
+      padding: 10px 18px;
       border-radius: 10px;
       font-weight: 500;
       font-size: 0.92rem;
@@ -369,9 +397,10 @@
       gap: 8px;
       box-shadow: 0 4px 12px rgba(27, 59, 54, 0.2);
       transition: all 0.2s ease;
+      white-space: nowrap;
     }
 
-    .btn-add-admin:hover {
+    .btn-action-main:hover {
       background: linear-gradient(135deg, var(--spa-primary-dark) 0%, var(--spa-primary) 100%);
       color: var(--spa-accent-light);
       transform: translateY(-1px);
@@ -448,6 +477,7 @@
     .action-btn-group {
       display: flex;
       gap: 6px;
+      justify-content: center;
     }
 
     .btn-table-action {
@@ -500,6 +530,7 @@
       font-family: 'Prompt', sans-serif !important;
       border-radius: 18px !important;
       padding: 24px 20px !important;
+      max-width: 480px !important;
     }
 
     .swal2-title {
@@ -576,10 +607,26 @@
       font-weight: 500 !important;
     }
 
+    /* Backdrop สำหรับมือถือเมื่อเปิด Sidebar */
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1015;
+    }
+
+    .sidebar-backdrop.show {
+      display: block;
+    }
+
     @keyframes fadeInDown {
       from {
         opacity: 0;
-        transform: translateY(-20px);
+        transform: translateY(-16px);
       }
       to {
         opacity: 1;
@@ -587,7 +634,10 @@
       }
     }
 
-    /* Responsive Mobile */
+    /* -------------------------------------------------------------
+       5. RESPONSIVE DESIGN (ข้อกำหนดสำคัญมาก)
+       - ถ้าชื่อระบบยาวไปให้ แสดงเฉพาะ logo ถ้าใช้บนโทรศัพท์ที่หน้าจอเล็ก
+       ------------------------------------------------------------- */
     @media (max-width: 991.98px) {
       .app-sidebar {
         position: fixed;
@@ -595,6 +645,7 @@
         top: var(--header-height);
         bottom: 0;
         z-index: 1020;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
       }
 
       .app-sidebar.show {
@@ -603,7 +654,72 @@
 
       .app-content {
         max-width: 100vw;
-        padding: 16px;
+        padding: 18px;
+      }
+    }
+
+    /* หน้าจอเล็กแบบโทรศัพท์มือถือ (Mobile Devices: < 576px) */
+    @media (max-width: 575.98px) {
+      .top-header {
+        padding: 0 12px;
+        height: 60px;
+      }
+
+      /* แสดงเฉพาะ logo ถ้าใช้บนโทรศัพท์ที่หน้าจอเล็ก (สำคัญมาก) */
+      .brand-title .brand-title-text {
+        display: none !important;
+      }
+
+      .brand-logo-circle {
+        width: 38px;
+        height: 38px;
+        font-size: 1.2rem;
+      }
+
+      /* ปรับขนาดส่วน User ให้กะทัดรัด */
+      .user-profile-badge {
+        padding: 4px 8px;
+        font-size: 0.82rem;
+        background-color: transparent;
+        border: none;
+      }
+
+      .user-profile-badge .user-display-text {
+        display: none; /* ซ่อนข้อความชื่อผู้ใช้ เหลือเฉพาะ Avatar */
+      }
+
+      /* ปรับปุ่มออกจากระบบให้พอดีหน้าจอ */
+      .btn-logout {
+        padding: 6px 10px;
+        font-size: 0.82rem;
+      }
+
+      .btn-logout .logout-text {
+        display: none; /* ซ่อนคำว่า 'ออกจากระบบ' แสดงเฉพาะไอคอน */
+      }
+
+      .app-content {
+        padding: 12px;
+      }
+
+      .page-title-box {
+        margin-bottom: 16px;
+      }
+
+      .page-title h3 {
+        font-size: 1.2rem;
+      }
+
+      .content-card {
+        padding: 14px;
+        border-radius: 12px;
+      }
+
+      .app-footer {
+        padding: 12px;
+        font-size: 0.76rem;
+        flex-direction: column;
+        text-align: center;
       }
     }
   </style>
@@ -611,7 +727,7 @@
 <body>
 
   <!-- ============================================================= -->
-  <!-- 1. หน้าจอ LOGIN (ส่วนที่ 1.1)                                   -->
+  <!-- 1. หน้าจอ LOGIN                                               -->
   <!-- ============================================================= -->
   <div id="login-view">
     <div class="login-container">
@@ -649,35 +765,41 @@
   </div>
 
   <!-- ============================================================= -->
-  <!-- 2. หน้าจอ DASHBOARD (ส่วนที่ 1.2: แบ่ง 3 ส่วน Header, Sidebar, Footer) -->
+  <!-- 2. หน้าจอ DASHBOARD (HEADER, SIDEBAR, CONTENT, FOOTER)        -->
   <!-- ============================================================= -->
   <div id="app-view">
     
     <!-- 2.1 HEADER (ส่วนบน) -->
     <header class="top-header">
       <div class="header-left">
+        <!-- ปุ่มเปิด/ปิด Sidebar บนมือถือ -->
         <button class="btn btn-sm btn-outline-secondary d-lg-none" onclick="toggleSidebar()" title="เมนู">
           <i class="fa-solid fa-bars"></i>
         </button>
-        <a href="#" class="brand-title">
-          <i class="fa-solid fa-spa"></i>
-          <span>JM Thai Massage System</span>
+
+        <!-- Brand Title: ปรับ responsive ถ้าหน้าจอเล็ก ให้แสดงเฉพาะ logo (สำคัญมาก) -->
+        <a href="javascript:void(0)" class="brand-title" title="JM Thai Massage Management System">
+          <div class="brand-logo-circle">
+            <i class="fa-solid fa-spa"></i>
+          </div>
+          <!-- ข้อความจะซ่อนอัตโนมัติเมื่ออยู่บนโทรศัพท์หน้าจอเล็ก (< 576px) -->
+          <span class="brand-title-text d-none d-sm-inline">JM Thai Massage System</span>
         </a>
       </div>
 
       <div class="header-right">
-        <!-- 1.2.1 แสดงชื่อผู้เข้าใช้งาน -->
+        <!-- แสดงชื่อผู้เข้าใช้งาน (1.2.1) -->
         <div class="user-profile-badge">
-          <div class="user-avatar" id="header-user-avatar">
+          <div class="user-avatar" id="header-user-avatar" title="ผู้ดูแลระบบ">
             <i class="fa-solid fa-user-tie"></i>
           </div>
-          <span id="header-user-name" class="fw-medium">แอดมิน (admin)</span>
+          <span id="header-user-name" class="fw-medium user-display-text">แอดมิน (admin)</span>
         </div>
 
-        <!-- 1.2.1 ปุ่ม "ออกจากระบบ" อยู่ด้านขวามือ -->
+        <!-- ปุ่ม "ออกจากระบบ" อยู่ด้านขวามือ (1.2.1) -->
         <button class="btn btn-logout" onclick="handleLogout()" title="ออกจากระบบ">
-          <i class="fa-solid fa-right-from-bracket me-1"></i>
-          <span>ออกจากระบบ</span>
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span class="logout-text">ออกจากระบบ</span>
         </button>
       </div>
     </header>
@@ -685,17 +807,28 @@
     <!-- 2.2 BODY WRAPPER (SIDEBAR + CONTENT) -->
     <div class="app-body-wrapper">
       
-      <!-- 2.2.1 SIDEBAR MENU (ส่วนเมนูด้านข้างตามตัวแปร Sheet_Name_Admin) -->
+      <!-- Backdrop สำหรับมือถือเมื่อเปิด Sidebar -->
+      <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+      <!-- 2.2.1 SIDEBAR MENU -->
       <nav class="app-sidebar" id="app-sidebar">
         <div class="sidebar-heading">
           เมนูระบบ (System Menu)
         </div>
         <ul class="sidebar-menu">
+          <!-- เมนู 1: ตามตัวแปร Sheet_Name_Admin (ข้อมูลผู้ดูแลระบบ) -->
           <li class="sidebar-menu-item">
-            <!-- เมนูตามตัวแปร Sheet_Name_Admin: ข้อมูลผู้ดูแลระบบ -->
-            <a href="javascript:void(0)" class="sidebar-link active" id="menu-admin" onclick="loadAdminTableData()">
+            <a href="javascript:void(0)" class="sidebar-link active" id="menu-admin" onclick="switchSection('admin')">
               <i class="fa-solid fa-users-gear"></i>
-              <span id="sidebar-menu-text">ข้อมูลผู้ดูแลระบบ</span>
+              <span id="sidebar-menu-admin-text">ข้อมูลผู้ดูแลระบบ</span>
+            </a>
+          </li>
+
+          <!-- เมนู 2: ตามตัวแปร Sheet_Name_Customer (ข้อมูลลูกค้า) [ใหม่] -->
+          <li class="sidebar-menu-item">
+            <a href="javascript:void(0)" class="sidebar-link" id="menu-customer" onclick="switchSection('customer')">
+              <i class="fa-solid fa-address-book"></i>
+              <span id="sidebar-menu-customer-text">ข้อมูลลูกค้า</span>
             </a>
           </li>
         </ul>
@@ -703,43 +836,88 @@
 
       <!-- 2.2.2 MAIN CONTENT AREA -->
       <main class="app-content">
-        <div class="page-title-box">
-          <div class="page-title">
-            <h3 id="content-page-title"><i class="fa-solid fa-users-gear me-2 text-warning"></i>ข้อมูลผู้ดูแลระบบ</h3>
-            <p>จัดการรายชื่อผู้ดูแลระบบ สามารถเพิ่ม แก้ไข และลบข้อมูลได้</p>
-          </div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary" onclick="loadAdminTableData()" title="รีเฟรชข้อมูล">
-              <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
-            </button>
-            <button class="btn btn-add-admin" onclick="openAddAdminModal()">
-              <i class="fa-solid fa-user-plus"></i>
-              <span>เพิ่มข้อมูลผู้ดูแลระบบ</span>
-            </button>
-          </div>
-        </div>
 
-        <!-- กล่องตารางข้อมูล DATA TABLE -->
-        <div class="content-card">
-          <div class="table-responsive">
-            <table id="adminDataTable" class="table table-hover align-middle w-100">
-              <thead>
-                <tr>
-                  <th style="width: 70px;" class="text-center">ลำดับ</th>
-                  <th>ชื่อผู้ใช้ (Username)</th>
-                  <th>ชื่อเล่น (Nickname)</th>
-                  <th>ชื่อจริง (Firstname)</th>
-                  <th>นามสกุล (Lastname)</th>
-                  <th>วันที่สร้าง</th>
-                  <th style="width: 130px;" class="text-center">จัดการ</th>
-                </tr>
-              </thead>
-              <tbody id="adminTableBody">
-                <!-- ข้อมูลจาก Google Sheet จะแสดงที่นี่ -->
-              </tbody>
-            </table>
+        <!-- SECTION 1: จัดการข้อมูลผู้ดูแลระบบ (Admin) -->
+        <section id="section-admin" class="content-section active">
+          <div class="page-title-box">
+            <div class="page-title">
+              <h3 id="admin-page-title"><i class="fa-solid fa-users-gear me-2 text-warning"></i>ข้อมูลผู้ดูแลระบบ</h3>
+              <p>จัดการรายชื่อผู้ดูแลระบบ สามารถเพิ่ม แก้ไข และลบข้อมูลได้</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              <button class="btn btn-outline-secondary" onclick="loadAdminTableData()" title="รีเฟรชข้อมูล">
+                <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
+              </button>
+              <button class="btn btn-action-main" onclick="openAddAdminModal()">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>เพิ่มข้อมูลผู้ดูแลระบบ</span>
+              </button>
+            </div>
           </div>
-        </div>
+
+          <div class="content-card">
+            <div class="table-responsive">
+              <table id="adminDataTable" class="table table-hover align-middle w-100">
+                <thead>
+                  <tr>
+                    <th style="width: 60px;" class="text-center">ลำดับ</th>
+                    <th>ชื่อผู้ใช้ (Username)</th>
+                    <th>ชื่อเล่น (Nickname)</th>
+                    <th>ชื่อจริง (Firstname)</th>
+                    <th>นามสกุล (Lastname)</th>
+                    <th>วันที่สร้าง</th>
+                    <th style="width: 110px;" class="text-center">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="adminTableBody">
+                  <!-- ข้อมูลผู้ดูแลระบบ -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: จัดการข้อมูลลูกค้า (Customer) [ใหม่] -->
+        <section id="section-customer" class="content-section">
+          <div class="page-title-box">
+            <div class="page-title">
+              <h3 id="customer-page-title"><i class="fa-solid fa-address-book me-2 text-warning"></i>ข้อมูลลูกค้า</h3>
+              <p>จัดการรายชื่อและเบอร์โทรลูกค้า สามารถเพิ่ม แก้ไข และลบข้อมูลได้</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              <button class="btn btn-outline-secondary" onclick="loadCustomerTableData()" title="รีเฟรชข้อมูล">
+                <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
+              </button>
+              <button class="btn btn-action-main" onclick="openAddCustomerModal()">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>เพิ่มข้อมูลลูกค้า</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="table-responsive">
+              <table id="customerDataTable" class="table table-hover align-middle w-100">
+                <thead>
+                  <tr>
+                    <th style="width: 60px;" class="text-center">ลำดับ</th>
+                    <th>ชื่อเล่น (Nickname)</th>
+                    <th>ชื่อจริง (Firstname)</th>
+                    <th>นามสกุล (Lastname)</th>
+                    <th>เบอร์โทร (Phone)</th>
+                    <th>วันที่สร้าง</th>
+                    <th>อัปเดตล่าสุด</th>
+                    <th style="width: 110px;" class="text-center">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="customerTableBody">
+                  <!-- ข้อมูลลูกค้า -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
       </main>
 
     </div>
@@ -775,9 +953,13 @@
     // ตัวแปรและสถานะระบบ (State)
     // -------------------------------------------------------------
     let currentAdminData = [];
-    let dataTableInstance = null;
+    let currentCustomerData = [];
+    let adminDataTableInstance = null;
+    let customerDataTableInstance = null;
     let currentUser = null;
     let sheetNameAdmin = "ข้อมูลผู้ดูแลระบบ";
+    let sheetNameCustomer = "ข้อมูลลูกค้า";
+    let activeSection = "admin";
 
     // -------------------------------------------------------------
     // เริ่มต้นทำงานเมื่อเอกสารพร้อมใช้งาน
@@ -808,10 +990,17 @@
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(function(config) {
-            if (config && config.sheetNameAdmin) {
-              sheetNameAdmin = config.sheetNameAdmin;
-              $('#sidebar-menu-text').text(sheetNameAdmin);
-              $('#content-page-title').html('<i class="fa-solid fa-users-gear me-2 text-warning"></i>' + sheetNameAdmin);
+            if (config) {
+              if (config.sheetNameAdmin) {
+                sheetNameAdmin = config.sheetNameAdmin;
+                $('#sidebar-menu-admin-text').text(sheetNameAdmin);
+                $('#admin-page-title').html('<i class="fa-solid fa-users-gear me-2 text-warning"></i>' + sheetNameAdmin);
+              }
+              if (config.sheetNameCustomer) {
+                sheetNameCustomer = config.sheetNameCustomer;
+                $('#sidebar-menu-customer-text').text(sheetNameCustomer);
+                $('#customer-page-title').html('<i class="fa-solid fa-address-book me-2 text-warning"></i>' + sheetNameCustomer);
+              }
             }
           })
           .getSystemSettings();
@@ -836,16 +1025,48 @@
         $('#header-user-name').text(display);
       }
 
-      // โหลดข้อมูลในตาราง
-      loadAdminTableData();
+      // โหลดข้อมูลตามเซกชันเริ่มต้น
+      if (activeSection === 'admin') {
+        loadAdminTableData();
+      } else {
+        loadCustomerTableData();
+      }
     }
 
     function toggleSidebar() {
       $('#app-sidebar').toggleClass('show');
+      $('#sidebar-backdrop').toggleClass('show');
+    }
+
+    /**
+     * สลับระหว่างเมนูผู้ดูแลระบบ และ เมนูข้อมูลลูกค้า
+     */
+    function switchSection(section) {
+      activeSection = section;
+
+      // จัดการ Active class ที่ Sidebar
+      $('.sidebar-link').removeClass('active');
+      $('.content-section').removeClass('active');
+
+      if (section === 'admin') {
+        $('#menu-admin').addClass('active');
+        $('#section-admin').addClass('active');
+        loadAdminTableData();
+      } else if (section === 'customer') {
+        $('#menu-customer').addClass('active');
+        $('#section-customer').addClass('active');
+        loadCustomerTableData();
+      }
+
+      // ปิด sidebar อัตโนมัติบนมือถือเมื่อคลิกเลือกเมนู
+      if ($(window).width() < 992) {
+        $('#app-sidebar').removeClass('show');
+        $('#sidebar-backdrop').removeClass('show');
+      }
     }
 
     // -------------------------------------------------------------
-    // 1.1 การเข้าสู่ระบบ และ ออกจากระบบ
+    // การเข้าสู่ระบบ และ ออกจากระบบ
     // -------------------------------------------------------------
     function handleLogin(e) {
       e.preventDefault();
@@ -865,7 +1086,6 @@
       const $btnLogin = $('#btn-submit-login');
       $btnLogin.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i> กำลังตรวจสอบ...');
 
-      // เรียกฟังก์ชัน Backend
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(function(res) {
@@ -902,7 +1122,7 @@
           })
           .loginUser(username, password);
       } else {
-        // Fallback จำลองกรณีเปิดทดสอบใน Local Browser
+        // Mock fallback สำหรับ Browser Preview
         setTimeout(() => {
           $btnLogin.prop('disabled', false).html('<i class="fa-solid fa-right-to-bracket me-2"></i> เข้าสู่ระบบ');
           if (username.toLowerCase() === 'admin' && password === '1234') {
@@ -929,9 +1149,6 @@
       }
     }
 
-    /**
-     * ออกจากระบบ (Logout)
-     */
     function handleLogout() {
       Swal.fire({
         title: 'ยืนยันการออกจากระบบ?',
@@ -952,9 +1169,9 @@
       });
     }
 
-    // -------------------------------------------------------------
-    // 1.2 การโหลดและแสดงผลข้อมูล Data Table
-    // -------------------------------------------------------------
+    // =============================================================
+    // โมดูล 1: ผู้ดูแลระบบ (Admin CRUD)
+    // =============================================================
     function loadAdminTableData() {
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         Swal.showLoading();
@@ -965,26 +1182,15 @@
               currentAdminData = response.data || [];
               renderAdminTable(currentAdminData);
             } else {
-              Swal.fire({
-                icon: 'error',
-                title: 'ไม่สามารถโหลดข้อมูลได้',
-                text: response.message,
-                confirmButtonColor: '#1B3B36'
-              });
+              Swal.fire({ icon: 'error', title: 'ไม่สามารถโหลดข้อมูลได้', text: response.message, confirmButtonColor: '#1B3B36' });
             }
           })
           .withFailureHandler(function(err) {
             Swal.close();
-            Swal.fire({
-              icon: 'error',
-              title: 'เกิดข้อผิดพลาด',
-              text: 'โหลดข้อมูลล้มเหลว: ' + (err.message || err),
-              confirmButtonColor: '#1B3B36'
-            });
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'โหลดข้อมูลล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
           })
           .getAdminUsers();
       } else {
-        // Mock data สำหรับการแสดงผล preview
         currentAdminData = [
           {
             rowId: 2,
@@ -1000,12 +1206,9 @@
       }
     }
 
-    /**
-     * เรนเดอร์ Data Table
-     */
     function renderAdminTable(dataList) {
-      if (dataTableInstance) {
-        dataTableInstance.destroy();
+      if (adminDataTableInstance) {
+        adminDataTableInstance.destroy();
       }
 
       const $tbody = $('#adminTableBody');
@@ -1018,14 +1221,13 @@
           const isSystemAdmin = (item.username.toLowerCase() === 'admin');
           
           let actionButtons = `
-            <div class="action-btn-group justify-content-center">
+            <div class="action-btn-group">
               <button class="btn btn-table-action btn-table-edit" title="แก้ไขข้อมูล" onclick="openEditAdminModal('${escapeHtml(item.username)}')">
                 <i class="fa-solid fa-pen-to-square"></i>
               </button>
           `;
 
           if (isSystemAdmin) {
-            // ห้ามลบ username = 'admin'
             actionButtons += `
               <button class="btn btn-table-action btn-table-delete" disabled title="บัญชีหลักของระบบ ห้ามลบ">
                 <i class="fa-solid fa-lock"></i>
@@ -1059,44 +1261,25 @@
         });
       }
 
-      // Initialize DataTable พร้อมการตั้งค่าภาษาไทย
-      dataTableInstance = $('#adminDataTable').DataTable({
+      adminDataTableInstance = $('#adminDataTable').DataTable({
         responsive: true,
-        language: {
-          search: "ค้นหา:",
-          lengthMenu: "แสดง _MENU_ แถวต่อหน้า",
-          info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ รายการ",
-          infoEmpty: "ไม่มีข้อมูลสำหรับแสดงผล",
-          infoFiltered: "(กรองจากทั้งหมด _MAX_ รายการ)",
-          zeroRecords: "ไม่พบข้อมูลที่ตรงกัน",
-          paginate: {
-            first: "หน้าแรก",
-            previous: "ก่อนหน้า",
-            next: "ถัดไป",
-            last: "หน้าสุดท้าย"
-          }
-        },
+        language: getDatatableThaiLang(),
         pageLength: 10,
-        columnDefs: [
-          { orderable: false, targets: [6] } // คอลัมน์จัดการไม่ต้องเรียงลำดับ
-        ]
+        columnDefs: [{ orderable: false, targets: [6] }]
       });
     }
 
-    // -------------------------------------------------------------
-    // 1.1.2 & 1.1.4: การเพิ่มข้อมูลผู้ดูแลระบบ ด้วย SweetAlert2 Modal
-    // -------------------------------------------------------------
     function openAddAdminModal() {
       Swal.fire({
         title: '<i class="fa-solid fa-user-plus text-success me-2"></i>เพิ่มข้อมูลผู้ดูแลระบบ',
         html: `
           <div class="swal-form-group">
             <label class="swal-form-label">ชื่อผู้ใช้ (Username)<span class="req">*</span></label>
-            <input id="swal-add-username" class="swal-input-custom" placeholder="เช่น somchai_jm (ภาษาอังกฤษหรือตัวเลข)" autocomplete="off">
+            <input id="swal-add-username" class="swal-input-custom" placeholder="เช่น somchai_jm (ภาษาอังกฤษ/ตัวเลข)" autocomplete="off">
           </div>
           <div class="swal-form-group">
             <label class="swal-form-label">รหัสผ่าน (Password)<span class="req">*</span></label>
-            <input id="swal-add-password" type="password" class="swal-input-custom" placeholder="กรอกรหัสผ่านอย่างน้อย 4 ตัวอักษร" autocomplete="new-password">
+            <input id="swal-add-password" type="password" class="swal-input-custom" placeholder="กรอกรหัสผ่าน" autocomplete="new-password">
           </div>
           <div class="swal-form-group">
             <label class="swal-form-label">ชื่อเล่น (Nickname)<span class="req">*</span></label>
@@ -1114,7 +1297,7 @@
         showCancelButton: true,
         confirmButtonText: '<i class="fa-solid fa-check me-1"></i> บันทึกข้อมูล',
         cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
-        reverseButtons: true, // ปุ่มยกเลิกอยู่ซ้าย ปุ่มบันทึกอยู่ขวา
+        reverseButtons: true, // ปุ่มยกเลิกอยู่ซ้าย ปุ่มยืนยันอยู่ขวา
         confirmButtonColor: '#1B3B36',
         cancelButtonColor: '#718096',
         focusConfirm: false,
@@ -1125,19 +1308,9 @@
           const firstname = $('#swal-add-firstname').val().trim();
           const lastname = $('#swal-add-lastname').val().trim();
 
-          // ตรวจสอบเงื่อนไข Required: ชื่อผู้ใช้, รหัสผ่าน, ชื่อเล่น
-          if (!username) {
-            Swal.showValidationMessage('กรุณากรอก "ชื่อผู้ใช้"');
-            return false;
-          }
-          if (!password) {
-            Swal.showValidationMessage('กรุณากรอก "รหัสผ่าน"');
-            return false;
-          }
-          if (!nickname) {
-            Swal.showValidationMessage('กรุณากรอก "ชื่อเล่น"');
-            return false;
-          }
+          if (!username) { Swal.showValidationMessage('กรุณากรอก "ชื่อผู้ใช้"'); return false; }
+          if (!password) { Swal.showValidationMessage('กรุณากรอก "รหัสผ่าน"'); return false; }
+          if (!nickname) { Swal.showValidationMessage('กรุณากรอก "ชื่อเล่น"'); return false; }
 
           return { username, password, nickname, firstname, lastname };
         }
@@ -1149,40 +1322,20 @@
     }
 
     function submitAddAdmin(payload) {
-      Swal.fire({
-        title: 'กำลังบันทึกข้อมูล...',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-      });
+      Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(function(response) {
             if (response.success) {
-              Swal.fire({
-                icon: 'success',
-                title: 'สำเร็จ!',
-                text: response.message,
-                timer: 1800,
-                showConfirmButton: false
-              });
+              Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: response.message, timer: 1800, showConfirmButton: false });
               loadAdminTableData();
             } else {
-              Swal.fire({
-                icon: 'error',
-                title: 'ไม่สามารถบันทึกได้',
-                text: response.message,
-                confirmButtonColor: '#1B3B36'
-              });
+              Swal.fire({ icon: 'error', title: 'ไม่สามารถบันทึกได้', text: response.message, confirmButtonColor: '#1B3B36' });
             }
           })
           .withFailureHandler(function(err) {
-            Swal.fire({
-              icon: 'error',
-              title: 'เกิดข้อผิดพลาด',
-              text: 'บันทึกข้อมูลล้มเหลว: ' + (err.message || err),
-              confirmButtonColor: '#1B3B36'
-            });
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'บันทึกข้อมูลล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
           })
           .addAdminUser(payload);
       } else {
@@ -1202,9 +1355,6 @@
       }
     }
 
-    // -------------------------------------------------------------
-    // 1.1.2 & 1.1.4: การแก้ไขข้อมูลผู้ดูแลระบบ ด้วย SweetAlert2 Modal
-    // -------------------------------------------------------------
     function openEditAdminModal(username) {
       const user = currentAdminData.find(u => u.username.toLowerCase() === username.toLowerCase());
       if (!user) {
@@ -1240,7 +1390,7 @@
         showCancelButton: true,
         confirmButtonText: '<i class="fa-solid fa-check me-1"></i> บันทึกการแก้ไข',
         cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
-        reverseButtons: true, // ปุ่มยกเลิกอยู่ซ้าย ปุ่มบันทึกอยู่ขวา
+        reverseButtons: true, // ปุ่มยกเลิกอยู่ซ้าย ปุ่มยืนยันอยู่ขวา
         confirmButtonColor: '#1B3B36',
         cancelButtonColor: '#718096',
         focusConfirm: false,
@@ -1250,18 +1400,9 @@
           const firstname = $('#swal-edit-firstname').val().trim();
           const lastname = $('#swal-edit-lastname').val().trim();
 
-          if (!nickname) {
-            Swal.showValidationMessage('กรุณากรอก "ชื่อเล่น"');
-            return false;
-          }
+          if (!nickname) { Swal.showValidationMessage('กรุณากรอก "ชื่อเล่น"'); return false; }
 
-          return {
-            username: user.username,
-            password: password,
-            nickname: nickname,
-            firstname: firstname,
-            lastname: lastname
-          };
+          return { username: user.username, password, nickname, firstname, lastname };
         }
       }).then((result) => {
         if (result.isConfirmed && result.value) {
@@ -1271,51 +1412,27 @@
     }
 
     function submitUpdateAdmin(payload) {
-      Swal.fire({
-        title: 'กำลังอัปเดตข้อมูล...',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-      });
+      Swal.fire({ title: 'กำลังอัปเดตข้อมูล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(function(response) {
             if (response.success) {
-              Swal.fire({
-                icon: 'success',
-                title: 'สำเร็จ!',
-                text: response.message,
-                timer: 1800,
-                showConfirmButton: false
-              });
-              
-              // หากอัปเดตผู้ใช้ปัจจุบัน ให้รีเฟรชชื่อที่แสดงใน Header
+              Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: response.message, timer: 1800, showConfirmButton: false });
               if (currentUser && currentUser.username.toLowerCase() === payload.username.toLowerCase()) {
                 currentUser.nickname = payload.nickname;
                 currentUser.firstname = payload.firstname;
                 currentUser.lastname = payload.lastname;
                 sessionStorage.setItem("jm_current_user", JSON.stringify(currentUser));
-                const display = `${currentUser.nickname} (${currentUser.username})`;
-                $('#header-user-name').text(display);
+                $('#header-user-name').text(`${currentUser.nickname} (${currentUser.username})`);
               }
-
               loadAdminTableData();
             } else {
-              Swal.fire({
-                icon: 'error',
-                title: 'ไม่สามารถแก้ไขได้',
-                text: response.message,
-                confirmButtonColor: '#1B3B36'
-              });
+              Swal.fire({ icon: 'error', title: 'ไม่สามารถแก้ไขได้', text: response.message, confirmButtonColor: '#1B3B36' });
             }
           })
           .withFailureHandler(function(err) {
-            Swal.fire({
-              icon: 'error',
-              title: 'เกิดข้อผิดพลาด',
-              text: 'อัปเดตล้มเหลว: ' + (err.message || err),
-              confirmButtonColor: '#1B3B36'
-            });
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'อัปเดตล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
           })
           .updateAdminUser(payload);
       } else {
@@ -1332,12 +1449,7 @@
       }
     }
 
-    // -------------------------------------------------------------
-    // 1.1.2 การลบข้อมูลผู้ดูแลระบบ (ห้ามลบ username = 'admin')
-    // ข้อกำหนด: Dialog confirm ทุกครั้ง, ปุ่มยกเลิกอยู่ซ้าย, ปุ่มยืนยันอยู่ขวา
-    // -------------------------------------------------------------
     function confirmDeleteAdmin(username) {
-      // ตรวจสอบความปลอดภัยระดับหน้าเว็บ
       if (username.toLowerCase() === 'admin') {
         Swal.fire({
           icon: 'error',
@@ -1353,10 +1465,9 @@
         html: `คุณแน่ใจหรือไม่ว่าต้องการลบผู้ดูแลระบบ <b>"${escapeHtml(username)}"</b>?<br><small class="text-danger">การดำเนินการนี้ไม่สามารถเรียกคืนข้อมูลได้</small>`,
         icon: 'warning',
         showCancelButton: true,
-        // ปุ่มยกเลิก (อยู่ด้านซ้าย) และ ปุ่มยืนยัน (อยู่ด้านขวา)
         cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
         confirmButtonText: '<i class="fa-solid fa-trash-can me-1"></i> ยืนยัน',
-        reverseButtons: true, // กำหนดให้ปุ่มยกเลิกอยู่ซ้าย และปุ่มยืนยันอยู่ขวา ตามข้อกำหนด
+        reverseButtons: true, // ปุ่มยกเลิกอยู่ซ้าย ปุ่มยืนยันอยู่ขวา
         confirmButtonColor: '#dc3545',
         cancelButtonColor: '#6c757d',
         focusCancel: true
@@ -1368,40 +1479,20 @@
     }
 
     function executeDeleteAdmin(username) {
-      Swal.fire({
-        title: 'กำลังลบข้อมูล...',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-      });
+      Swal.fire({ title: 'กำลังลบข้อมูล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(function(response) {
             if (response.success) {
-              Swal.fire({
-                icon: 'success',
-                title: 'สำเร็จ!',
-                text: response.message,
-                timer: 1800,
-                showConfirmButton: false
-              });
+              Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: response.message, timer: 1800, showConfirmButton: false });
               loadAdminTableData();
             } else {
-              Swal.fire({
-                icon: 'error',
-                title: 'ไม่สามารถลบข้อมูลได้',
-                text: response.message,
-                confirmButtonColor: '#1B3B36'
-              });
+              Swal.fire({ icon: 'error', title: 'ไม่สามารถลบข้อมูลได้', text: response.message, confirmButtonColor: '#1B3B36' });
             }
           })
           .withFailureHandler(function(err) {
-            Swal.fire({
-              icon: 'error',
-              title: 'เกิดข้อผิดพลาด',
-              text: 'ลบข้อมูลล้มเหลว: ' + (err.message || err),
-              confirmButtonColor: '#1B3B36'
-            });
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ลบข้อมูลล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
           })
           .deleteAdminUser(username);
       } else {
@@ -1411,6 +1502,347 @@
           Swal.fire({ icon: 'success', title: 'สำเร็จ (จำลอง)', timer: 1500, showConfirmButton: false });
         }, 500);
       }
+    }
+
+    // =============================================================
+    // โมดูล 2: ข้อมูลลูกค้า (Customer CRUD - Sheet_Name_Customer)
+    // ฟิลด์: 1.1 ชื่อเล่น(Req), 1.2 ชื่อจริง(Opt), 1.3 นามสกุล(Opt), 1.4 เบอร์โทร(Req), 1.5 วันที่สร้าง, 1.6 อัปเดตล่าสุด
+    // =============================================================
+    function loadCustomerTableData() {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        Swal.showLoading();
+        google.script.run
+          .withSuccessHandler(function(response) {
+            Swal.close();
+            if (response.success) {
+              currentCustomerData = response.data || [];
+              renderCustomerTable(currentCustomerData);
+            } else {
+              Swal.fire({ icon: 'error', title: 'ไม่สามารถโหลดข้อมูลลูกค้าได้', text: response.message, confirmButtonColor: '#1B3B36' });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.close();
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'โหลดข้อมูลล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
+          })
+          .getCustomers();
+      } else {
+        currentCustomerData = [
+          {
+            rowId: 2,
+            nickname: "คุณนิด",
+            firstname: "นิตยา",
+            lastname: "สุขใจ",
+            phone: "081-234-5678",
+            createdAt: "18/09/2026 15:30",
+            updatedAt: "18/09/2026 15:30"
+          }
+        ];
+        renderCustomerTable(currentCustomerData);
+      }
+    }
+
+    function renderCustomerTable(dataList) {
+      if (customerDataTableInstance) {
+        customerDataTableInstance.destroy();
+      }
+
+      const $tbody = $('#customerTableBody');
+      $tbody.empty();
+
+      if (!dataList || dataList.length === 0) {
+        $tbody.append('<tr><td colspan="8" class="text-center py-4 text-muted">ไม่พบข้อมูลลูกค้า</td></tr>');
+      } else {
+        dataList.forEach((cust, index) => {
+          const actionButtons = `
+            <div class="action-btn-group">
+              <button class="btn btn-table-action btn-table-edit" title="แก้ไขข้อมูลลูกค้า" onclick="openEditCustomerModal(${cust.rowId})">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+              <button class="btn btn-table-action btn-table-delete" title="ลบข้อมูลลูกค้า" onclick="confirmDeleteCustomer(${cust.rowId}, '${escapeHtml(cust.nickname)}')">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          `;
+
+          const rowHtml = `
+            <tr>
+              <td class="text-center fw-medium">${index + 1}</td>
+              <td><span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-6">${escapeHtml(cust.nickname)}</span></td>
+              <td>${escapeHtml(cust.firstname || '-')}</td>
+              <td>${escapeHtml(cust.lastname || '-')}</td>
+              <td><i class="fa-solid fa-phone text-muted me-1 small"></i><b>${escapeHtml(cust.phone)}</b></td>
+              <td class="text-muted small">${escapeHtml(cust.createdAt || '-')}</td>
+              <td class="text-muted small">${escapeHtml(cust.updatedAt || '-')}</td>
+              <td class="text-center">${actionButtons}</td>
+            </tr>
+          `;
+          $tbody.append(rowHtml);
+        });
+      }
+
+      customerDataTableInstance = $('#customerDataTable').DataTable({
+        responsive: true,
+        language: getDatatableThaiLang(),
+        pageLength: 10,
+        columnDefs: [{ orderable: false, targets: [7] }]
+      });
+    }
+
+    /**
+     * Modal เพิ่มข้อมูลลูกค้า (SweetAlert2)
+     * 1.1 ชื่อเล่น (Required)
+     * 1.2 ชื่อจริง (Optional)
+     * 1.3 นามสกุล (Optional)
+     * 1.4 เบอร์โทร (Required)
+     */
+    function openAddCustomerModal() {
+      Swal.fire({
+        title: '<i class="fa-solid fa-user-plus text-success me-2"></i>เพิ่มข้อมูลลูกค้า',
+        html: `
+          <div class="swal-form-group">
+            <label class="swal-form-label">ชื่อเล่น (Nickname)<span class="req">*</span></label>
+            <input id="swal-cust-nickname" class="swal-input-custom" placeholder="เช่น นิด, แนน, บอย" autocomplete="off">
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">เบอร์โทรศัพท์ (Phone Number)<span class="req">*</span></label>
+            <input id="swal-cust-phone" type="tel" class="swal-input-custom" placeholder="เช่น 0812345678" autocomplete="tel">
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">ชื่อจริง (First Name)<span class="opt">(ไม่บังคับ/Optional)</span></label>
+            <input id="swal-cust-firstname" class="swal-input-custom" placeholder="เช่น นิตยา">
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">นามสกุล (Last Name)<span class="opt">(ไม่บังคับ/Optional)</span></label>
+            <input id="swal-cust-lastname" class="swal-input-custom" placeholder="เช่น สุขใจ">
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-check me-1"></i> บันทึกข้อมูล',
+        cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+        reverseButtons: true, // ปุ่มยกเลิกอยู่ซ้าย ปุ่มยืนยันอยู่ขวา
+        confirmButtonColor: '#1B3B36',
+        cancelButtonColor: '#718096',
+        focusConfirm: false,
+        preConfirm: () => {
+          const nickname = $('#swal-cust-nickname').val().trim();
+          const phone = $('#swal-cust-phone').val().trim();
+          const firstname = $('#swal-cust-firstname').val().trim();
+          const lastname = $('#swal-cust-lastname').val().trim();
+
+          // ตรวจสอบเงื่อนไข Required (ชื่อเล่น และ เบอร์โทร)
+          if (!nickname) {
+            Swal.showValidationMessage('กรุณากรอก "ชื่อเล่น" ของลูกค้า');
+            return false;
+          }
+          if (!phone) {
+            Swal.showValidationMessage('กรุณากรอก "เบอร์โทรศัพท์" ของลูกค้า');
+            return false;
+          }
+
+          return { nickname, phone, firstname, lastname };
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value) {
+          submitAddCustomer(result.value);
+        }
+      });
+    }
+
+    function submitAddCustomer(payload) {
+      Swal.fire({ title: 'กำลังบันทึกข้อมูลลูกค้า...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            if (response.success) {
+              Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: response.message, timer: 1800, showConfirmButton: false });
+              loadCustomerTableData();
+            } else {
+              Swal.fire({ icon: 'error', title: 'ไม่สามารถบันทึกได้', text: response.message, confirmButtonColor: '#1B3B36' });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'บันทึกข้อมูลล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
+          })
+          .addCustomer(payload);
+      } else {
+        setTimeout(() => {
+          currentCustomerData.push({
+            rowId: currentCustomerData.length + 2,
+            nickname: payload.nickname,
+            firstname: payload.firstname,
+            lastname: payload.lastname,
+            phone: payload.phone,
+            createdAt: "วันนี้",
+            updatedAt: "วันนี้"
+          });
+          renderCustomerTable(currentCustomerData);
+          Swal.fire({ icon: 'success', title: 'สำเร็จ (จำลอง)', timer: 1500, showConfirmButton: false });
+        }, 500);
+      }
+    }
+
+    /**
+     * Modal แก้ไขข้อมูลลูกค้า (SweetAlert2)
+     */
+    function openEditCustomerModal(rowId) {
+      const customer = currentCustomerData.find(c => c.rowId === rowId);
+      if (!customer) {
+        Swal.fire({ icon: 'error', title: 'ไม่พบข้อมูลลูกค้า', confirmButtonColor: '#1B3B36' });
+        return;
+      }
+
+      Swal.fire({
+        title: '<i class="fa-solid fa-pen-to-square text-primary me-2"></i>แก้ไขข้อมูลลูกค้า',
+        html: `
+          <div class="swal-form-group">
+            <label class="swal-form-label">ชื่อเล่น (Nickname)<span class="req">*</span></label>
+            <input id="swal-edit-cust-nickname" class="swal-input-custom" value="${escapeHtml(customer.nickname || '')}">
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">เบอร์โทรศัพท์ (Phone Number)<span class="req">*</span></label>
+            <input id="swal-edit-cust-phone" type="tel" class="swal-input-custom" value="${escapeHtml(customer.phone || '')}">
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">ชื่อจริง (First Name)<span class="opt">(ไม่บังคับ/Optional)</span></label>
+            <input id="swal-edit-cust-firstname" class="swal-input-custom" value="${escapeHtml(customer.firstname || '')}">
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">นามสกุล (Last Name)<span class="opt">(ไม่บังคับ/Optional)</span></label>
+            <input id="swal-edit-cust-lastname" class="swal-input-custom" value="${escapeHtml(customer.lastname || '')}">
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-check me-1"></i> บันทึกการแก้ไข',
+        cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+        reverseButtons: true, // ปุ่มยกเลิกอยู่ซ้าย ปุ่มยืนยันอยู่ขวา
+        confirmButtonColor: '#1B3B36',
+        cancelButtonColor: '#718096',
+        focusConfirm: false,
+        preConfirm: () => {
+          const nickname = $('#swal-edit-cust-nickname').val().trim();
+          const phone = $('#swal-edit-cust-phone').val().trim();
+          const firstname = $('#swal-edit-cust-firstname').val().trim();
+          const lastname = $('#swal-edit-cust-lastname').val().trim();
+
+          if (!nickname) {
+            Swal.showValidationMessage('กรุณากรอก "ชื่อเล่น" ของลูกค้า');
+            return false;
+          }
+          if (!phone) {
+            Swal.showValidationMessage('กรุณากรอก "เบอร์โทรศัพท์" ของลูกค้า');
+            return false;
+          }
+
+          return { rowId: customer.rowId, nickname, phone, firstname, lastname };
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value) {
+          submitUpdateCustomer(result.value);
+        }
+      });
+    }
+
+    function submitUpdateCustomer(payload) {
+      Swal.fire({ title: 'กำลังอัปเดตข้อมูลลูกค้า...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            if (response.success) {
+              Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: response.message, timer: 1800, showConfirmButton: false });
+              loadCustomerTableData();
+            } else {
+              Swal.fire({ icon: 'error', title: 'ไม่สามารถแก้ไขได้', text: response.message, confirmButtonColor: '#1B3B36' });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'อัปเดตข้อมูลล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
+          })
+          .updateCustomer(payload);
+      } else {
+        setTimeout(() => {
+          const c = currentCustomerData.find(x => x.rowId === payload.rowId);
+          if (c) {
+            c.nickname = payload.nickname;
+            c.phone = payload.phone;
+            c.firstname = payload.firstname;
+            c.lastname = payload.lastname;
+            c.updatedAt = "เมื่อสักครู่";
+          }
+          renderCustomerTable(currentCustomerData);
+          Swal.fire({ icon: 'success', title: 'สำเร็จ (จำลอง)', timer: 1500, showConfirmButton: false });
+        }, 500);
+      }
+    }
+
+    /**
+     * Modal ยืนยันการลบข้อมูลลูกค้า (SweetAlert2)
+     * เงื่อนไข: ปุ่มยกเลิกอยู่ด้านซ้าย และ ปุ่มยืนยันอยู่ด้านขวา
+     */
+    function confirmDeleteCustomer(rowId, nickname) {
+      Swal.fire({
+        title: 'ยืนยันการลบข้อมูลลูกค้า?',
+        html: `คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลลูกค้า <b>"${escapeHtml(nickname)}"</b>?<br><small class="text-danger">การดำเนินการนี้ไม่สามารถเรียกคืนข้อมูลได้</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        // ปุ่มยกเลิก (อยู่ด้านซ้าย) และ ปุ่มยืนยัน (อยู่ด้านขวา)
+        cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+        confirmButtonText: '<i class="fa-solid fa-trash-can me-1"></i> ยืนยัน',
+        reverseButtons: true, // กำหนดให้ปุ่มยกเลิกอยู่ซ้าย และปุ่มยืนยันอยู่ขวา
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        focusCancel: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+          executeDeleteCustomer(rowId);
+        }
+      });
+    }
+
+    function executeDeleteCustomer(rowId) {
+      Swal.fire({ title: 'กำลังลบข้อมูลลูกค้า...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            if (response.success) {
+              Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: response.message, timer: 1800, showConfirmButton: false });
+              loadCustomerTableData();
+            } else {
+              Swal.fire({ icon: 'error', title: 'ไม่สามารถลบข้อมูลได้', text: response.message, confirmButtonColor: '#1B3B36' });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ลบข้อมูลล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
+          })
+          .deleteCustomer(rowId);
+      } else {
+        setTimeout(() => {
+          currentCustomerData = currentCustomerData.filter(x => x.rowId !== rowId);
+          renderCustomerTable(currentCustomerData);
+          Swal.fire({ icon: 'success', title: 'สำเร็จ (จำลอง)', timer: 1500, showConfirmButton: false });
+        }, 500);
+      }
+    }
+
+    // Helper: การตั้งค่าภาษาไทยสำหรับ DataTables
+    function getDatatableThaiLang() {
+      return {
+        search: "ค้นหา:",
+        lengthMenu: "แสดง _MENU_ รายการต่อหน้า",
+        info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ รายการ",
+        infoEmpty: "ไม่มีข้อมูลสำหรับแสดงผล",
+        infoFiltered: "(กรองจากทั้งหมด _MAX_ รายการ)",
+        zeroRecords: "ไม่พบข้อมูลที่ตรงกัน",
+        paginate: {
+          first: "หน้าแรก",
+          previous: "ก่อนหน้า",
+          next: "ถัดไป",
+          last: "หน้าสุดท้าย"
+        }
+      };
     }
 
     // Helper: ป้องกัน XSS
