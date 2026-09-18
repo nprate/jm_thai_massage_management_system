@@ -1,6 +1,6 @@
 /**
  * ==============================================================================
- * ระบบบริหารจัดการร้านนวดแผนไทย (JM Thai Massage Management System)
+ * ระบบบริหารจัดการข้อมูลร้านนวดแผนไทยเจเอ็ม (JM Thai Massage Management System)
  * Backend Google Apps Script (Code.gs)
  * ==============================================================================
  */
@@ -36,7 +36,7 @@ function doGet(e) {
 function getSystemSettings() {
   return {
     systemName: "JM Thai Massage Management System",
-    systemSubName: "ระบบบริหารจัดการร้านนวดแผนไทย",
+    systemSubName: "ระบบบริหารจัดการข้อมูลร้านนวดแผนไทยเจเอ็ม",
     sheetNameAdmin: SHEET_NAME_ADMIN,
     sheetNameCustomer: SHEET_NAME_CUSTOMER,
     googleSheetId: GOOGLE_SHEET_ID

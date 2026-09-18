@@ -112,10 +112,11 @@
     }
 
     .login-header h2 {
-      font-size: 1.35rem;
+      font-size: 1.25rem;
       font-weight: 700;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
+      letter-spacing: 0.3px;
+      margin-bottom: 6px;
+      line-height: 1.35;
     }
 
     .login-header p {
@@ -123,6 +124,7 @@
       color: var(--spa-accent-light);
       margin: 0;
       font-weight: 300;
+      line-height: 1.4;
     }
 
     .login-body {
@@ -660,20 +662,48 @@
 
     /* หน้าจอเล็กแบบโทรศัพท์มือถือ (Mobile Devices: < 576px) */
     @media (max-width: 575.98px) {
+      .login-container {
+        max-width: 94%;
+        border-radius: 16px;
+      }
+
+      .login-header {
+        padding: 28px 18px 22px;
+      }
+
+      .login-header h2 {
+        font-size: 1.15rem;
+      }
+
+      .login-header p {
+        font-size: 0.8rem;
+      }
+
+      .brand-logo-badge {
+        width: 64px;
+        height: 64px;
+        font-size: 26px;
+      }
+
+      .login-body {
+        padding: 24px 18px;
+      }
+
       .top-header {
-        padding: 0 12px;
-        height: 60px;
+        padding: 0 10px;
+        height: 58px;
       }
 
       /* แสดงเฉพาะ logo ถ้าใช้บนโทรศัพท์ที่หน้าจอเล็ก (สำคัญมาก) */
-      .brand-title .brand-title-text {
+      .brand-title .brand-title-text,
+      .brand-title .brand-title-text-short {
         display: none !important;
       }
 
       .brand-logo-circle {
-        width: 38px;
-        height: 38px;
-        font-size: 1.2rem;
+        width: 36px;
+        height: 36px;
+        font-size: 1.15rem;
       }
 
       /* ปรับขนาดส่วน User ให้กะทัดรัด */
@@ -735,8 +765,8 @@
         <div class="brand-logo-badge">
           <i class="fa-solid fa-spa"></i>
         </div>
-        <h2>JM Thai Massage</h2>
-        <p>ระบบบริหารจัดการร้านนวดแผนไทย</p>
+        <h2>JM Thai Massage Management System</h2>
+        <p>ระบบบริหารจัดการข้อมูลร้านนวดแผนไทยเจเอ็ม</p>
       </div>
 
       <div class="login-body">
@@ -751,15 +781,10 @@
             <label for="login-password"><i class="fa-solid fa-lock me-1"></i> รหัสผ่าน (Password)</label>
           </div>
 
-          <button type="submit" class="btn btn-login w-100 mb-3" id="btn-submit-login">
+          <button type="submit" class="btn btn-login w-100" id="btn-submit-login">
             <i class="fa-solid fa-right-to-bracket me-2"></i> เข้าสู่ระบบ
           </button>
         </form>
-
-        <div class="demo-hint-box text-center">
-          <i class="fa-solid fa-circle-info text-warning me-1"></i> 
-          ข้อมูลเข้าสู่ระบบเริ่มต้น: <b>admin</b> / <b>1234</b>
-        </div>
       </div>
     </div>
   </div>
@@ -782,8 +807,11 @@
           <div class="brand-logo-circle">
             <i class="fa-solid fa-spa"></i>
           </div>
-          <!-- ข้อความจะซ่อนอัตโนมัติเมื่ออยู่บนโทรศัพท์หน้าจอเล็ก (< 576px) -->
-          <span class="brand-title-text d-none d-sm-inline">JM Thai Massage System</span>
+          <!-- จอใหญ่ Desktop (>= 992px): แสดงชื่อเต็มระบบ -->
+          <span class="brand-title-text d-none d-lg-inline">JM Thai Massage Management System</span>
+          <!-- จอกลาง Tablet (576px - 991px): แสดงชื่อย่อลงมาเพื่อไม่ให้เบียดเมนู -->
+          <span class="brand-title-text-short d-none d-sm-inline d-lg-none">JM Thai Massage</span>
+          <!-- จอเล็ก Mobile (< 576px): ทั้งสองข้อความจะถูกซ่อน แสดงเฉพาะ logo (สำคัญมาก) -->
         </a>
       </div>
 
@@ -925,7 +953,7 @@
     <!-- 2.3 FOOTER (ส่วนล่าง) -->
     <footer class="app-footer">
       <div>
-        © 2026 <b>JM Thai Massage Management System</b>. ระบบบริหารจัดการร้านนวดแผนไทย
+        © 2026 <b>JM Thai Massage Management System</b>. ระบบบริหารจัดการข้อมูลร้านนวดแผนไทยเจเอ็ม
       </div>
       <div>
         <span class="status-indicator">
