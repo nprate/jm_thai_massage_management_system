@@ -123,7 +123,7 @@ function initSheetIfNeeded() {
   // 2. ตรวจสอบชีตข้อมูลลูกค้า (Sheet_Name_Customer)
   var customerSheet = getCustomerSheet();
   var customerLastRow = customerSheet.getLastRow();
-  var customerHeaders = ["ชื่อเล่น", "ชื่อจริง", "นามสกุล", "เบอร์โทร", "วันที่สร้าง", "อัปเดตล่าสุด"];
+  var customerHeaders = ["รหัสลูกค้า", "ชื่อเล่น", "ชื่อจริง", "นามสกุล", "เบอร์โทร", "วันที่สร้าง", "อัปเดตล่าสุด"];
 
   if (customerLastRow === 0) {
     customerSheet.appendRow(customerHeaders);
@@ -136,11 +136,38 @@ function initSheetIfNeeded() {
     customerSheet.setRowHeight(1, 40);
     customerSheet.setFrozenRows(1);
 
-    // เพิ่มข้อมูลลูกค้าตัวอย่างเริ่มต้น
-    customerSheet.appendRow(["คุณนิด", "นิตยา", "สุขใจ", "081-234-5678", nowStr, nowStr]);
+    // เพิ่มข้อมูลลูกค้าตัวอย่างเริ่มต้น พร้อมรหัส JM0001
+    customerSheet.appendRow(["JM0001", "คุณนิด", "นิตยา", "สุขใจ", "081-234-5678", nowStr, nowStr]);
 
     for (var c = 1; c <= customerHeaders.length; c++) {
       customerSheet.autoResizeColumn(c);
+    }
+  } else {
+    // กรณีมีข้อมูลอยู่แล้ว แต่ยังไม่มีคอลัมน์ "รหัสลูกค้า" ในคอลัมน์แรก (Auto-migration)
+    var firstHeader = String(customerSheet.getRange(1, 1).getValue() || "").trim();
+    if (firstHeader !== "รหัสลูกค้า") {
+      customerSheet.insertColumnBefore(1);
+      customerSheet.getRange(1, 1).setValue("รหัสลูกค้า");
+      customerSheet.getRange(1, 1)
+        .setBackground("#1B3B36")
+        .setFontColor("#FFFFFF")
+        .setFontWeight("bold")
+        .setHorizontalAlignment("center")
+        .setVerticalAlignment("middle");
+      customerSheet.setRowHeight(1, 40);
+
+      // สร้างรหัสลูกค้าเริ่มต้น (JM0001, JM0002, ...) ให้กับข้อมูลแถวเดิมที่มีอยู่
+      var totalRows = customerSheet.getLastRow();
+      var count = 1;
+      for (var r = 2; r <= totalRows; r++) {
+        var existingVal = customerSheet.getRange(r, 1).getValue();
+        if (!existingVal) {
+          var codeStr = "JM" + ("0000" + count).slice(-4);
+          customerSheet.getRange(r, 1).setValue(codeStr);
+          count++;
+        }
+      }
+      customerSheet.autoResizeColumn(1);
     }
   }
 }
@@ -365,8 +392,37 @@ function deleteAdminUser(username) {
 
 // ==============================================================================
 // CRUD: ข้อมูลลูกค้า (Customer Management - Sheet_Name_Customer)
-// ฟิลด์: 1.ชื่อเล่น(Req) 2.ชื่อจริง(Opt) 3.นามสกุล(Opt) 4.เบอร์โทร(Req) 5.วันที่สร้าง 6.อัปเดตล่าสุด
+// ฟิลด์: 1.รหัสลูกค้า 2.ชื่อเล่น(Req) 3.ชื่อจริง(Opt) 4.นามสกุล(Opt) 5.เบอร์โทร(Req) 6.วันที่สร้าง 7.อัปเดตล่าสุด
 // ==============================================================================
+
+/**
+ * สร้างรหัสลูกค้าอัตโนมัติ (Pattern: JM ตามด้วยตัวเลข 4 หลัก เริ่มต้น JM0001)
+ * รันลำดับ number ถัดไปเสมอเมื่อทำการเพิ่มข้อมูลลูกค้าใหม่
+ */
+function generateNextCustomerId() {
+  var sheet = getCustomerSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    return "JM0001";
+  }
+
+  var idValues = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  var maxNum = 0;
+
+  for (var i = 0; i < idValues.length; i++) {
+    var val = String(idValues[i][0] || "").trim();
+    var match = val.match(/^JM(\d+)$/i);
+    if (match) {
+      var num = parseInt(match[1], 10);
+      if (num > maxNum) {
+        maxNum = num;
+      }
+    }
+  }
+
+  var nextNum = maxNum + 1;
+  return "JM" + ("0000" + nextNum).slice(-4);
+}
 
 /**
  * ดึงรายการข้อมูลลูกค้าทั้งหมดเพื่อแสดงใน Data Table
@@ -380,18 +436,20 @@ function getCustomers() {
 
     if (data.length > 1) {
       for (var i = 1; i < data.length; i++) {
-        var nickname = String(data[i][0] || "").trim();
-        var firstname = String(data[i][1] || "").trim();
-        var lastname = String(data[i][2] || "").trim();
-        var phone = String(data[i][3] || "").trim();
-        var createdAt = data[i][4] ? formatDateDisplay(data[i][4]) : "-";
-        var updatedAt = data[i][5] ? formatDateDisplay(data[i][5]) : "-";
+        var customerId = String(data[i][0] || "").trim();
+        var nickname = String(data[i][1] || "").trim();
+        var firstname = String(data[i][2] || "").trim();
+        var lastname = String(data[i][3] || "").trim();
+        var phone = String(data[i][4] || "").trim();
+        var createdAt = data[i][5] ? formatDateDisplay(data[i][5]) : "-";
+        var updatedAt = data[i][6] ? formatDateDisplay(data[i][6]) : "-";
 
         // หากแถวว่างเปล่าให้ข้าม
-        if (!nickname && !phone) continue;
+        if (!customerId && !nickname && !phone) continue;
 
         customerList.push({
           rowId: i + 1, // 1-based row index in Google Sheet
+          customerId: customerId || "-",
           nickname: nickname,
           firstname: firstname,
           lastname: lastname,
@@ -413,12 +471,14 @@ function getCustomers() {
 }
 
 /**
- * เพิ่มข้อมูลลูกค้าใหม่
+ * เพิ่มข้อมูลลูกค้าใหม่ (สร้างรหัสอัตโนมัติ เช่น JM0001)
  * @param {object} customerData { nickname, firstname, lastname, phone }
  */
 function addCustomer(customerData) {
   try {
+    initSheetIfNeeded();
     var sheet = getCustomerSheet();
+    var customerId = generateNextCustomerId();
     var nickname = String(customerData.nickname || "").trim();
     var firstname = String(customerData.firstname || "").trim();
     var lastname = String(customerData.lastname || "").trim();
@@ -435,12 +495,13 @@ function addCustomer(customerData) {
 
     var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
-    // ฟิลด์ตามข้อกำหนด: 1.ชื่อเล่น, 2.ชื่อจริง, 3.นามสกุล, 4.เบอร์โทร, 5.วันที่สร้าง, 6.อัปเดตล่าสุด
-    sheet.appendRow([nickname, firstname, lastname, phone, nowStr, nowStr]);
+    // ฟิลด์ตามข้อกำหนด: 1.รหัสลูกค้า, 2.ชื่อเล่น, 3.ชื่อจริง, 4.นามสกุล, 5.เบอร์โทร, 6.วันที่สร้าง, 7.อัปเดตล่าสุด
+    sheet.appendRow([customerId, nickname, firstname, lastname, phone, nowStr, nowStr]);
 
     return {
       success: true,
-      message: "เพิ่มข้อมูลลูกค้า '" + nickname + "' เรียบร้อยแล้ว"
+      customerId: customerId,
+      message: "เพิ่มข้อมูลลูกค้า '" + nickname + "' (รหัส: " + customerId + ") เรียบร้อยแล้ว"
     };
   } catch (err) {
     return { success: false, message: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลลูกค้า: " + err.message };
@@ -448,7 +509,7 @@ function addCustomer(customerData) {
 }
 
 /**
- * แก้ไขข้อมูลลูกค้า
+ * แก้ไขข้อมูลลูกค้า (รหัสลูกค้าเป็น readonly ไม่เปลี่ยนแปลง)
  * @param {object} customerData { rowId, nickname, firstname, lastname, phone }
  */
 function updateCustomer(customerData) {
@@ -473,11 +534,12 @@ function updateCustomer(customerData) {
 
     var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
-    sheet.getRange(rowId, 1).setValue(nickname);
-    sheet.getRange(rowId, 2).setValue(firstname);
-    sheet.getRange(rowId, 3).setValue(lastname);
-    sheet.getRange(rowId, 4).setValue(phone);
-    sheet.getRange(rowId, 6).setValue(nowStr); // อัปเดตล่าสุด
+    // คอลัมน์ 1 คือ รหัสลูกค้า (ห้ามแก้ไข)
+    sheet.getRange(rowId, 2).setValue(nickname);
+    sheet.getRange(rowId, 3).setValue(firstname);
+    sheet.getRange(rowId, 4).setValue(lastname);
+    sheet.getRange(rowId, 5).setValue(phone);
+    sheet.getRange(rowId, 7).setValue(nowStr); // อัปเดตล่าสุด
 
     return {
       success: true,

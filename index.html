@@ -928,7 +928,7 @@
               <table id="customerDataTable" class="table table-hover align-middle w-100">
                 <thead>
                   <tr>
-                    <th style="width: 60px;" class="text-center">ลำดับ</th>
+                    <th style="width: 110px;" class="text-center">รหัสลูกค้า</th>
                     <th>ชื่อเล่น (Nickname)</th>
                     <th>ชื่อจริง (Firstname)</th>
                     <th>นามสกุล (Lastname)</th>
@@ -1558,12 +1558,23 @@
         currentCustomerData = [
           {
             rowId: 2,
-            nickname: "คุณนิด",
-            firstname: "นิตยา",
-            lastname: "สุขใจ",
-            phone: "081-234-5678",
-            createdAt: "18/09/2026 15:30",
-            updatedAt: "18/09/2026 15:30"
+            customerId: "JM0001",
+            nickname: "คุณนิด2",
+            firstname: "นิตยา2",
+            lastname: "สุขใจ2",
+            phone: "081-234-56789",
+            createdAt: "18/09/2026 18:12",
+            updatedAt: "18/09/2026 18:31"
+          },
+          {
+            rowId: 3,
+            customerId: "JM0002",
+            nickname: "คุณหน่อย",
+            firstname: "",
+            lastname: "",
+            phone: "812345678",
+            createdAt: "18/09/2026 19:30",
+            updatedAt: "18/09/2026 19:30"
           }
         ];
         renderCustomerTable(currentCustomerData);
@@ -1593,9 +1604,11 @@
             </div>
           `;
 
+          const customerIdBadge = `<span class="badge bg-dark-subtle text-dark border border-secondary-subtle px-2 py-1 font-monospace fw-semibold fs-7"><i class="fa-solid fa-id-card-clip text-warning me-1"></i>${escapeHtml(cust.customerId || '-')}</span>`;
+
           const rowHtml = `
             <tr>
-              <td class="text-center fw-medium">${index + 1}</td>
+              <td class="text-center">${customerIdBadge}</td>
               <td><span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-6">${escapeHtml(cust.nickname)}</span></td>
               <td>${escapeHtml(cust.firstname || '-')}</td>
               <td>${escapeHtml(cust.lastname || '-')}</td>
@@ -1696,8 +1709,11 @@
           .addCustomer(payload);
       } else {
         setTimeout(() => {
+          const nextNum = currentCustomerData.length + 1;
+          const nextId = "JM" + ("0000" + nextNum).slice(-4);
           currentCustomerData.push({
             rowId: currentCustomerData.length + 2,
+            customerId: nextId,
             nickname: payload.nickname,
             firstname: payload.firstname,
             lastname: payload.lastname,
@@ -1706,7 +1722,7 @@
             updatedAt: "วันนี้"
           });
           renderCustomerTable(currentCustomerData);
-          Swal.fire({ icon: 'success', title: 'สำเร็จ (จำลอง)', timer: 1500, showConfirmButton: false });
+          Swal.fire({ icon: 'success', title: 'สำเร็จ (จำลอง: ' + nextId + ')', timer: 1500, showConfirmButton: false });
         }, 500);
       }
     }
@@ -1724,6 +1740,11 @@
       Swal.fire({
         title: '<i class="fa-solid fa-pen-to-square text-primary me-2"></i>แก้ไขข้อมูลลูกค้า',
         html: `
+          <div class="swal-form-group">
+            <label class="swal-form-label">รหัสลูกค้า (Customer ID)</label>
+            <input id="swal-edit-cust-id" class="swal-input-custom font-monospace fw-bold" value="${escapeHtml(customer.customerId || '')}" readonly>
+            <small class="text-muted" style="font-size:0.75rem;">* รหัสลูกค้าถูกสร้างอัตโนมัติ ไม่สามารถแก้ไขได้</small>
+          </div>
           <div class="swal-form-group">
             <label class="swal-form-label">ชื่อเล่น (Nickname)<span class="req">*</span></label>
             <input id="swal-edit-cust-nickname" class="swal-input-custom" value="${escapeHtml(customer.nickname || '')}">
