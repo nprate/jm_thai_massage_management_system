@@ -2,6 +2,12 @@
  * ==============================================================================
  * ระบบบริหารจัดการข้อมูลร้านนวดแผนไทยเจเอ็ม (JM Thai Massage Management System)
  * Backend Google Apps Script (Code.gs)
+ *
+ * กฎการแสดงผลและสถานะการจอง:
+ * 1. รอบเวลาที่เปิดรับจองได้ (โควต้า 0/5 - 4/5): แสดงป้าย "จองได้" ตัวหนังสือสีขาว (ตัวหนา bold) บน badge สีฟ้า
+ * 2. รอบเวลาที่ครบโควต้า (5/5): แสดงป้าย "เต็ม" ไอคอนคนสีแดง
+ * 3. รอบเวลาที่เลยกำหนด (เวลาปัจจุบัน >= เวลาเริ่มรอบ + 20 นาที): ปิดรับจอง (ไอคอนนาฬิกาสีแดง ตัวหนังสือสีแดง)
+ * 4. หน้าต่าง Modal (รายละเอียดรอบเวลาและฟอร์มจอง): แสดงจำนวนโควต้าตัวเลขอย่างละเอียดตามเดิม (ว่าง (0/5) ถึง ว่าง (4/5))
  * ==============================================================================
  */
 
@@ -222,9 +228,17 @@ function initSheetIfNeeded() {
       timeSheet.appendRow([defaultTimes[t], nowStr, nowStr]);
     }
 
+    try {
+      timeSheet.getRange("A:A").setNumberFormat("@");
+    } catch (e) {}
+
     for (var tc = 1; tc <= timeHeaders.length; tc++) {
       timeSheet.autoResizeColumn(tc);
     }
+  } else {
+    try {
+      timeSheet.getRange("A:A").setNumberFormat("@");
+    } catch (e) {}
   }
 
   // 4. ตรวจสอบชีต "ข้อมูลการจอง" (Sheet_Name_Reservation)
@@ -248,9 +262,17 @@ function initSheetIfNeeded() {
     var todayStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd");
     resSheet.appendRow(["BK0001", "JM0001", todayStr, "17:30", "ยืนยันแล้ว", nowStr, nowStr]);
 
+    try {
+      resSheet.getRange("D:D").setNumberFormat("@");
+    } catch (e) {}
+
     for (var rc = 1; rc <= resHeaders.length; rc++) {
       resSheet.autoResizeColumn(rc);
     }
+  } else {
+    try {
+      resSheet.getRange("D:D").setNumberFormat("@");
+    } catch (e) {}
   }
 }
 
@@ -675,6 +697,33 @@ function formatDateDisplay(dateVal) {
 // ==============================================================================
 
 /**
+ * แปลงฟอร์แมตเวลาให้อยู่ในรูปแบบ HH:mm (เช่น 17:30, 10:00)
+ * จัดการกรณี Date object จาก Google Sheets หรือสตริงเวลาที่มี GMT/ปี 1899
+ */
+function formatTimeSlot(val) {
+  if (!val) return "";
+  if (val instanceof Date) {
+    return Utilities.formatDate(val, "Asia/Bangkok", "HH:mm");
+  }
+  var str = String(val).trim();
+  if (str.indexOf("GMT") !== -1 || str.indexOf("1899") !== -1 || str.indexOf("1900") !== -1) {
+    try {
+      var d = new Date(str);
+      if (!isNaN(d.getTime())) {
+        return Utilities.formatDate(d, "Asia/Bangkok", "HH:mm");
+      }
+    } catch (e) {}
+  }
+  var match = str.match(/(\d{1,2}):(\d{2})/);
+  if (match) {
+    var hh = match[1].length === 1 ? "0" + match[1] : match[1];
+    var mm = match[2];
+    return hh + ":" + mm;
+  }
+  return str;
+}
+
+/**
  * ดึงรายการตัวเลือกเวลาการจองทั้งหมด
  * @returns {Array<string>} รายการเวลา เช่น ["10:00", "11:30", ...]
  */
@@ -686,51 +735,68 @@ function getReservationTimeSlots() {
     var slots = [];
     if (data.length > 1) {
       for (var i = 1; i < data.length; i++) {
-        var t = String(data[i][0] || "").trim();
-        if (t) slots.push(t);
+        var t = formatTimeSlot(data[i][0]);
+        if (t && slots.indexOf(t) === -1) slots.push(t);
       }
     }
     slots.sort(function(a, b) {
       return a.localeCompare(b);
     });
-    return slots;
+    return slots.length > 0 ? slots : ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
   } catch (err) {
     return ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
   }
 }
 
 /**
- * ตรวจสอบสิทธิ์การแก้ไขข้อมูลตามเงื่อนไขเดือน:
- * - 2.1.2 แสดง active ตามเดือนและปีปัจจุบัน
- * - 2.1.3 เดือนย้อนหลัง: ดูได้ แต่ห้ามแก้ไข (isPast: true, isEditable: false)
- * - 2.1.4 เดือนปัจจุบันและถัดไปไม่เกิน 1 เดือน: แก้ไขได้ (isEditable: true)
- * - เดือนล่วงหน้าเกิน 1 เดือน: ดูอย่างเดียว (isTooFar: true, isEditable: false)
+ * ตรวจสอบสิทธิ์การแก้ไขข้อมูลตามเงื่อนไขเดือนและวันที่:
+ * - 1. เพิ่ม, แก้ไข, ลบ: เลือกได้เฉพาะ ตั้งแต่ วันที่ปัจจุบัน เป็นต้นไป แต่ไม่เกินเดือนถัดไป 1 เดือน
+ * - 1.1 เลือกเดือนย้อนหลังดูข้อมูลได้: ไม่เกิน 1 เดือนนับจากเดือนปัจจุบัน (diffMonths >= -1) แต่ห้ามแก้ไข
+ * - เดินหน้าดูเดือนถัดไปได้: ไม่เกิน 1 เดือนนับจากเดือนปัจจุบัน (diffMonths <= 1)
  */
 function checkMonthPermission(year, month) {
   var now = new Date();
   var currYear = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "yyyy"), 10);
   var currMonth = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "M"), 10);
+  var todayStr = Utilities.formatDate(now, "Asia/Bangkok", "yyyy-MM-dd");
 
   var diffMonths = (year - currYear) * 12 + (month - currMonth);
 
+  // ควบคุมการเปลี่ยนเดือน: ย้อนหลังได้ไม่เกิน 1 เดือน และ ล่วงหน้าได้ไม่เกิน 1 เดือน
+  var canGoPrev = diffMonths > -1;
+  var canGoNext = diffMonths < 1;
+
   var isPast = diffMonths < 0;
-  var isEditable = (diffMonths === 0 || diffMonths === 1);
+  var isCurrent = diffMonths === 0;
+  var isNext = diffMonths === 1;
   var isTooFar = diffMonths > 1;
+  var isTooFarPast = diffMonths < -1;
+  var isEditable = (isCurrent || isNext);
 
   var statusText = "";
   if (isPast) {
     statusText = "โหมดย้อนหลัง (ดูข้อมูลได้อย่างเดียว ห้ามแก้ไข)";
-  } else if (isEditable) {
-    statusText = diffMonths === 0 ? "เดือนปัจจุบัน (สามารถจัดการข้อมูลได้)" : "เดือนถัดไป (สามารถจัดการข้อมูลได้)";
-  } else {
+  } else if (isCurrent) {
+    statusText = "เดือนปัจจุบัน (สามารถจัดการข้อมูลได้ ตั้งแต่วันที่ปัจจุบัน)";
+  } else if (isNext) {
+    statusText = "เดือนถัดไป (สามารถจัดการข้อมูลล่วงหน้าได้)";
+  } else if (isTooFar) {
     statusText = "เดือนล่วงหน้าเกิน 1 เดือน (ดูข้อมูลได้อย่างเดียว)";
+  } else {
+    statusText = "เดือนย้อนหลังเกิน 1 เดือน (ดูข้อมูลได้อย่างเดียว)";
   }
 
   return {
     isPast: isPast,
+    isCurrent: isCurrent,
+    isNext: isNext,
     isEditable: isEditable,
     isTooFar: isTooFar,
+    isTooFarPast: isTooFarPast,
     diffMonths: diffMonths,
+    canGoPrev: canGoPrev,
+    canGoNext: canGoNext,
+    todayStr: todayStr,
     statusText: statusText,
     currentYear: currYear,
     currentMonth: currMonth
@@ -782,7 +848,7 @@ function getCalendarData(year, month) {
         var resId = String(resData[r][0] || "").trim();
         var custId = String(resData[r][1] || "").trim();
         var dateRaw = resData[r][2];
-        var timeSlot = String(resData[r][3] || "").trim();
+        var timeSlot = formatTimeSlot(resData[r][3]);
         var status = String(resData[r][4] || "ยืนยันแล้ว").trim();
         var createdAt = resData[r][5] ? formatDateDisplay(resData[r][5]) : "-";
         var updatedAt = resData[r][6] ? formatDateDisplay(resData[r][6]) : "-";
@@ -834,6 +900,7 @@ function getCalendarData(year, month) {
       year: year,
       month: month,
       permission: permission,
+      todayStr: permission.todayStr,
       timeSlots: timeSlots,
       reservationsByDate: reservationsByDate
     };
@@ -849,22 +916,20 @@ function getCalendarData(year, month) {
  * สร้างรหัสการจองอัตโนมัติ (Pattern: BK ตามด้วยตัวเลข 4 หลัก เช่น BK0001)
  */
 function generateNextReservationId() {
+  initSheetIfNeeded();
   var sheet = getReservationSheet();
-  var lastRow = sheet.getLastRow();
-  if (lastRow <= 1) {
-    return "BK0001";
-  }
+  var data = sheet.getDataRange().getValues();
 
-  var idValues = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
   var maxNum = 0;
-
-  for (var i = 0; i < idValues.length; i++) {
-    var val = String(idValues[i][0] || "").trim();
-    var match = val.match(/^BK(\d+)$/i);
-    if (match) {
-      var num = parseInt(match[1], 10);
-      if (num > maxNum) {
-        maxNum = num;
+  if (data.length > 1) {
+    for (var i = 1; i < data.length; i++) {
+      var code = String(data[i][0] || "").trim();
+      var match = code.match(/^BK(\d+)$/i);
+      if (match) {
+        var num = parseInt(match[1], 10);
+        if (num > maxNum) {
+          maxNum = num;
+        }
       }
     }
   }
@@ -881,7 +946,7 @@ function addReservation(data) {
     initSheetIfNeeded();
 
     var dateStr = String(data.date || "").trim(); // YYYY-MM-DD
-    var timeSlot = String(data.timeSlot || "").trim();
+    var timeSlot = formatTimeSlot(data.timeSlot || "");
     var customerId = String(data.customerId || "").trim();
     var status = String(data.status || "ยืนยันแล้ว").trim();
 
@@ -889,7 +954,40 @@ function addReservation(data) {
     if (!timeSlot) return { success: false, message: "กรุณาระบุเวลาที่จอง" };
     if (!customerId) return { success: false, message: "กรุณาเลือกลูกค้า" };
 
-    // ตรวจสอบสิทธิ์การแก้ไขเดือน
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, "Asia/Bangkok", "yyyy-MM-dd");
+
+    // ตรวจสอบเงื่อนไขข้อ 1: เฉพาะตั้งแต่วันที่ปัจจุบันเป็นต้นไป
+    if (dateStr < todayStr) {
+      return {
+        success: false,
+        message: "ไม่อนุญาตให้จองย้อนหลัง สามารถจองได้ตั้งแต่วันที่ปัจจุบัน (" + todayStr + ") เป็นต้นไป"
+      };
+    }
+
+    // ตรวจสอบเงื่อนไขข้อ 3.1 & 3.3: เกณฑ์การตรวจสอบเวลาปิดรับจองของรอบเวลานั้นๆ
+    // สมมติตัวอย่างรอบเวลา 12:00 น.:
+    // - ช่วงเวลา 10:00, 11:00 ที่น้อยกว่า 12:00 ปิดรับจอง
+    // - ตั้งแต่ 12:00 ถึง 12:19 น. เปิดให้จองได้
+    // - 12:20 น. เป็นต้นไป ปิดรับจอง ของรอบเวลา 12:00 น.
+    // (สูตร: nowTotalMinutes >= slotTotalMinutes + 20)
+    if (dateStr === todayStr) {
+      var currentHour = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "HH"), 10);
+      var currentMin = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "mm"), 10);
+      var nowTotalMinutes = currentHour * 60 + currentMin;
+
+      var slotParts = timeSlot.split(":");
+      var slotTotalMinutes = parseInt(slotParts[0], 10) * 60 + parseInt(slotParts[1], 10);
+
+      if (nowTotalMinutes >= slotTotalMinutes + 20) {
+        return {
+          success: false,
+          message: "รอบเวลา " + timeSlot + " น. ปิดรับจองแล้ว (ปิดรับจองเมื่อเวลาเริ่มรอบผ่านไปเกิน 20 นาที)"
+        };
+      }
+    }
+
+    // ตรวจสอบสิทธิ์การแก้ไขเดือน (ไม่เกินเดือนถัดไป 1 เดือน)
     var parts = dateStr.split("-");
     var year = parseInt(parts[0], 10);
     var month = parseInt(parts[1], 10);
@@ -910,7 +1008,7 @@ function addReservation(data) {
       for (var i = 1; i < allData.length; i++) {
         var rowDate = allData[i][2];
         var rDateStr = (rowDate instanceof Date) ? Utilities.formatDate(rowDate, "Asia/Bangkok", "yyyy-MM-dd") : String(rowDate).slice(0, 10);
-        var rTime = String(allData[i][3] || "").trim();
+        var rTime = formatTimeSlot(allData[i][3]);
         var rStatus = String(allData[i][4] || "").trim();
 
         if (rDateStr === dateStr && rTime === timeSlot && rStatus !== "ยกเลิก") {
@@ -922,7 +1020,7 @@ function addReservation(data) {
     if (currentCount >= 5) {
       return {
         success: false,
-        message: "ช่วงเวลา " + timeSlot + " เต็มแล้ว (โควต้าครบ 5/5 ท่านแล้ว)"
+        message: "ช่วงเวลา " + timeSlot + " น. เต็มแล้ว (โควต้าครบ 5/5 ท่านแล้ว)"
       };
     }
 
@@ -934,7 +1032,7 @@ function addReservation(data) {
     return {
       success: true,
       reservationId: reservationId,
-      message: "บันทึกการจองรหัส " + reservationId + " ช่วงเวลา " + timeSlot + " เรียบร้อยแล้ว (โควต้า: " + (currentCount + 1) + "/5)"
+      message: "บันทึกการจองรหัส " + reservationId + " ช่วงเวลา " + timeSlot + " น. เรียบร้อยแล้ว (โควต้า: " + (currentCount + 1) + "/5)"
     };
   } catch (err) {
     return { success: false, message: "เกิดข้อผิดพลาดในการบันทึกการจอง: " + err.message };
