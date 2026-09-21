@@ -11,6 +11,8 @@
 const GOOGLE_SHEET_ID = "1seXuWUYbsSL8VoyDlMj1V9vfuGPQtDoYGwjuGBzOlaU";
 const SHEET_NAME_ADMIN = "ข้อมูลผู้ดูแลระบบ";
 const SHEET_NAME_CUSTOMER = "ข้อมูลลูกค้า";
+const SHEET_NAME_RESERVATION = "ข้อมูลการจอง";
+const SHEET_NAME_SETTING_TIME = "ตั้งค่าตัวเลือกเวลาการจอง";
 
 /**
  * ให้บริการหน้าเว็บ Web Application (Entry point)
@@ -39,6 +41,8 @@ function getSystemSettings() {
     systemSubName: "ระบบบริหารจัดการข้อมูลร้านนวดแผนไทยเจเอ็ม",
     sheetNameAdmin: SHEET_NAME_ADMIN,
     sheetNameCustomer: SHEET_NAME_CUSTOMER,
+    sheetNameReservation: SHEET_NAME_RESERVATION,
+    sheetNameSettingTime: SHEET_NAME_SETTING_TIME,
     googleSheetId: GOOGLE_SHEET_ID
   };
 }
@@ -79,7 +83,31 @@ function getCustomerSheet() {
 }
 
 /**
- * เริ่มต้นโครงสร้างตารางและสร้างบัญชี Admin / ชีตลูกค้า เริ่มต้น (หากยังไม่มี)
+ * Helper: ดึงหรือสร้างชีต "ข้อมูลการจอง" (Sheet_Name_Reservation)
+ */
+function getReservationSheet() {
+  var ss = getSpreadsheet();
+  var sheet = ss.getSheetByName(SHEET_NAME_RESERVATION);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME_RESERVATION);
+  }
+  return sheet;
+}
+
+/**
+ * Helper: ดึงหรือสร้างชีต "ตั้งค่าตัวเลือกเวลาการจอง" (Sheet_Name_Setting_Selection_Reservation_Time)
+ */
+function getSettingTimeSheet() {
+  var ss = getSpreadsheet();
+  var sheet = ss.getSheetByName(SHEET_NAME_SETTING_TIME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME_SETTING_TIME);
+  }
+  return sheet;
+}
+
+/**
+ * เริ่มต้นโครงสร้างตารางและสร้างบัญชี Admin / ชีตลูกค้า / ชีตเวลา / ชีตการจอง เริ่มต้น (หากยังไม่มี)
  */
 function initSheetIfNeeded() {
   var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
@@ -168,6 +196,60 @@ function initSheetIfNeeded() {
         }
       }
       customerSheet.autoResizeColumn(1);
+    }
+  }
+
+  // 3. ตรวจสอบชีต "ตั้งค่าตัวเลือกเวลาการจอง" (Sheet_Name_Setting_Selection_Reservation_Time)
+  // ฟิลด์: 2.1.1.4.1 เวลาที่จอง, 2.1.1.4.2 วันที่สร้าง, 2.1.1.4.3 วันที่อัปเดต
+  var timeSheet = getSettingTimeSheet();
+  var timeLastRow = timeSheet.getLastRow();
+  var timeHeaders = ["เวลาที่จอง", "วันที่สร้าง", "วันที่อัปเดต"];
+
+  if (timeLastRow === 0) {
+    timeSheet.appendRow(timeHeaders);
+    var timeHeaderRange = timeSheet.getRange(1, 1, 1, timeHeaders.length);
+    timeHeaderRange.setBackground("#1B3B36");
+    timeHeaderRange.setFontColor("#FFFFFF");
+    timeHeaderRange.setFontWeight("bold");
+    timeHeaderRange.setHorizontalAlignment("center");
+    timeHeaderRange.setVerticalAlignment("middle");
+    timeSheet.setRowHeight(1, 40);
+    timeSheet.setFrozenRows(1);
+
+    // ตัวเลือกช่วงเวลาบริการมาตรฐานของร้านนวด
+    var defaultTimes = ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
+    for (var t = 0; t < defaultTimes.length; t++) {
+      timeSheet.appendRow([defaultTimes[t], nowStr, nowStr]);
+    }
+
+    for (var tc = 1; tc <= timeHeaders.length; tc++) {
+      timeSheet.autoResizeColumn(tc);
+    }
+  }
+
+  // 4. ตรวจสอบชีต "ข้อมูลการจอง" (Sheet_Name_Reservation)
+  // ฟิลด์: 2.1.1.1 รหัสการจอง, 2.1.1.2 รหัสลูกค้า, 2.1.1.3 วันที่ที่จอง, 2.1.1.4 เวลาที่จอง, 2.1.1.5 สถานะการจอง, 2.1.1.6 วันที่สร้าง, 2.1.1.7 อัปเดตล่าสุด
+  var resSheet = getReservationSheet();
+  var resLastRow = resSheet.getLastRow();
+  var resHeaders = ["รหัสการจอง", "รหัสลูกค้า", "วันที่ที่จอง", "เวลาที่จอง", "สถานะการจอง", "วันที่สร้าง", "อัปเดตล่าสุด"];
+
+  if (resLastRow === 0) {
+    resSheet.appendRow(resHeaders);
+    var resHeaderRange = resSheet.getRange(1, 1, 1, resHeaders.length);
+    resHeaderRange.setBackground("#1B3B36");
+    resHeaderRange.setFontColor("#FFFFFF");
+    resHeaderRange.setFontWeight("bold");
+    resHeaderRange.setHorizontalAlignment("center");
+    resHeaderRange.setVerticalAlignment("middle");
+    resSheet.setRowHeight(1, 40);
+    resSheet.setFrozenRows(1);
+
+    // ข้อมูลตัวอย่างการจองเพื่อแสดงผลทันที
+    var todayStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd");
+    resSheet.appendRow(["BK0001", "JM0001", todayStr, "17:30", "ยืนยันแล้ว", nowStr, nowStr]);
+
+    for (var rc = 1; rc <= resHeaders.length; rc++) {
+      resSheet.autoResizeColumn(rc);
     }
   }
 }
@@ -585,5 +667,304 @@ function formatDateDisplay(dateVal) {
     return Utilities.formatDate(d, "Asia/Bangkok", "dd/MM/yyyy HH:mm");
   } catch (e) {
     return String(dateVal);
+  }
+}
+
+// ==============================================================================
+// โมดูล 3: ข้อมูลการจอง และ ตารางนัดหมาย (Reservation & Calendar Module)
+// ==============================================================================
+
+/**
+ * ดึงรายการตัวเลือกเวลาการจองทั้งหมด
+ * @returns {Array<string>} รายการเวลา เช่น ["10:00", "11:30", ...]
+ */
+function getReservationTimeSlots() {
+  try {
+    initSheetIfNeeded();
+    var sheet = getSettingTimeSheet();
+    var data = sheet.getDataRange().getValues();
+    var slots = [];
+    if (data.length > 1) {
+      for (var i = 1; i < data.length; i++) {
+        var t = String(data[i][0] || "").trim();
+        if (t) slots.push(t);
+      }
+    }
+    slots.sort(function(a, b) {
+      return a.localeCompare(b);
+    });
+    return slots;
+  } catch (err) {
+    return ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
+  }
+}
+
+/**
+ * ตรวจสอบสิทธิ์การแก้ไขข้อมูลตามเงื่อนไขเดือน:
+ * - 2.1.2 แสดง active ตามเดือนและปีปัจจุบัน
+ * - 2.1.3 เดือนย้อนหลัง: ดูได้ แต่ห้ามแก้ไข (isPast: true, isEditable: false)
+ * - 2.1.4 เดือนปัจจุบันและถัดไปไม่เกิน 1 เดือน: แก้ไขได้ (isEditable: true)
+ * - เดือนล่วงหน้าเกิน 1 เดือน: ดูอย่างเดียว (isTooFar: true, isEditable: false)
+ */
+function checkMonthPermission(year, month) {
+  var now = new Date();
+  var currYear = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "yyyy"), 10);
+  var currMonth = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "M"), 10);
+
+  var diffMonths = (year - currYear) * 12 + (month - currMonth);
+
+  var isPast = diffMonths < 0;
+  var isEditable = (diffMonths === 0 || diffMonths === 1);
+  var isTooFar = diffMonths > 1;
+
+  var statusText = "";
+  if (isPast) {
+    statusText = "โหมดย้อนหลัง (ดูข้อมูลได้อย่างเดียว ห้ามแก้ไข)";
+  } else if (isEditable) {
+    statusText = diffMonths === 0 ? "เดือนปัจจุบัน (สามารถจัดการข้อมูลได้)" : "เดือนถัดไป (สามารถจัดการข้อมูลได้)";
+  } else {
+    statusText = "เดือนล่วงหน้าเกิน 1 เดือน (ดูข้อมูลได้อย่างเดียว)";
+  }
+
+  return {
+    isPast: isPast,
+    isEditable: isEditable,
+    isTooFar: isTooFar,
+    diffMonths: diffMonths,
+    statusText: statusText,
+    currentYear: currYear,
+    currentMonth: currMonth
+  };
+}
+
+/**
+ * ดึงข้อมูลตารางนัดหมายประจำเดือน (ปี ค.ศ., เดือน 1-12)
+ * พร้อมคำนวณโควต้าการจองในแต่ละช่วงเวลา (สูงสุด 5 คน ต่อช่วงเวลา)
+ */
+function getCalendarData(year, month) {
+  try {
+    initSheetIfNeeded();
+    year = parseInt(year, 10);
+    month = parseInt(month, 10);
+
+    var permission = checkMonthPermission(year, month);
+    var timeSlots = getReservationTimeSlots();
+
+    // ดึงข้อมูลลูกค้าเพื่อนำมา map ชื่อ
+    var custSheet = getCustomerSheet();
+    var custData = custSheet.getDataRange().getValues();
+    var customerMap = {};
+    if (custData.length > 1) {
+      for (var c = 1; c < custData.length; c++) {
+        var cid = String(custData[c][0] || "").trim();
+        if (cid) {
+          customerMap[cid] = {
+            nickname: String(custData[c][1] || "").trim(),
+            firstname: String(custData[c][2] || "").trim(),
+            lastname: String(custData[c][3] || "").trim(),
+            phone: String(custData[c][4] || "").trim()
+          };
+        }
+      }
+    }
+
+    // ดึงข้อมูลการจอง
+    var resSheet = getReservationSheet();
+    var resData = resSheet.getDataRange().getValues();
+
+    // เก็บรายการจองแยกตาม วันที่ และ เวลา
+    // โครงสร้าง: { "YYYY-MM-DD": { "17:30": [ bookingObj, ... ] } }
+    var reservationsByDate = {};
+    var targetMonthPrefix = year + "-" + (month < 10 ? "0" + month : month);
+
+    if (resData.length > 1) {
+      for (var r = 1; r < resData.length; r++) {
+        var resId = String(resData[r][0] || "").trim();
+        var custId = String(resData[r][1] || "").trim();
+        var dateRaw = resData[r][2];
+        var timeSlot = String(resData[r][3] || "").trim();
+        var status = String(resData[r][4] || "ยืนยันแล้ว").trim();
+        var createdAt = resData[r][5] ? formatDateDisplay(resData[r][5]) : "-";
+        var updatedAt = resData[r][6] ? formatDateDisplay(resData[r][6]) : "-";
+
+        if (!dateRaw) continue;
+
+        var dateStr = "";
+        if (dateRaw instanceof Date) {
+          dateStr = Utilities.formatDate(dateRaw, "Asia/Bangkok", "yyyy-MM-dd");
+        } else {
+          dateStr = String(dateRaw).trim().slice(0, 10);
+        }
+
+        // ตรวจสอบว่าอยู่ในเดือนและปีที่ระบุหรือไม่
+        if (dateStr.indexOf(targetMonthPrefix) === 0) {
+          if (!reservationsByDate[dateStr]) {
+            reservationsByDate[dateStr] = {};
+          }
+          if (!reservationsByDate[dateStr][timeSlot]) {
+            reservationsByDate[dateStr][timeSlot] = [];
+          }
+
+          var custInfo = customerMap[custId] || {
+            nickname: custId || "-",
+            firstname: "",
+            lastname: "",
+            phone: "-"
+          };
+
+          reservationsByDate[dateStr][timeSlot].push({
+            rowId: r + 1,
+            reservationId: resId,
+            customerId: custId,
+            customerNickname: custInfo.nickname,
+            customerFullName: (custInfo.firstname + " " + custInfo.lastname).trim(),
+            customerPhone: custInfo.phone,
+            timeSlot: timeSlot,
+            date: dateStr,
+            status: status,
+            createdAt: createdAt,
+            updatedAt: updatedAt
+          });
+        }
+      }
+    }
+
+    return {
+      success: true,
+      year: year,
+      month: month,
+      permission: permission,
+      timeSlots: timeSlots,
+      reservationsByDate: reservationsByDate
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "ไม่สามารถดึงข้อมูลตารางนัดหมายได้: " + err.message
+    };
+  }
+}
+
+/**
+ * สร้างรหัสการจองอัตโนมัติ (Pattern: BK ตามด้วยตัวเลข 4 หลัก เช่น BK0001)
+ */
+function generateNextReservationId() {
+  var sheet = getReservationSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    return "BK0001";
+  }
+
+  var idValues = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  var maxNum = 0;
+
+  for (var i = 0; i < idValues.length; i++) {
+    var val = String(idValues[i][0] || "").trim();
+    var match = val.match(/^BK(\d+)$/i);
+    if (match) {
+      var num = parseInt(match[1], 10);
+      if (num > maxNum) {
+        maxNum = num;
+      }
+    }
+  }
+
+  var nextNum = maxNum + 1;
+  return "BK" + ("0000" + nextNum).slice(-4);
+}
+
+/**
+ * เพิ่มข้อมูลการจองใหม่ (ตรวจสอบสิทธิ์ช่วงเดือน และโควต้าไม่เกิน 5 คน)
+ */
+function addReservation(data) {
+  try {
+    initSheetIfNeeded();
+
+    var dateStr = String(data.date || "").trim(); // YYYY-MM-DD
+    var timeSlot = String(data.timeSlot || "").trim();
+    var customerId = String(data.customerId || "").trim();
+    var status = String(data.status || "ยืนยันแล้ว").trim();
+
+    if (!dateStr) return { success: false, message: "กรุณาระบุวันที่ที่จอง" };
+    if (!timeSlot) return { success: false, message: "กรุณาระบุเวลาที่จอง" };
+    if (!customerId) return { success: false, message: "กรุณาเลือกลูกค้า" };
+
+    // ตรวจสอบสิทธิ์การแก้ไขเดือน
+    var parts = dateStr.split("-");
+    var year = parseInt(parts[0], 10);
+    var month = parseInt(parts[1], 10);
+    var perm = checkMonthPermission(year, month);
+    if (!perm.isEditable) {
+      return {
+        success: false,
+        message: "ไม่อนุญาตให้ทำการจองในเดือนนี้ (" + perm.statusText + ")"
+      };
+    }
+
+    var sheet = getReservationSheet();
+    var allData = sheet.getDataRange().getValues();
+
+    // ตรวจสอบโควต้าสูงสุด 5 คน ต่อช่วงเวลา
+    var currentCount = 0;
+    if (allData.length > 1) {
+      for (var i = 1; i < allData.length; i++) {
+        var rowDate = allData[i][2];
+        var rDateStr = (rowDate instanceof Date) ? Utilities.formatDate(rowDate, "Asia/Bangkok", "yyyy-MM-dd") : String(rowDate).slice(0, 10);
+        var rTime = String(allData[i][3] || "").trim();
+        var rStatus = String(allData[i][4] || "").trim();
+
+        if (rDateStr === dateStr && rTime === timeSlot && rStatus !== "ยกเลิก") {
+          currentCount++;
+        }
+      }
+    }
+
+    if (currentCount >= 5) {
+      return {
+        success: false,
+        message: "ช่วงเวลา " + timeSlot + " เต็มแล้ว (โควต้าครบ 5/5 ท่านแล้ว)"
+      };
+    }
+
+    var reservationId = generateNextReservationId();
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    sheet.appendRow([reservationId, customerId, dateStr, timeSlot, status, nowStr, nowStr]);
+
+    return {
+      success: true,
+      reservationId: reservationId,
+      message: "บันทึกการจองรหัส " + reservationId + " ช่วงเวลา " + timeSlot + " เรียบร้อยแล้ว (โควต้า: " + (currentCount + 1) + "/5)"
+    };
+  } catch (err) {
+    return { success: false, message: "เกิดข้อผิดพลาดในการบันทึกการจอง: " + err.message };
+  }
+}
+
+/**
+ * ลบข้อมูลการจอง
+ */
+function deleteReservation(reservationId) {
+  try {
+    var sheet = getReservationSheet();
+    var cleanId = String(reservationId || "").trim();
+    var data = sheet.getDataRange().getValues();
+    var targetRow = -1;
+
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === cleanId) {
+        targetRow = i + 1;
+        break;
+      }
+    }
+
+    if (targetRow === -1) {
+      return { success: false, message: "ไม่พบข้อมูลการจองรหัส " + cleanId };
+    }
+
+    sheet.deleteRow(targetRow);
+    return { success: true, message: "ลบข้อมูลการจองรหัส " + cleanId + " เรียบร้อยแล้ว" };
+  } catch (err) {
+    return { success: false, message: "เกิดข้อผิดพลาดในการลบการจอง: " + err.message };
   }
 }

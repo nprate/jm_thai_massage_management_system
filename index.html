@@ -535,6 +535,11 @@
       max-width: 480px !important;
     }
 
+    .swal2-popup.swal-wide-calendar {
+      max-width: 720px !important;
+      width: 95% !important;
+    }
+
     .swal2-title {
       font-size: 1.3rem !important;
       color: var(--spa-primary) !important;
@@ -633,6 +638,276 @@
       to {
         opacity: 1;
         transform: translateY(0);
+      }
+    }
+
+    /* -------------------------------------------------------------
+       4.1 CALENDAR STYLES (ตารางนัดหมาย สไตล์ Google Calendar ภาษาไทย)
+       ------------------------------------------------------------- */
+    .calendar-container {
+      background: #FFFFFF;
+      border-radius: 16px;
+      border: 1px solid var(--spa-border);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+      overflow: hidden;
+    }
+
+    .calendar-header-nav {
+      padding: 16px 20px;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--spa-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .calendar-legend-bar {
+      padding: 8px 20px;
+      background-color: #FAF9F6;
+      border-bottom: 1px solid var(--spa-border);
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .calendar-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background-color: #F8F9FA;
+      border-bottom: 1px solid var(--spa-border);
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.86rem;
+      color: var(--spa-primary);
+    }
+
+    .calendar-weekday {
+      padding: 10px 4px;
+    }
+
+    .calendar-weekday.sun {
+      color: #DC2626;
+    }
+
+    .calendar-weekday.sat {
+      color: #2563EB;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background-color: var(--spa-border);
+      gap: 1px;
+    }
+
+    .calendar-day-cell {
+      min-height: 125px;
+      background: #FFFFFF;
+      padding: 8px 6px;
+      position: relative;
+      transition: background-color 0.15s ease, box-shadow 0.15s ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .calendar-day-cell:hover {
+      background-color: #F8FAF9;
+      box-shadow: inset 0 0 0 2px var(--spa-accent);
+      z-index: 2;
+    }
+
+    .calendar-day-cell.other-month {
+      background-color: #FCFCFC;
+      color: #A0AEC0;
+      cursor: not-allowed;
+      opacity: 0.65;
+    }
+
+    .calendar-day-cell.other-month:hover {
+      background-color: #FCFCFC;
+      box-shadow: none;
+    }
+
+    .calendar-day-cell.today {
+      background-color: #FEFDF9;
+      border: 1px solid rgba(197, 160, 89, 0.4);
+    }
+
+    .day-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .day-number {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #2D3748;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .calendar-day-cell.today .day-number {
+      background: var(--spa-primary);
+      color: var(--spa-accent-light);
+      box-shadow: 0 2px 6px rgba(27, 59, 54, 0.3);
+    }
+
+    .calendar-day-cell.sun .day-number {
+      color: #DC2626;
+    }
+
+    .calendar-day-cell.sat .day-number {
+      color: #2563EB;
+    }
+
+    .calendar-day-cell.today.sun .day-number,
+    .calendar-day-cell.today.sat .day-number {
+      color: #FFFFFF;
+    }
+
+    .day-badges-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      overflow-y: auto;
+      max-height: 100px;
+    }
+
+    .slot-badge-item {
+      font-size: 0.74rem;
+      padding: 3px 5px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      line-height: 1.2;
+    }
+
+    .slot-badge-item.empty {
+      background-color: #F8F9FA;
+      color: #718096;
+      border-color: #E2E8F0;
+    }
+
+    .slot-badge-item.booked {
+      background-color: #ECFDF5;
+      color: #065F46;
+      border-color: #A7F3D0;
+      font-weight: 500;
+    }
+
+    .slot-badge-item.full {
+      background-color: #FEF2F2;
+      color: #991B1B;
+      border-color: #FECACA;
+      font-weight: 600;
+    }
+
+    .slot-quota-badge {
+      font-size: 0.7rem;
+      font-family: monospace;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+
+    .slot-quota-badge.q-empty {
+      background: #E2E8F0;
+      color: #4A5568;
+    }
+
+    .slot-quota-badge.q-booked {
+      background: #059669;
+      color: #FFFFFF;
+    }
+
+    .slot-quota-badge.q-full {
+      background: #DC2626;
+      color: #FFFFFF;
+    }
+
+    .calendar-month-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .calendar-month-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--spa-primary);
+      min-width: 170px;
+      text-align: center;
+    }
+
+    .calendar-permission-badge {
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .calendar-permission-badge.editable {
+      background-color: #ECFDF5;
+      color: #065F46;
+      border: 1px solid #A7F3D0;
+    }
+
+    .calendar-permission-badge.readonly {
+      background-color: #F1F5F9;
+      color: #475569;
+      border: 1px solid #CBD5E1;
+    }
+
+    .calendar-permission-badge.toofar {
+      background-color: #FFFBEB;
+      color: #92400E;
+      border: 1px solid #FDE68A;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #4A5568;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    @media (max-width: 768px) {
+      .calendar-day-cell {
+        min-height: 85px;
+        padding: 4px 2px;
+      }
+      .slot-badge-item {
+        font-size: 0.65rem;
+        padding: 2px 3px;
+      }
+      .calendar-month-title {
+        font-size: 1.05rem;
+        min-width: 140px;
       }
     }
 
@@ -859,6 +1134,14 @@
               <span id="sidebar-menu-customer-text">ข้อมูลลูกค้า</span>
             </a>
           </li>
+
+          <!-- เมนู 3: ตามตัวแปร Sheet_Name_Reservation (ข้อมูลการจอง) [ใหม่] -->
+          <li class="sidebar-menu-item">
+            <a href="javascript:void(0)" class="sidebar-link" id="menu-reservation" onclick="switchSection('reservation')">
+              <i class="fa-solid fa-calendar-days"></i>
+              <span id="sidebar-menu-reservation-text">ข้อมูลการจอง</span>
+            </a>
+          </li>
         </ul>
       </nav>
 
@@ -946,6 +1229,86 @@
           </div>
         </section>
 
+        <!-- SECTION 3: จัดการข้อมูลการจอง (Reservation Calendar) [ใหม่] -->
+        <section id="section-reservation" class="content-section">
+          <div class="page-title-box">
+            <div class="page-title">
+              <h3 id="reservation-page-title"><i class="fa-solid fa-calendar-days me-2 text-warning"></i>ตารางนัดหมายข้อมูลการจอง</h3>
+              <p>แสดงปฏิทินการนัดหมาย จองคิวนวดแผนไทย และโควตาในแต่ละรอบเวลา (สูงสุด 5 คนต่อช่วงเวลา)</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+              <button class="btn btn-outline-secondary" onclick="loadCalendarData(currentCalendarYear, currentCalendarMonth)" title="รีเฟรชข้อมูลปฏิทิน">
+                <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
+              </button>
+              <button class="btn btn-primary" style="background-color: var(--spa-primary); border-color: var(--spa-primary);" onclick="goToCurrentMonth()">
+                <i class="fa-solid fa-calendar-day me-1"></i> เดือนปัจจุบัน
+              </button>
+            </div>
+          </div>
+
+          <!-- Calendar Container Card -->
+          <div class="calendar-container">
+            <!-- Calendar Navigation Header -->
+            <div class="calendar-header-nav">
+              <div class="calendar-month-selector">
+                <button class="btn btn-sm btn-outline-secondary" onclick="changeMonth(-1)" title="เดือนก่อนหน้า">
+                  <i class="fa-solid fa-chevron-left me-1"></i> ก่อนหน้า
+                </button>
+                <div class="calendar-month-title" id="calendar-month-title">
+                  -
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" onclick="changeMonth(1)" title="เดือนถัดไป">
+                  ถัดไป <i class="fa-solid fa-chevron-right ms-1"></i>
+                </button>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+                <span id="calendar-permission-badge" class="calendar-permission-badge editable">
+                  <i class="fa-solid fa-circle-notch fa-spin"></i> กำลังตรวจสอบสิทธิ์...
+                </span>
+              </div>
+            </div>
+
+            <!-- Calendar Legend / Quota Guide -->
+            <div class="calendar-legend-bar">
+              <div class="d-flex align-items-center gap-3 flex-wrap">
+                <span class="legend-item">
+                  <span class="legend-dot" style="background: #e2e8f0; border: 1px solid #cbd5e1;"></span> ว่าง (0/5)
+                </span>
+                <span class="legend-item">
+                  <span class="legend-dot" style="background: #059669;"></span> มีผู้จอง (1-4/5)
+                </span>
+                <span class="legend-item">
+                  <span class="legend-dot" style="background: #dc2626;"></span> เต็มแล้ว (5/5)
+                </span>
+              </div>
+              <div class="text-muted" style="font-size: 0.78rem;">
+                <i class="fa-solid fa-hand-pointer me-1 text-warning"></i> คลิกที่ช่องวันที่เพื่อดูรายละเอียดและจัดการการจอง
+              </div>
+            </div>
+
+            <!-- Calendar Weekday Header -->
+            <div class="calendar-weekdays">
+              <div class="calendar-weekday sun">อาทิตย์</div>
+              <div class="calendar-weekday">จันทร์</div>
+              <div class="calendar-weekday">อังคาร</div>
+              <div class="calendar-weekday">พุธ</div>
+              <div class="calendar-weekday">พฤหัสบดี</div>
+              <div class="calendar-weekday">ศุกร์</div>
+              <div class="calendar-weekday sat">เสาร์</div>
+            </div>
+
+            <!-- Calendar Days Grid -->
+            <div class="calendar-grid" id="calendar-grid">
+              <!-- Rendered dynamically by JavaScript -->
+              <div class="p-5 text-center text-muted w-100" style="grid-column: 1 / -1;">
+                <i class="fa-solid fa-spinner fa-spin fa-2x mb-2 text-warning"></i>
+                <div>กำลังโหลดข้อมูลปฏิทิน...</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </main>
 
     </div>
@@ -987,7 +1350,16 @@
     let currentUser = null;
     let sheetNameAdmin = "ข้อมูลผู้ดูแลระบบ";
     let sheetNameCustomer = "ข้อมูลลูกค้า";
+    let sheetNameReservation = "ข้อมูลการจอง";
+    let sheetNameSettingTime = "ตั้งค่าตัวเลือกเวลาการจอง";
     let activeSection = "admin";
+
+    // สถานะตารางนัดหมาย (Calendar State)
+    const initialDate = new Date();
+    let currentCalendarYear = initialDate.getFullYear();
+    let currentCalendarMonth = initialDate.getMonth() + 1; // 1-12
+    let calendarDataCache = null;
+    let defaultTimeSlots = ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
 
     // -------------------------------------------------------------
     // เริ่มต้นทำงานเมื่อเอกสารพร้อมใช้งาน
@@ -1029,6 +1401,14 @@
                 $('#sidebar-menu-customer-text').text(sheetNameCustomer);
                 $('#customer-page-title').html('<i class="fa-solid fa-address-book me-2 text-warning"></i>' + sheetNameCustomer);
               }
+              if (config.sheetNameReservation) {
+                sheetNameReservation = config.sheetNameReservation;
+                $('#sidebar-menu-reservation-text').text(sheetNameReservation);
+                $('#reservation-page-title').html('<i class="fa-solid fa-calendar-days me-2 text-warning"></i>ตารางนัดหมาย' + sheetNameReservation);
+              }
+              if (config.sheetNameSettingTime) {
+                sheetNameSettingTime = config.sheetNameSettingTime;
+              }
             }
           })
           .getSystemSettings();
@@ -1056,8 +1436,10 @@
       // โหลดข้อมูลตามเซกชันเริ่มต้น
       if (activeSection === 'admin') {
         loadAdminTableData();
-      } else {
+      } else if (activeSection === 'customer') {
         loadCustomerTableData();
+      } else if (activeSection === 'reservation') {
+        loadCalendarData(currentCalendarYear, currentCalendarMonth);
       }
     }
 
@@ -1067,7 +1449,7 @@
     }
 
     /**
-     * สลับระหว่างเมนูผู้ดูแลระบบ และ เมนูข้อมูลลูกค้า
+     * สลับระหว่างเมนูผู้ดูแลระบบ, เมนูข้อมูลลูกค้า, และ เมนูข้อมูลการจอง
      */
     function switchSection(section) {
       activeSection = section;
@@ -1084,6 +1466,10 @@
         $('#menu-customer').addClass('active');
         $('#section-customer').addClass('active');
         loadCustomerTableData();
+      } else if (section === 'reservation') {
+        $('#menu-reservation').addClass('active');
+        $('#section-reservation').addClass('active');
+        loadCalendarData(currentCalendarYear, currentCalendarMonth);
       }
 
       // ปิด sidebar อัตโนมัติบนมือถือเมื่อคลิกเลือกเมนู
@@ -1874,6 +2260,418 @@
           Swal.fire({ icon: 'success', title: 'สำเร็จ (จำลอง)', timer: 1500, showConfirmButton: false });
         }, 500);
       }
+    }
+
+    // =============================================================
+    // โมดูล 3: ข้อมูลการจอง และ ตารางนัดหมาย (Reservation & Calendar Module)
+    // =============================================================
+    const THAI_MONTH_NAMES = [
+      "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+      "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    ];
+    const THAI_DAY_NAMES = ["วันอาทิตย์", "วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัสบดี", "วันศุกร์", "วันเสาร์"];
+
+    /**
+     * เปลี่ยนเดือนในปฏิทิน (+1 ถัดไป, -1 ก่อนหน้า)
+     */
+    function changeMonth(offset) {
+      currentCalendarMonth += offset;
+      if (currentCalendarMonth > 12) {
+        currentCalendarMonth = 1;
+        currentCalendarYear++;
+      } else if (currentCalendarMonth < 1) {
+        currentCalendarMonth = 12;
+        currentCalendarYear--;
+      }
+      loadCalendarData(currentCalendarYear, currentCalendarMonth);
+    }
+
+    /**
+     * ย้อนกลับมายังเดือนปัจจุบัน
+     */
+    function goToCurrentMonth() {
+      const now = new Date();
+      currentCalendarYear = now.getFullYear();
+      currentCalendarMonth = now.getMonth() + 1;
+      loadCalendarData(currentCalendarYear, currentCalendarMonth);
+    }
+
+    /**
+     * โหลดข้อมูลตารางนัดหมายจาก Google Apps Script
+     */
+    function loadCalendarData(year, month) {
+      const thaiYear = year + 543;
+      const monthTitle = `${THAI_MONTH_NAMES[month - 1]} ${thaiYear} (${year})`;
+      $('#calendar-month-title').text(monthTitle);
+
+      $('#calendar-grid').html(`
+        <div class="p-5 text-center text-muted w-100" style="grid-column: 1 / -1;">
+          <i class="fa-solid fa-circle-notch fa-spin fa-2x mb-2 text-warning"></i>
+          <div>กำลังโหลดข้อมูลตารางนัดหมาย...</div>
+        </div>
+      `);
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            if (response && response.success) {
+              calendarDataCache = response;
+              renderCalendar(response);
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: response ? response.message : 'ไม่สามารถโหลดข้อมูลการจองได้',
+                confirmButtonColor: '#1B3B36'
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาดในการโหลดปฏิทิน',
+              text: err.message || err,
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .getCalendarData(year, month);
+      } else {
+        // Mock fallback สำหรับทดสอบในเบราว์เซอร์
+        setTimeout(() => {
+          const now = new Date();
+          const currY = now.getFullYear();
+          const currM = now.getMonth() + 1;
+          const diffMonths = (year - currY) * 12 + (month - currM);
+          const isPast = diffMonths < 0;
+          const isEditable = (diffMonths === 0 || diffMonths === 1);
+          const isTooFar = diffMonths > 1;
+          let statusText = "";
+          if (isPast) {
+            statusText = "โหมดย้อนหลัง (ดูข้อมูลได้อย่างเดียว ห้ามแก้ไข)";
+          } else if (isEditable) {
+            statusText = diffMonths === 0 ? "เดือนปัจจุบัน (สามารถจัดการข้อมูลได้)" : "เดือนถัดไป (สามารถจัดการข้อมูลได้)";
+          } else {
+            statusText = "เดือนล่วงหน้าเกิน 1 เดือน (ดูข้อมูลได้อย่างเดียว)";
+          }
+
+          const mockReservations = {};
+          // จำลองการจองในวันที่ 18 และ 25
+          const mStr = month < 10 ? "0" + month : month;
+          const sampleDate1 = `${year}-${mStr}-18`;
+
+          mockReservations[sampleDate1] = {
+            "17:30": [
+              {
+                rowId: 2,
+                reservationId: "BK0001",
+                customerId: "JM0001",
+                customerNickname: "สมชาย",
+                customerFullName: "สมชาย ใจดี",
+                customerPhone: "081-234-5678",
+                timeSlot: "17:30",
+                date: sampleDate1,
+                status: "ยืนยันแล้ว",
+                createdAt: "18/09/2026 10:00",
+                updatedAt: "18/09/2026 10:00"
+              }
+            ]
+          };
+
+          const mockData = {
+            success: true,
+            year: year,
+            month: month,
+            permission: {
+              isPast: isPast,
+              isEditable: isEditable,
+              isTooFar: isTooFar,
+              diffMonths: diffMonths,
+              statusText: statusText,
+              currentYear: currY,
+              currentMonth: currM
+            },
+            timeSlots: defaultTimeSlots,
+            reservationsByDate: mockReservations
+          };
+          calendarDataCache = mockData;
+          renderCalendar(mockData);
+        }, 300);
+      }
+    }
+
+    /**
+     * เรนเดอร์ตารางปฏิทินแบบ Google Calendar ภาษาไทย
+     */
+    function renderCalendar(data) {
+      // 1. จัดการ Badge แสดงสิทธิ์เดือน
+      const perm = data.permission || {};
+      const $badge = $('#calendar-permission-badge');
+      $badge.removeClass('editable readonly toofar');
+
+      if (perm.isPast) {
+        $badge.addClass('readonly').html(`<i class="fa-solid fa-lock me-1"></i> ${escapeHtml(perm.statusText)}`);
+      } else if (perm.isEditable) {
+        $badge.addClass('editable').html(`<i class="fa-solid fa-pen-to-square me-1"></i> ${escapeHtml(perm.statusText)}`);
+      } else {
+        $badge.addClass('toofar').html(`<i class="fa-solid fa-calendar-xmark me-1"></i> ${escapeHtml(perm.statusText)}`);
+      }
+
+      // 2. คำนวณวันในเดือน
+      const year = data.year;
+      const month = data.month;
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const firstDayOfWeek = new Date(year, month - 1, 1).getDay(); // 0 = อาทิตย์ ... 6 = เสาร์
+      const prevMonthDays = new Date(year, month - 1, 0).getDate();
+
+      const today = new Date();
+      const todayY = today.getFullYear();
+      const todayM = today.getMonth() + 1;
+      const todayD = today.getDate();
+
+      let gridHtml = '';
+
+      // 2.1 วันย้อนหลังจากเดือนก่อนหน้า
+      for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+        const dayNum = prevMonthDays - i;
+        gridHtml += `
+          <div class="calendar-day-cell other-month">
+            <div class="day-header">
+              <span class="day-number">${dayNum}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      // 2.2 วันในเดือนปัจจุบัน
+      const slots = data.timeSlots || defaultTimeSlots;
+      for (let d = 1; d <= daysInMonth; d++) {
+        const isToday = (year === todayY && month === todayM && d === todayD);
+        const dayOfWeek = (firstDayOfWeek + d - 1) % 7;
+        let dayClass = 'calendar-day-cell';
+        if (isToday) dayClass += ' today';
+        if (dayOfWeek === 0) dayClass += ' sun';
+        if (dayOfWeek === 6) dayClass += ' sat';
+
+        const mStr = month < 10 ? '0' + month : month;
+        const dStr = d < 10 ? '0' + d : d;
+        const dateStr = `${year}-${mStr}-${dStr}`;
+
+        const dateReservations = (data.reservationsByDate && data.reservationsByDate[dateStr]) ? data.reservationsByDate[dateStr] : {};
+
+        let badgesHtml = '';
+        let totalDayBooked = 0;
+
+        slots.forEach(slot => {
+          const bookedList = dateReservations[slot] || [];
+          const count = bookedList.length;
+          totalDayBooked += count;
+
+          let itemClass = 'slot-badge-item empty';
+          let quotaClass = 'slot-quota-badge q-empty';
+
+          if (count >= 5) {
+            itemClass = 'slot-badge-item full';
+            quotaClass = 'slot-quota-badge q-full';
+          } else if (count > 0) {
+            itemClass = 'slot-badge-item booked';
+            quotaClass = 'slot-quota-badge q-booked';
+          }
+
+          badgesHtml += `
+            <div class="${itemClass}" title="รอบ ${escapeHtml(slot)} น. (จองแล้ว ${count}/5 คน)">
+              <span class="slot-time"><i class="fa-regular fa-clock" style="font-size:0.62rem;"></i> ${escapeHtml(slot)}</span>
+              <span class="${quotaClass}">${count}/5</span>
+            </div>
+          `;
+        });
+
+        gridHtml += `
+          <div class="${dayClass}" onclick="openDateDetailModal('${dateStr}')" title="คลิกเพื่อดูรายละเอียดและรายการจองวันที่ ${d}">
+            <div class="day-header">
+              <span class="day-number">${d}</span>
+              ${isToday ? '<span class="badge bg-warning text-dark" style="font-size:0.65rem; font-weight: 600;">วันนี้</span>' : ''}
+            </div>
+            <div class="day-badges-list">
+              ${badgesHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      // 2.3 วันของเดือนถัดไป เพื่อให้ครบตาราง
+      const totalCells = firstDayOfWeek + daysInMonth;
+      const remainingCells = (7 - (totalCells % 7)) % 7;
+      for (let nextD = 1; nextD <= remainingCells; nextD++) {
+        gridHtml += `
+          <div class="calendar-day-cell other-month">
+            <div class="day-header">
+              <span class="day-number">${nextD}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      $('#calendar-grid').html(gridHtml);
+    }
+
+    /**
+     * เปิด Modal แสดงรายละเอียดคิวการจองของวันที่เลือก (SweetAlert2)
+     */
+    function openDateDetailModal(dateStr) {
+      if (!calendarDataCache) return;
+
+      const parts = dateStr.split('-');
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+      const dateObj = new Date(y, m - 1, d);
+      const dayName = THAI_DAY_NAMES[dateObj.getDay()];
+      const thaiFormattedDate = `${dayName}ที่ ${d} ${THAI_MONTH_NAMES[m - 1]} พ.ศ. ${y + 543} (${dateStr})`;
+
+      const perm = calendarDataCache.permission || {};
+      const slots = calendarDataCache.timeSlots || defaultTimeSlots;
+      const dateReservations = (calendarDataCache.reservationsByDate && calendarDataCache.reservationsByDate[dateStr]) 
+        ? calendarDataCache.reservationsByDate[dateStr] 
+        : {};
+
+      // แบนเนอร์สถานะสิทธิ์
+      let bannerHtml = '';
+      if (perm.isPast) {
+        bannerHtml = `
+          <div class="alert alert-secondary py-2 px-3 mb-3 d-flex align-items-center gap-2 text-start" style="font-size:0.85rem; border-radius:10px;">
+            <i class="fa-solid fa-lock text-secondary fa-lg"></i>
+            <div>
+              <strong>โหมดย้อนหลัง (Read-Only):</strong> สามารถดูข้อมูลการจองย้อนหลังได้อย่างเดียว <u>ห้ามแก้ไขหรือเพิ่มข้อมูล</u>
+            </div>
+          </div>
+        `;
+      } else if (perm.isTooFar) {
+        bannerHtml = `
+          <div class="alert alert-warning py-2 px-3 mb-3 d-flex align-items-center gap-2 text-start" style="font-size:0.85rem; border-radius:10px;">
+            <i class="fa-solid fa-calendar-xmark text-warning fa-lg"></i>
+            <div>
+              <strong>เดือนล่วงหน้าเกิน 1 เดือน:</strong> ยังไม่เปิดให้จองล่วงหน้าเกิน 1 เดือน (ดูข้อมูลได้อย่างเดียว)
+            </div>
+          </div>
+        `;
+      } else {
+        bannerHtml = `
+          <div class="alert alert-success py-2 px-3 mb-3 d-flex align-items-center gap-2 text-start" style="font-size:0.85rem; border-radius:10px;">
+            <i class="fa-solid fa-circle-check text-success fa-lg"></i>
+            <div>
+              <strong>สามารถจัดการการจองได้:</strong> เดือนปัจจุบันและถัดไป 1 เดือน เปิดให้เพิ่ม/แก้ไข/ยกเลิกการจองได้ตามโควตา
+            </div>
+          </div>
+        `;
+      }
+
+      // รายละเอียดแต่ละช่วงเวลา
+      let slotsDetailHtml = '';
+      let totalBookedInDay = 0;
+
+      slots.forEach(slot => {
+        const bookedList = dateReservations[slot] || [];
+        const count = bookedList.length;
+        const available = 5 - count;
+        totalBookedInDay += count;
+
+        let quotaBadge = '';
+        if (count >= 5) {
+          quotaBadge = '<span class="badge bg-danger text-white px-2 py-1">เต็มแล้ว (5/5)</span>';
+        } else if (count > 0) {
+          quotaBadge = `<span class="badge bg-success text-white px-2 py-1">จองแล้ว ${count}/5 (ว่าง ${available})</span>`;
+        } else {
+          quotaBadge = '<span class="badge bg-secondary text-white px-2 py-1">ว่าง 5/5</span>';
+        }
+
+        // รายการลูกค้าที่จองในรอบนี้
+        let bookingsListHtml = '';
+        if (bookedList.length > 0) {
+          bookingsListHtml = `
+            <div class="table-responsive mt-2">
+              <table class="table table-sm table-bordered align-middle mb-0 text-start" style="font-size:0.82rem;">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 100px;">รหัสการจอง</th>
+                    <th>ลูกค้า</th>
+                    <th>เบอร์โทร</th>
+                    <th style="width: 90px;" class="text-center">สถานะ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${bookedList.map(b => `
+                    <tr>
+                      <td class="font-monospace fw-bold text-primary">${escapeHtml(b.reservationId)}</td>
+                      <td>
+                        <strong>${escapeHtml(b.customerNickname)}</strong>
+                        ${b.customerFullName ? `<small class="text-muted d-block">${escapeHtml(b.customerFullName)}</small>` : ''}
+                      </td>
+                      <td>${escapeHtml(b.customerPhone || '-')}</td>
+                      <td class="text-center"><span class="badge bg-success-subtle text-success border border-success-subtle">${escapeHtml(b.status || 'ยืนยัน')}</span></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        } else {
+          bookingsListHtml = `
+            <div class="text-muted text-start mt-1 ps-1" style="font-size: 0.8rem;">
+              <i class="fa-regular fa-circle me-1"></i> ยังไม่มีรายการจองในรอบเวลานี้ (สามารถรับลูกค้าได้สูงสุด 5 คน)
+            </div>
+          `;
+        }
+
+        slotsDetailHtml += `
+          <div class="card mb-2 border" style="border-radius: 10px; overflow: hidden;">
+            <div class="card-header py-2 px-3 d-flex align-items-center justify-content-between" style="background-color: #F8F9FA;">
+              <div class="d-flex align-items-center gap-2">
+                <i class="fa-solid fa-clock text-warning"></i>
+                <strong style="font-size: 0.95rem; color: var(--spa-primary);">รอบเวลา ${escapeHtml(slot)} น.</strong>
+              </div>
+              <div>${quotaBadge}</div>
+            </div>
+            <div class="card-body p-2">
+              ${bookingsListHtml}
+            </div>
+          </div>
+        `;
+      });
+
+      const modalHtml = `
+        <div class="text-start">
+          ${bannerHtml}
+          <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+            <span class="text-muted" style="font-size: 0.85rem;">
+              <i class="fa-solid fa-list-check me-1 text-warning"></i> สรุปการจองทั้งหมดวันนี้: <strong>${totalBookedInDay} คน</strong>
+            </span>
+            <span class="text-muted" style="font-size: 0.8rem;">
+              (จำกัดสูงสุดรอบละ 5 คน)
+            </span>
+          </div>
+          <div style="max-height: 55vh; overflow-y: auto; padding-right: 4px;">
+            ${slotsDetailHtml}
+          </div>
+          ${perm.isEditable ? `
+            <div class="mt-3 p-2 bg-light rounded text-center text-muted border" style="font-size: 0.8rem;">
+              <i class="fa-solid fa-circle-info text-primary me-1"></i>
+              ระบบจัดเตรียมโควตาและปฏิทินเรียบร้อยแล้ว พร้อมเชื่อมต่อแบบฟอร์มการจองแบบละเอียดตามข้อมูลที่จะระบุเพิ่มเติม
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      Swal.fire({
+        title: `<i class="fa-solid fa-calendar-day text-warning me-2"></i>${thaiFormattedDate}`,
+        html: modalHtml,
+        width: '720px',
+        customClass: {
+          popup: 'swal-wide-calendar'
+        },
+        confirmButtonText: '<i class="fa-solid fa-check me-1"></i> ปิดหน้าต่าง',
+        confirmButtonColor: '#1B3B36',
+        reverseButtons: true
+      });
     }
 
     // Helper: การตั้งค่าภาษาไทยสำหรับ DataTables
