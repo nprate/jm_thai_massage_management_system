@@ -1258,13 +1258,14 @@
               <table id="adminDataTable" class="table table-hover align-middle w-100">
                 <thead>
                   <tr>
-                    <th style="width: 60px;" class="text-center">ลำดับ</th>
+                    <th style="width: 50px;" class="text-center">ลำดับ</th>
                     <th>ชื่อผู้ใช้ (Username)</th>
                     <th>ชื่อเล่น (Nickname)</th>
-                    <th>ชื่อจริง (Firstname)</th>
-                    <th>นามสกุล (Lastname)</th>
-                    <th>วันที่สร้าง</th>
-                    <th style="width: 110px;" class="text-center">จัดการ</th>
+                    <th>ชื่อจริง - นามสกุล</th>
+                    <th style="width: 140px;" class="text-center">ประเภทผู้ใช้งาน</th>
+                    <th style="width: 110px;" class="text-center">สถานะ</th>
+                    <th style="width: 130px;">วันที่สร้าง</th>
+                    <th style="width: 100px;" class="text-center">จัดการ</th>
                   </tr>
                 </thead>
                 <tbody id="adminTableBody">
@@ -1716,7 +1717,7 @@
       $tbody.empty();
 
       if (!dataList || dataList.length === 0) {
-        $tbody.append('<tr><td colspan="7" class="text-center py-4 text-muted">ไม่พบข้อมูลผู้ดูแลระบบ</td></tr>');
+        $tbody.append('<tr><td colspan="8" class="text-center py-4 text-muted">ไม่พบข้อมูลผู้ดูแลระบบ</td></tr>');
       } else {
         dataList.forEach((item, index) => {
           const isSystemAdmin = (item.username.toLowerCase() === 'admin');
@@ -1736,7 +1737,7 @@
             `;
           } else {
             actionButtons += `
-              <button class="btn btn-table-action btn-table-delete" title="ลบข้อมูล" onclick="confirmDeleteAdmin('${escapeHtml(item.username)}')">
+              <button class="btn btn-table-action btn-table-delete" title="ลบข้อมูล (Soft Delete)" onclick="confirmDeleteAdmin('${escapeHtml(item.username)}')">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
             `;
@@ -1747,13 +1748,22 @@
             ? `<span class="fw-semibold text-primary">${escapeHtml(item.username)}</span> <span class="badge badge-protected ms-1"><i class="fa-solid fa-shield-halved text-warning me-1"></i>หลัก</span>` 
             : `<span class="fw-semibold">${escapeHtml(item.username)}</span>`;
 
+          const roleBadge = `<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><i class="fa-solid fa-user-shield me-1"></i>ผู้ดูแลระบบ (9)</span>`;
+
+          const statusBadge = item.isActive 
+            ? `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="fa-solid fa-circle-check me-1"></i>เปิดใช้งาน</span>`
+            : `<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i class="fa-solid fa-circle-xmark me-1"></i>ปิดการใช้งาน</span>`;
+
+          const fullName = (item.firstname || item.lastname) ? `${item.firstname || ''} ${item.lastname || ''}`.trim() : '-';
+
           const rowHtml = `
             <tr>
               <td class="text-center fw-medium">${index + 1}</td>
               <td>${usernameBadge}</td>
               <td><span class="badge bg-light text-dark border px-2 py-1">${escapeHtml(item.nickname || '-')}</span></td>
-              <td>${escapeHtml(item.firstname || '-')}</td>
-              <td>${escapeHtml(item.lastname || '-')}</td>
+              <td>${escapeHtml(fullName)}</td>
+              <td class="text-center">${roleBadge}</td>
+              <td class="text-center">${statusBadge}</td>
               <td class="text-muted small">${escapeHtml(item.createdAt || '-')}</td>
               <td class="text-center">${actionButtons}</td>
             </tr>
@@ -1766,7 +1776,7 @@
         responsive: true,
         language: getDatatableThaiLang(),
         pageLength: 10,
-        columnDefs: [{ orderable: false, targets: [6] }]
+        columnDefs: [{ orderable: false, targets: [7] }]
       });
     }
 
@@ -1794,6 +1804,20 @@
             <label class="swal-form-label">นามสกุล (Last Name)<span class="opt">(ไม่บังคับ/Optional)</span></label>
             <input id="swal-add-lastname" class="swal-input-custom" placeholder="เช่น ใจดี">
           </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">ประเภทผู้ใช้งาน</label>
+            <div class="form-control-plaintext py-2 px-3 bg-light rounded border text-start" style="font-size:0.88rem;">
+              <span class="badge bg-primary me-1"><i class="fa-solid fa-user-shield me-1"></i>ผู้ดูแลระบบ (9)</span>
+              <span class="text-muted">(กำหนดสำหรับหน้าจอนี้เท่านั้น)</span>
+            </div>
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">สถานะการใช้งาน<span class="req">*</span></label>
+            <select id="swal-add-isactive" class="swal-input-custom">
+              <option value="true" selected>เปิดใช้งาน (Active)</option>
+              <option value="false">ปิดการใช้งาน (Inactive)</option>
+            </select>
+          </div>
         `,
         showCancelButton: true,
         confirmButtonText: '<i class="fa-solid fa-check me-1"></i> บันทึกข้อมูล',
@@ -1808,12 +1832,24 @@
           const nickname = $('#swal-add-nickname').val().trim();
           const firstname = $('#swal-add-firstname').val().trim();
           const lastname = $('#swal-add-lastname').val().trim();
+          const isActive = ($('#swal-add-isactive').val() === 'true');
 
           if (!username) { Swal.showValidationMessage('กรุณากรอก "ชื่อผู้ใช้"'); return false; }
           if (!password) { Swal.showValidationMessage('กรุณากรอก "รหัสผ่าน"'); return false; }
           if (!nickname) { Swal.showValidationMessage('กรุณากรอก "ชื่อเล่น"'); return false; }
 
-          return { username, password, nickname, firstname, lastname };
+          const creator = (currentUser && currentUser.username) ? currentUser.username : username;
+
+          return { 
+            username, 
+            password, 
+            nickname, 
+            firstname, 
+            lastname, 
+            createdBy: creator,
+            isActive: isActive,
+            personFlag: 9
+          };
         }
       }).then((result) => {
         if (result.isConfirmed && result.value) {
@@ -1848,6 +1884,9 @@
             firstname: payload.firstname,
             lastname: payload.lastname,
             createdAt: "วันนี้",
+            createdBy: payload.createdBy,
+            isActive: payload.isActive,
+            personFlag: 9,
             isProtected: false
           });
           renderAdminTable(currentAdminData);
@@ -1862,6 +1901,8 @@
         Swal.fire({ icon: 'error', title: 'ไม่พบข้อมูลผู้ใช้', confirmButtonColor: '#1B3B36' });
         return;
       }
+
+      const isSystemAdmin = (user.username.toLowerCase() === 'admin');
 
       Swal.fire({
         title: '<i class="fa-solid fa-pen-to-square text-primary me-2"></i>แก้ไขข้อมูลผู้ดูแลระบบ',
@@ -1887,6 +1928,21 @@
             <label class="swal-form-label">นามสกุล (Last Name)<span class="opt">(ไม่บังคับ/Optional)</span></label>
             <input id="swal-edit-lastname" class="swal-input-custom" value="${escapeHtml(user.lastname || '')}">
           </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">ประเภทผู้ใช้งาน</label>
+            <div class="form-control-plaintext py-2 px-3 bg-light rounded border text-start" style="font-size:0.88rem;">
+              <span class="badge bg-primary me-1"><i class="fa-solid fa-user-shield me-1"></i>ผู้ดูแลระบบ (9)</span>
+              <span class="text-muted">(กำหนดสำหรับหน้าจอนี้เท่านั้น)</span>
+            </div>
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">สถานะการใช้งาน<span class="req">*</span></label>
+            <select id="swal-edit-isactive" class="swal-input-custom" ${isSystemAdmin ? 'disabled' : ''}>
+              <option value="true" ${user.isActive ? 'selected' : ''}>เปิดใช้งาน (Active)</option>
+              <option value="false" ${!user.isActive ? 'selected' : ''}>ปิดการใช้งาน (Inactive)</option>
+            </select>
+            ${isSystemAdmin ? '<small class="text-muted" style="font-size:0.75rem;">* บัญชี admin หลักต้องเปิดใช้งานเสมอ</small>' : ''}
+          </div>
         `,
         showCancelButton: true,
         confirmButtonText: '<i class="fa-solid fa-check me-1"></i> บันทึกการแก้ไข',
@@ -1900,10 +1956,22 @@
           const password = $('#swal-edit-password').val().trim();
           const firstname = $('#swal-edit-firstname').val().trim();
           const lastname = $('#swal-edit-lastname').val().trim();
+          const isActive = isSystemAdmin ? true : ($('#swal-edit-isactive').val() === 'true');
 
           if (!nickname) { Swal.showValidationMessage('กรุณากรอก "ชื่อเล่น"'); return false; }
 
-          return { username: user.username, password, nickname, firstname, lastname };
+          const updater = (currentUser && currentUser.username) ? currentUser.username : user.username;
+
+          return { 
+            username: user.username, 
+            password, 
+            nickname, 
+            firstname, 
+            lastname, 
+            updatedBy: updater,
+            isActive: isActive,
+            personFlag: 9
+          };
         }
       }).then((result) => {
         if (result.isConfirmed && result.value) {
@@ -1943,6 +2011,7 @@
             u.nickname = payload.nickname;
             u.firstname = payload.firstname;
             u.lastname = payload.lastname;
+            u.isActive = payload.isActive;
           }
           renderAdminTable(currentAdminData);
           Swal.fire({ icon: 'success', title: 'สำเร็จ (จำลอง)', timer: 1500, showConfirmButton: false });
@@ -1963,11 +2032,11 @@
 
       Swal.fire({
         title: 'ยืนยันการลบข้อมูล?',
-        html: `คุณแน่ใจหรือไม่ว่าต้องการลบผู้ดูแลระบบ <b>"${escapeHtml(username)}"</b>?<br><small class="text-danger">การดำเนินการนี้ไม่สามารถเรียกคืนข้อมูลได้</small>`,
+        html: `คุณแน่ใจหรือไม่ว่าต้องการลบผู้ดูแลระบบ <b>"${escapeHtml(username)}"</b>?<br><small class="text-danger">ระบบจะทำการลบข้อมูลผู้ใช้งานออกจากระบบ (Soft Delete)</small>`,
         icon: 'warning',
         showCancelButton: true,
         cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
-        confirmButtonText: '<i class="fa-solid fa-trash-can me-1"></i> ยืนยัน',
+        confirmButtonText: '<i class="fa-solid fa-trash-can me-1"></i> ยืนยันการลบ',
         reverseButtons: true, // ปุ่มยกเลิกอยู่ซ้าย ปุ่มยืนยันอยู่ขวา
         confirmButtonColor: '#dc3545',
         cancelButtonColor: '#6c757d',
@@ -1982,6 +2051,8 @@
     function executeDeleteAdmin(username) {
       Swal.fire({ title: 'กำลังลบข้อมูล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
+      const operator = (currentUser && currentUser.username) ? currentUser.username : '';
+
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(function(response) {
@@ -1995,7 +2066,7 @@
           .withFailureHandler(function(err) {
             Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ลบข้อมูลล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
           })
-          .deleteAdminUser(username);
+          .deleteAdminUser(username, operator);
       } else {
         setTimeout(() => {
           currentAdminData = currentAdminData.filter(x => x.username.toLowerCase() !== username.toLowerCase());

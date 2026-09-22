@@ -118,10 +118,23 @@ function getSettingTimeSheet() {
 function initSheetIfNeeded() {
   var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
-  // 1. ตรวจสอบชีตผู้ดูแลระบบ
+  // 1. ตรวจสอบชีตผู้ดูแลระบบ (Schema 12 คอลัมน์)
   var adminSheet = getAdminSheet();
   var adminLastRow = adminSheet.getLastRow();
-  var adminHeaders = ["ชื่อผู้ใช้", "รหัสผ่าน", "ชื่อเล่น", "ชื่อจริง", "นามสกุล", "วันที่สร้าง", "อัปเดตล่าสุด"];
+  var adminHeaders = [
+    "username",     // 1. ชื่อผู้ใช้
+    "pwd",          // 2. รหัสผ่าน
+    "nick_name",    // 3. ชื่อเล่น
+    "first_name",   // 4. ชื่อจริง
+    "last_name",    // 5. นามสกุล
+    "create_date",  // 6. วันที่สร้าง
+    "created_by",   // 7. ผู้สร้าง
+    "update_date",  // 8. อัปเดตล่าสุด
+    "updated_by",   // 9. ผู้อัปเดต
+    "is_active",    // 10. สถานะการใช้งาน (true/false)
+    "person_flag",  // 11. ประเภทผู้ใช้ (9: ผู้ดูแลระบบ)
+    "deleted_flag"  // 12. สถานะการลบ (N: ใช้งานได้, Y: ถูกลบ)
+  ];
 
   if (adminLastRow === 0) {
     adminSheet.appendRow(adminHeaders);
@@ -135,13 +148,45 @@ function initSheetIfNeeded() {
     adminSheet.setFrozenRows(1);
 
     // บัญชีเริ่มต้น: username = 'admin', password = '1234'
-    adminSheet.appendRow(["admin", "1234", "แอดมิน", "ผู้ดูแลระบบ", "JM Thai Massage", nowStr, nowStr]);
+    adminSheet.appendRow(["admin", "1234", "แอดมิน", "ผู้ดูแลระบบ", "JM Thai Massage", nowStr, "admin", nowStr, "admin", true, 9, "N"]);
 
     for (var col = 1; col <= adminHeaders.length; col++) {
       adminSheet.autoResizeColumn(col);
     }
   } else {
+    // ตรวจสอบและ Auto-Migrate หากเป็น Schema เดิม
     var adminData = adminSheet.getDataRange().getValues();
+    var firstColName = String(adminData[0][0] || "").trim();
+    var headerLen = adminData[0].length;
+
+    if (firstColName === "ชื่อผู้ใช้" || headerLen < 12) {
+      // อัปเดต Header แถวที่ 1 ให้เป็น 12 คอลัมน์ใหม่
+      adminSheet.getRange(1, 1, 1, adminHeaders.length).setValues([adminHeaders]);
+      var hRange = adminSheet.getRange(1, 1, 1, adminHeaders.length);
+      hRange.setBackground("#1B3B36");
+      hRange.setFontColor("#FFFFFF");
+      hRange.setFontWeight("bold");
+      hRange.setHorizontalAlignment("center");
+      hRange.setVerticalAlignment("middle");
+
+      // เติมข้อมูลคอลัมน์ใหม่ให้กับแถวข้อมูลเดิมที่มีอยู่
+      for (var r = 1; r < adminData.length; r++) {
+        var rowNum = r + 1;
+        var rUser = String(adminData[r][0] || "admin").trim();
+        var cBy = String(adminData[r][6] || "").trim() || rUser;
+        var uBy = String(adminData[r][8] || "").trim() || rUser;
+        var isAct = (adminData[r][9] === false || String(adminData[r][9]).toLowerCase() === "false") ? false : true;
+        var pFlag = parseInt(adminData[r][10], 10) || 9;
+        var dFlag = String(adminData[r][11] || "").trim() || "N";
+
+        adminSheet.getRange(rowNum, 7).setValue(cBy);
+        adminSheet.getRange(rowNum, 9).setValue(uBy);
+        adminSheet.getRange(rowNum, 10).setValue(isAct);
+        adminSheet.getRange(rowNum, 11).setValue(pFlag);
+        adminSheet.getRange(rowNum, 12).setValue(dFlag);
+      }
+    }
+
     var hasAdmin = false;
     for (var i = 1; i < adminData.length; i++) {
       if (String(adminData[i][0]).trim().toLowerCase() === "admin") {
@@ -150,7 +195,7 @@ function initSheetIfNeeded() {
       }
     }
     if (!hasAdmin) {
-      adminSheet.appendRow(["admin", "1234", "แอดมิน", "ผู้ดูแลระบบ", "JM Thai Massage", nowStr, nowStr]);
+      adminSheet.appendRow(["admin", "1234", "แอดมิน", "ผู้ดูแลระบบ", "JM Thai Massage", nowStr, "admin", nowStr, "admin", true, 9, "N"]);
     }
   }
 
@@ -298,8 +343,21 @@ function loginUser(username, password) {
       var nickname = String(data[i][2] || "").trim();
       var firstname = String(data[i][3] || "").trim();
       var lastname = String(data[i][4] || "").trim();
+      var isActiveVal = data[i][9];
+      var personFlag = parseInt(data[i][10], 10) || 9;
+      var deletedFlag = String(data[i][11] || "N").trim().toUpperCase();
 
       if (rowUser === cleanUsername) {
+        // ตรวจสอบ Soft Delete (ถูกลบหรือไม่)
+        if (deletedFlag === "Y") {
+          return { success: false, message: "บัญชีผู้ใช้นี้ถูกลบหรือระงับการใช้งานแล้ว" };
+        }
+
+        // ตรวจสอบสถานะการเปิด/ปิดใช้งาน (is_active)
+        if (isActiveVal === false || String(isActiveVal).toLowerCase() === "false") {
+          return { success: false, message: "บัญชีผู้ใช้นี้ถูกปิดการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" };
+        }
+
         if (rowPass === cleanPassword) {
           return {
             success: true,
@@ -308,6 +366,8 @@ function loginUser(username, password) {
               nickname: nickname || data[i][0],
               firstname: firstname,
               lastname: lastname,
+              personFlag: personFlag,
+              isActive: true,
               displayName: nickname ? (nickname + (firstname ? " (" + firstname + ")" : "")) : data[i][0]
             }
           };
@@ -328,7 +388,7 @@ function loginUser(username, password) {
 // ==============================================================================
 
 /**
- * ดึงรายการผู้ดูแลระบบทั้งหมด
+ * ดึงรายการผู้ดูแลระบบทั้งหมด (เฉพาะที่ deleted_flag !== 'Y')
  */
 function getAdminUsers() {
   try {
@@ -342,10 +402,19 @@ function getAdminUsers() {
         var username = String(data[i][0] || "").trim();
         if (!username) continue;
 
+        var deletedFlag = String(data[i][11] || "N").trim().toUpperCase();
+        // เงื่อนไข Soft Delete: ถ้าถูกลบ (Y) จะไม่แสดงผลในหน้ารายการ
+        if (deletedFlag === "Y") continue;
+
         var nickname = String(data[i][2] || "").trim();
         var firstname = String(data[i][3] || "").trim();
         var lastname = String(data[i][4] || "").trim();
         var createdAt = data[i][5] ? formatDateDisplay(data[i][5]) : "-";
+        var createdBy = String(data[i][6] || "").trim() || username;
+        var updatedAt = data[i][7] ? formatDateDisplay(data[i][7]) : "-";
+        var updatedBy = String(data[i][8] || "").trim() || username;
+        var isActive = (data[i][9] === false || String(data[i][9]).toLowerCase() === "false") ? false : true;
+        var personFlag = parseInt(data[i][10], 10) || 9;
         var isSystemAdmin = (username.toLowerCase() === "admin");
 
         userList.push({
@@ -355,6 +424,11 @@ function getAdminUsers() {
           firstname: firstname,
           lastname: lastname,
           createdAt: createdAt,
+          createdBy: createdBy,
+          updatedAt: updatedAt,
+          updatedBy: updatedBy,
+          isActive: isActive,
+          personFlag: personFlag,
           isProtected: isSystemAdmin // แอดมินหลักห้ามลบ
         });
       }
@@ -371,7 +445,7 @@ function getAdminUsers() {
 }
 
 /**
- * เพิ่มข้อมูลผู้ดูแลระบบใหม่
+ * เพิ่มข้อมูลผู้ดูแลระบบใหม่ (Schema 12 คอลัมน์)
  */
 function addAdminUser(userData) {
   try {
@@ -381,6 +455,10 @@ function addAdminUser(userData) {
     var nickname = String(userData.nickname || "").trim();
     var firstname = String(userData.firstname || "").trim();
     var lastname = String(userData.lastname || "").trim();
+    var createdBy = String(userData.createdBy || userData.username || "").trim() || username;
+    var isActive = (userData.isActive === false || String(userData.isActive) === "false") ? false : true;
+    var personFlag = 9; // สำหรับหน้าจอข้อมูลผู้ดูแลระบบ กำหนดเป็น 9 (ผู้ดูแลระบบ) เสมอ
+    var deletedFlag = "N"; // ใช้งานได้
 
     if (!username) return { success: false, message: "กรุณากรอก 'ชื่อผู้ใช้'" };
     if (!password) return { success: false, message: "กรุณากรอก 'รหัสผ่าน'" };
@@ -388,13 +466,31 @@ function addAdminUser(userData) {
 
     var data = sheet.getDataRange().getValues();
     for (var i = 1; i < data.length; i++) {
-      if (String(data[i][0]).trim().toLowerCase() === username.toLowerCase()) {
+      var rowUser = String(data[i][0]).trim().toLowerCase();
+      var rowDel = String(data[i][11] || "N").trim().toUpperCase();
+      if (rowUser === username.toLowerCase()) {
+        if (rowDel === "Y") {
+          return { success: false, message: "ชื่อผู้ใช้ '" + username + "' เคยถูกลบออกจากระบบแล้ว กรุณาใช้ชื่ออื่นหรือติดต่อผู้ดูแลระบบ" };
+        }
         return { success: false, message: "ชื่อผู้ใช้ '" + username + "' มีอยู่ในระบบแล้ว กรุณาใช้ชื่ออื่น" };
       }
     }
 
     var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
-    sheet.appendRow([username, password, nickname, firstname, lastname, nowStr, nowStr]);
+    sheet.appendRow([
+      username,
+      password,
+      nickname,
+      firstname,
+      lastname,
+      nowStr,
+      createdBy,
+      nowStr,
+      createdBy,
+      isActive,
+      personFlag,
+      deletedFlag
+    ]);
 
     return {
       success: true,
@@ -416,6 +512,9 @@ function updateAdminUser(userData) {
     var nickname = String(userData.nickname || "").trim();
     var firstname = String(userData.firstname || "").trim();
     var lastname = String(userData.lastname || "").trim();
+    var updatedBy = String(userData.updatedBy || userData.username || "").trim() || username;
+    var isActive = (userData.isActive === false || String(userData.isActive) === "false") ? false : true;
+    var personFlag = 9; // สำหรับหน้าจอข้อมูลผู้ดูแลระบบ กำหนดเป็น 9 เสมอ
 
     if (!username) return { success: false, message: "ไม่พบชื่อผู้ใช้ที่ต้องการแก้ไข" };
     if (!nickname) return { success: false, message: "กรุณากรอก 'ชื่อเล่น'" };
@@ -437,12 +536,15 @@ function updateAdminUser(userData) {
     var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
     if (password) {
-      sheet.getRange(targetRowIndex, 2).setValue(password);
+      sheet.getRange(targetRowIndex, 2).setValue(password); // Col 2: pwd
     }
-    sheet.getRange(targetRowIndex, 3).setValue(nickname);
-    sheet.getRange(targetRowIndex, 4).setValue(firstname);
-    sheet.getRange(targetRowIndex, 5).setValue(lastname);
-    sheet.getRange(targetRowIndex, 7).setValue(nowStr);
+    sheet.getRange(targetRowIndex, 3).setValue(nickname);   // Col 3: nick_name
+    sheet.getRange(targetRowIndex, 4).setValue(firstname);  // Col 4: first_name
+    sheet.getRange(targetRowIndex, 5).setValue(lastname);   // Col 5: last_name
+    sheet.getRange(targetRowIndex, 8).setValue(nowStr);     // Col 8: update_date
+    sheet.getRange(targetRowIndex, 9).setValue(updatedBy);  // Col 9: updated_by
+    sheet.getRange(targetRowIndex, 10).setValue(isActive);  // Col 10: is_active
+    sheet.getRange(targetRowIndex, 11).setValue(personFlag);// Col 11: person_flag (9)
 
     return {
       success: true,
@@ -454,11 +556,13 @@ function updateAdminUser(userData) {
 }
 
 /**
- * ลบข้อมูลผู้ดูแลระบบ (ห้ามลบ username = 'admin')
+ * ลบข้อมูลผู้ดูแลระบบแบบ Soft Delete (deleted_flag = 'Y')
+ * (ห้ามลบ username = 'admin')
  */
-function deleteAdminUser(username) {
+function deleteAdminUser(username, operatorUsername) {
   try {
     var cleanUsername = String(username || "").trim();
+    var updatedBy = String(operatorUsername || "").trim() || cleanUsername;
 
     // กฎสำคัญ: ห้ามลบ admin เด็ดขาด!
     if (cleanUsername.toLowerCase() === "admin") {
@@ -483,7 +587,13 @@ function deleteAdminUser(username) {
       return { success: false, message: "ไม่พบข้อมูลผู้ใช้ '" + cleanUsername + "' ในระบบ" };
     }
 
-    sheet.deleteRow(targetRowIndex);
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    // Soft delete: ไม่ลบแถวออกจากชีต แต่ทำเครื่องหมาย deleted_flag = 'Y' และ is_active = false
+    sheet.getRange(targetRowIndex, 8).setValue(nowStr);     // Col 8: update_date
+    sheet.getRange(targetRowIndex, 9).setValue(updatedBy);  // Col 9: updated_by
+    sheet.getRange(targetRowIndex, 10).setValue(false);     // Col 10: is_active = false
+    sheet.getRange(targetRowIndex, 12).setValue("Y");       // Col 12: deleted_flag = 'Y'
 
     return {
       success: true,
