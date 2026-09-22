@@ -132,7 +132,7 @@ function initSheetIfNeeded() {
     "update_date",  // 8. อัปเดตล่าสุด
     "updated_by",   // 9. ผู้อัปเดต
     "is_active",    // 10. สถานะการใช้งาน (true/false)
-    "person_flag",  // 11. ประเภทผู้ใช้ (9: ผู้ดูแลระบบ)
+    "person_flag",  // 11. ประเภทผู้ใช้ (8: ผู้ดูแลระบบ, 9: ผู้ดูแลระบบสูงสุด)
     "deleted_flag"  // 12. สถานะการลบ (N: ใช้งานได้, Y: ถูกลบ)
   ];
 
@@ -147,8 +147,8 @@ function initSheetIfNeeded() {
     adminSheet.setRowHeight(1, 40);
     adminSheet.setFrozenRows(1);
 
-    // บัญชีเริ่มต้น: username = 'admin', password = '1234'
-    adminSheet.appendRow(["admin", "1234", "แอดมิน", "ผู้ดูแลระบบ", "JM Thai Massage", nowStr, "admin", nowStr, "admin", true, 9, "N"]);
+    // บัญชีเริ่มต้น: username = 'admin', password = '1234', person_flag = 9 (ผู้ดูแลระบบสูงสุด)
+    adminSheet.appendRow(["admin", "1234", "แอดมิน", "ผู้ดูแลระบบสูงสุด", "JM Thai Massage", nowStr, "admin", nowStr, "admin", true, 9, "N"]);
 
     for (var col = 1; col <= adminHeaders.length; col++) {
       adminSheet.autoResizeColumn(col);
@@ -176,7 +176,7 @@ function initSheetIfNeeded() {
         var cBy = String(adminData[r][6] || "").trim() || rUser;
         var uBy = String(adminData[r][8] || "").trim() || rUser;
         var isAct = (adminData[r][9] === false || String(adminData[r][9]).toLowerCase() === "false") ? false : true;
-        var pFlag = parseInt(adminData[r][10], 10) || 9;
+        var pFlag = parseInt(adminData[r][10], 10) || (rUser.toLowerCase() === "admin" ? 9 : 8);
         var dFlag = String(adminData[r][11] || "").trim() || "N";
 
         adminSheet.getRange(rowNum, 7).setValue(cBy);
@@ -344,7 +344,8 @@ function loginUser(username, password) {
       var firstname = String(data[i][3] || "").trim();
       var lastname = String(data[i][4] || "").trim();
       var isActiveVal = data[i][9];
-      var personFlag = parseInt(data[i][10], 10) || 9;
+      var personFlag = parseInt(data[i][10], 10) || (rowUser === "admin" ? 9 : 8);
+      var roleTitle = (personFlag === 9) ? "ผู้ดูแลระบบสูงสุด" : "ผู้ดูแลระบบ";
       var deletedFlag = String(data[i][11] || "N").trim().toUpperCase();
 
       if (rowUser === cleanUsername) {
@@ -367,6 +368,7 @@ function loginUser(username, password) {
               firstname: firstname,
               lastname: lastname,
               personFlag: personFlag,
+              roleTitle: roleTitle,
               isActive: true,
               displayName: nickname ? (nickname + (firstname ? " (" + firstname + ")" : "")) : data[i][0]
             }
@@ -388,14 +390,64 @@ function loginUser(username, password) {
 // ==============================================================================
 
 /**
- * ดึงรายการผู้ดูแลระบบทั้งหมด (เฉพาะที่ deleted_flag !== 'Y')
+ * ค้นหาข้อมูลผู้ดูแลระบบตาม username
  */
-function getAdminUsers() {
+function getAdminRecord(username) {
+  try {
+    var sheet = getAdminSheet();
+    var data = sheet.getDataRange().getValues();
+    var cleanUser = String(username || "").trim().toLowerCase();
+    if (!cleanUser) return null;
+
+    for (var i = 1; i < data.length; i++) {
+      var rowUser = String(data[i][0] || "").trim().toLowerCase();
+      if (rowUser === cleanUser) {
+        return {
+          rowIndex: i + 1,
+          username: String(data[i][0] || "").trim(),
+          password: String(data[i][1] || "").trim(),
+          nickname: String(data[i][2] || "").trim(),
+          firstname: String(data[i][3] || "").trim(),
+          lastname: String(data[i][4] || "").trim(),
+          createdAt: data[i][5],
+          createdBy: String(data[i][6] || "").trim(),
+          updatedAt: data[i][7],
+          updatedBy: String(data[i][8] || "").trim(),
+          isActive: (data[i][9] === false || String(data[i][9]).toLowerCase() === "false") ? false : true,
+          personFlag: parseInt(data[i][10], 10) || (cleanUser === "admin" ? 9 : 8),
+          deletedFlag: String(data[i][11] || "N").trim().toUpperCase()
+        };
+      }
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * ดึงรายการผู้ดูแลระบบ
+ * - ผู้ดูแลระบบสูงสุด (person_flag = 9 หรือ admin): มองเห็นผู้ดูแลระบบทุกคน (ที่ deleted_flag !== 'Y')
+ * - ผู้ดูแลระบบ (person_flag = 8): มองเห็นเฉพาะข้อมูลของตนเองเท่านั้น ไม่แสดงข้อมูลของคนอื่น
+ */
+function getAdminUsers(requesterUsername) {
   try {
     initSheetIfNeeded();
     var sheet = getAdminSheet();
     var data = sheet.getDataRange().getValues();
     var userList = [];
+
+    // ตรวจสอบสิทธิ์ผู้ขอข้อมูล (requester)
+    var cleanRequester = String(requesterUsername || "").trim().toLowerCase();
+    var requesterFlag = 9; // ค่าเริ่มต้นถ้าไม่ได้ส่งมา หรือเป็นระบบ
+    if (cleanRequester) {
+      for (var k = 1; k < data.length; k++) {
+        if (String(data[k][0] || "").trim().toLowerCase() === cleanRequester) {
+          requesterFlag = parseInt(data[k][10], 10) || (cleanRequester === "admin" ? 9 : 8);
+          break;
+        }
+      }
+    }
 
     if (data.length > 1) {
       for (var i = 1; i < data.length; i++) {
@@ -406,6 +458,11 @@ function getAdminUsers() {
         // เงื่อนไข Soft Delete: ถ้าถูกลบ (Y) จะไม่แสดงผลในหน้ารายการ
         if (deletedFlag === "Y") continue;
 
+        // ถ้าผู้ขอข้อมูลเป็น ผู้ดูแลระบบ (person_flag = 8): แสดงเฉพาะข้อมูลของตนเองเท่านั้น
+        if (cleanRequester && requesterFlag === 8 && username.toLowerCase() !== cleanRequester) {
+          continue;
+        }
+
         var nickname = String(data[i][2] || "").trim();
         var firstname = String(data[i][3] || "").trim();
         var lastname = String(data[i][4] || "").trim();
@@ -414,7 +471,8 @@ function getAdminUsers() {
         var updatedAt = data[i][7] ? formatDateDisplay(data[i][7]) : "-";
         var updatedBy = String(data[i][8] || "").trim() || username;
         var isActive = (data[i][9] === false || String(data[i][9]).toLowerCase() === "false") ? false : true;
-        var personFlag = parseInt(data[i][10], 10) || 9;
+        var personFlag = parseInt(data[i][10], 10) || (username.toLowerCase() === "admin" ? 9 : 8);
+        var roleTitle = (personFlag === 9) ? "ผู้ดูแลระบบสูงสุด" : "ผู้ดูแลระบบ";
         var isSystemAdmin = (username.toLowerCase() === "admin");
 
         userList.push({
@@ -429,6 +487,7 @@ function getAdminUsers() {
           updatedBy: updatedBy,
           isActive: isActive,
           personFlag: personFlag,
+          roleTitle: roleTitle,
           isProtected: isSystemAdmin // แอดมินหลักห้ามลบ
         });
       }
@@ -445,7 +504,8 @@ function getAdminUsers() {
 }
 
 /**
- * เพิ่มข้อมูลผู้ดูแลระบบใหม่ (Schema 12 คอลัมน์)
+ * เพิ่มข้อมูลผู้ดูแลระบบใหม่
+ * - เฉพาะผู้ดูแลระบบสูงสุด (person_flag = 9) เท่านั้นที่สามารถเพิ่มข้อมูลได้
  */
 function addAdminUser(userData) {
   try {
@@ -457,7 +517,18 @@ function addAdminUser(userData) {
     var lastname = String(userData.lastname || "").trim();
     var createdBy = String(userData.createdBy || userData.username || "").trim() || username;
     var isActive = (userData.isActive === false || String(userData.isActive) === "false") ? false : true;
-    var personFlag = 9; // สำหรับหน้าจอข้อมูลผู้ดูแลระบบ กำหนดเป็น 9 (ผู้ดูแลระบบ) เสมอ
+
+    // ตรวจสอบสิทธิ์ผู้สร้าง: เฉพาะผู้ดูแลระบบสูงสุด (person_flag = 9 หรือ admin) เท่านั้น
+    var creatorRecord = getAdminRecord(createdBy);
+    if (creatorRecord && creatorRecord.personFlag !== 9 && createdBy.toLowerCase() !== "admin") {
+      return { success: false, message: "ไม่มีสิทธิ์เพิ่มข้อมูลผู้ดูแลระบบ (เฉพาะผู้ดูแลระบบสูงสุดเท่านั้น)" };
+    }
+
+    // กำหนด personFlag (8: ผู้ดูแลระบบ, 9: ผู้ดูแลระบบสูงสุด)
+    var personFlag = parseInt(userData.personFlag, 10);
+    if (personFlag !== 8 && personFlag !== 9) {
+      personFlag = 8; // ค่าเริ่มต้นเป็น 8 (ผู้ดูแลระบบ)
+    }
     var deletedFlag = "N"; // ใช้งานได้
 
     if (!username) return { success: false, message: "กรุณากรอก 'ชื่อผู้ใช้'" };
@@ -503,6 +574,8 @@ function addAdminUser(userData) {
 
 /**
  * แก้ไขข้อมูลผู้ดูแลระบบ
+ * - ผู้ดูแลระบบสูงสุด (person_flag = 9): แก้ไขได้ทั้งของตนเองและผู้อื่น
+ * - ผู้ดูแลระบบ (person_flag = 8): แก้ไขได้เฉพาะข้อมูลของตนเองเท่านั้น
  */
 function updateAdminUser(userData) {
   try {
@@ -513,24 +586,57 @@ function updateAdminUser(userData) {
     var firstname = String(userData.firstname || "").trim();
     var lastname = String(userData.lastname || "").trim();
     var updatedBy = String(userData.updatedBy || userData.username || "").trim() || username;
-    var isActive = (userData.isActive === false || String(userData.isActive) === "false") ? false : true;
-    var personFlag = 9; // สำหรับหน้าจอข้อมูลผู้ดูแลระบบ กำหนดเป็น 9 เสมอ
 
     if (!username) return { success: false, message: "ไม่พบชื่อผู้ใช้ที่ต้องการแก้ไข" };
     if (!nickname) return { success: false, message: "กรุณากรอก 'ชื่อเล่น'" };
 
     var data = sheet.getDataRange().getValues();
     var targetRowIndex = -1;
+    var targetRecord = null;
 
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][0]).trim().toLowerCase() === username.toLowerCase()) {
         targetRowIndex = i + 1;
+        targetRecord = {
+          personFlag: parseInt(data[i][10], 10) || (username.toLowerCase() === "admin" ? 9 : 8),
+          isActive: (data[i][9] === false || String(data[i][9]).toLowerCase() === "false") ? false : true
+        };
         break;
       }
     }
 
     if (targetRowIndex === -1) {
       return { success: false, message: "ไม่พบข้อมูลผู้ใช้ '" + username + "' ในระบบ" };
+    }
+
+    // ตรวจสอบสิทธิ์ผู้แก้ไข (updatedBy)
+    var updaterRecord = getAdminRecord(updatedBy);
+    var isUpdaterSuperAdmin = (!updaterRecord || updaterRecord.personFlag === 9 || updatedBy.toLowerCase() === "admin");
+
+    var personFlag = targetRecord.personFlag;
+    var isActive = targetRecord.isActive;
+
+    if (!isUpdaterSuperAdmin) {
+      // ผู้ดูแลระบบ (person_flag = 8): แก้ไขได้เฉพาะข้อมูลของตนเองเท่านั้น
+      if (username.toLowerCase() !== updatedBy.toLowerCase()) {
+        return { success: false, message: "ผู้ดูแลระบบสามารถแก้ไขได้เฉพาะข้อมูลของตัวเองเท่านั้น" };
+      }
+      // คงสิทธิ์ personFlag เดิม และห้ามปิดการใช้งานตนเอง
+      personFlag = targetRecord.personFlag;
+      isActive = true;
+    } else {
+      // ผู้ดูแลระบบสูงสุด (person_flag = 9)
+      var requestedFlag = parseInt(userData.personFlag, 10);
+      if (requestedFlag === 8 || requestedFlag === 9) {
+        personFlag = requestedFlag;
+      }
+      isActive = (userData.isActive === false || String(userData.isActive) === "false") ? false : true;
+
+      // บัญชี admin หลัก ล็อคให้เป็น person_flag = 9 และ isActive = true เสมอ
+      if (username.toLowerCase() === "admin") {
+        personFlag = 9;
+        isActive = true;
+      }
     }
 
     var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
@@ -544,7 +650,7 @@ function updateAdminUser(userData) {
     sheet.getRange(targetRowIndex, 8).setValue(nowStr);     // Col 8: update_date
     sheet.getRange(targetRowIndex, 9).setValue(updatedBy);  // Col 9: updated_by
     sheet.getRange(targetRowIndex, 10).setValue(isActive);  // Col 10: is_active
-    sheet.getRange(targetRowIndex, 11).setValue(personFlag);// Col 11: person_flag (9)
+    sheet.getRange(targetRowIndex, 11).setValue(personFlag);// Col 11: person_flag (8 หรือ 9)
 
     return {
       success: true,
@@ -557,18 +663,37 @@ function updateAdminUser(userData) {
 
 /**
  * ลบข้อมูลผู้ดูแลระบบแบบ Soft Delete (deleted_flag = 'Y')
- * (ห้ามลบ username = 'admin')
+ * - เฉพาะผู้ดูแลระบบสูงสุด (person_flag = 9) เท่านั้นที่มีสิทธิ์ลบ
+ * - ห้ามลบ username = 'admin'
+ * - ห้ามลบบัญชีของตัวเอง
  */
 function deleteAdminUser(username, operatorUsername) {
   try {
     var cleanUsername = String(username || "").trim();
     var updatedBy = String(operatorUsername || "").trim() || cleanUsername;
 
+    // ตรวจสอบสิทธิ์ผู้ดำเนินการ (operator)
+    var operatorRecord = getAdminRecord(updatedBy);
+    if (operatorRecord && operatorRecord.personFlag !== 9 && updatedBy.toLowerCase() !== "admin") {
+      return {
+        success: false,
+        message: "ไม่มีสิทธิ์ลบข้อมูลผู้ดูแลระบบ (เฉพาะผู้ดูแลระบบสูงสุดเท่านั้น)"
+      };
+    }
+
     // กฎสำคัญ: ห้ามลบ admin เด็ดขาด!
     if (cleanUsername.toLowerCase() === "admin") {
       return {
         success: false,
         message: "ไม่อนุญาตให้ลบผู้ดูแลระบบหลัก (admin) โดยเด็ดขาด"
+      };
+    }
+
+    // ห้ามลบบัญชีของตนเอง
+    if (updatedBy && cleanUsername.toLowerCase() === updatedBy.toLowerCase()) {
+      return {
+        success: false,
+        message: "ไม่อนุญาตให้ลบบัญชีของตนเองในขณะที่เข้าสู่ระบบอยู่"
       };
     }
 

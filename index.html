@@ -1246,7 +1246,7 @@
               <button class="btn btn-outline-secondary" onclick="loadAdminTableData()" title="รีเฟรชข้อมูล">
                 <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
               </button>
-              <button class="btn btn-action-main" onclick="openAddAdminModal()">
+              <button class="btn btn-action-main" id="btn-open-add-admin" onclick="openAddAdminModal()">
                 <i class="fa-solid fa-user-plus"></i>
                 <span>เพิ่มข้อมูลผู้ดูแลระบบ</span>
               </button>
@@ -1517,8 +1517,11 @@
 
       // อัปเดตข้อมูลผู้เข้าใช้งานใน Header (ข้อ 1.2.1)
       if (currentUser) {
+        const isSuper = (parseInt(currentUser.personFlag, 10) === 9 || (currentUser.username && currentUser.username.toLowerCase() === 'admin'));
+        const roleName = isSuper ? "ผู้ดูแลระบบสูงสุด" : "ผู้ดูแลระบบ";
         const display = currentUser.nickname ? `${currentUser.nickname} (${currentUser.username})` : currentUser.username;
-        $('#header-user-name').text(display);
+        $('#header-user-name').html(`${escapeHtml(display)} <span class="badge ${isSuper ? 'bg-warning text-dark' : 'bg-info-subtle text-dark border'} ms-1" style="font-size:0.75rem; font-weight:normal;"><i class="fa-solid ${isSuper ? 'fa-crown' : 'fa-user-gear'} me-1"></i>${roleName}</span>`);
+        $('#header-user-avatar').attr('title', roleName);
       }
 
       // โหลดข้อมูลตามเซกชันเริ่มต้น
@@ -1675,6 +1678,7 @@
     // โมดูล 1: ผู้ดูแลระบบ (Admin CRUD)
     // =============================================================
     function loadAdminTableData() {
+      const requester = (currentUser && currentUser.username) ? currentUser.username : '';
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         Swal.showLoading();
         google.script.run
@@ -1691,16 +1695,19 @@
             Swal.close();
             Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'โหลดข้อมูลล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
           })
-          .getAdminUsers();
+          .getAdminUsers(requester);
       } else {
         currentAdminData = [
           {
             rowId: 2,
             username: "admin",
             nickname: "แอดมิน",
-            firstname: "ผู้ดูแลระบบ",
+            firstname: "ผู้ดูแลระบบสูงสุด",
             lastname: "JM Thai Massage",
             createdAt: "18/09/2026 14:00",
+            isActive: true,
+            personFlag: 9,
+            roleTitle: "ผู้ดูแลระบบสูงสุด",
             isProtected: true
           }
         ];
@@ -1713,34 +1720,71 @@
         adminDataTableInstance.destroy();
       }
 
+      const isSuperAdmin = Boolean(currentUser && (parseInt(currentUser.personFlag, 10) === 9 || (currentUser.username && currentUser.username.toLowerCase() === 'admin')));
+
+      // ควบคุมการแสดงผลปุ่ม "เพิ่มข้อมูลผู้ดูแลระบบ":
+      // ผู้ดูแลระบบสูงสุด (person_flag = 9) เท่านั้นที่เห็นปุ่มนี้
+      if (isSuperAdmin) {
+        $('#btn-open-add-admin').show();
+      } else {
+        $('#btn-open-add-admin').hide();
+      }
+
+      // กรองข้อมูล: หากเป็นผู้ดูแลระบบทั่วไป (person_flag = 8) จะเห็นเฉพาะข้อมูลของตนเองเท่านั้น
+      let displayList = dataList || [];
+      if (!isSuperAdmin && currentUser && currentUser.username) {
+        displayList = displayList.filter(u => u.username.toLowerCase() === currentUser.username.toLowerCase());
+      }
+
       const $tbody = $('#adminTableBody');
       $tbody.empty();
 
-      if (!dataList || dataList.length === 0) {
+      if (!displayList || displayList.length === 0) {
         $tbody.append('<tr><td colspan="8" class="text-center py-4 text-muted">ไม่พบข้อมูลผู้ดูแลระบบ</td></tr>');
       } else {
-        dataList.forEach((item, index) => {
+        displayList.forEach((item, index) => {
           const isSystemAdmin = (item.username.toLowerCase() === 'admin');
-          
-          let actionButtons = `
-            <div class="action-btn-group">
+          const isSelf = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === item.username.toLowerCase());
+          const itemFlag = parseInt(item.personFlag, 10) || (isSystemAdmin ? 9 : 8);
+
+          let actionButtons = `<div class="action-btn-group">`;
+
+          if (isSuperAdmin) {
+            // สิทธิ์ผู้ดูแลระบบสูงสุด (person_flag = 9): แก้ไขได้ทุกคน, ลบผู้ใช้อื่นได้
+            actionButtons += `
               <button class="btn btn-table-action btn-table-edit" title="แก้ไขข้อมูล" onclick="openEditAdminModal('${escapeHtml(item.username)}')">
                 <i class="fa-solid fa-pen-to-square"></i>
               </button>
-          `;
+            `;
 
-          if (isSystemAdmin) {
-            actionButtons += `
-              <button class="btn btn-table-action btn-table-delete" disabled title="บัญชีหลักของระบบ ห้ามลบ">
-                <i class="fa-solid fa-lock"></i>
-              </button>
-            `;
+            if (isSystemAdmin) {
+              actionButtons += `
+                <button class="btn btn-table-action btn-table-delete" disabled title="บัญชีหลักของระบบ ห้ามลบ">
+                  <i class="fa-solid fa-lock"></i>
+                </button>
+              `;
+            } else if (isSelf) {
+              actionButtons += `
+                <button class="btn btn-table-action btn-table-delete" disabled title="ไม่สามารถลบบัญชีของตนเองได้">
+                  <i class="fa-solid fa-ban"></i>
+                </button>
+              `;
+            } else {
+              actionButtons += `
+                <button class="btn btn-table-action btn-table-delete" title="ลบข้อมูล (Soft Delete)" onclick="confirmDeleteAdmin('${escapeHtml(item.username)}')">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              `;
+            }
           } else {
-            actionButtons += `
-              <button class="btn btn-table-action btn-table-delete" title="ลบข้อมูล (Soft Delete)" onclick="confirmDeleteAdmin('${escapeHtml(item.username)}')">
-                <i class="fa-solid fa-trash-can"></i>
-              </button>
-            `;
+            // สิทธิ์ผู้ดูแลระบบ (person_flag = 8): แก้ไขได้เฉพาะของตัวเองเท่านั้น และไม่มีปุ่มลบ
+            if (isSelf) {
+              actionButtons += `
+                <button class="btn btn-table-action btn-table-edit" title="แก้ไขข้อมูลของฉัน" onclick="openEditAdminModal('${escapeHtml(item.username)}')">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+              `;
+            }
           }
           actionButtons += `</div>`;
 
@@ -1748,7 +1792,9 @@
             ? `<span class="fw-semibold text-primary">${escapeHtml(item.username)}</span> <span class="badge badge-protected ms-1"><i class="fa-solid fa-shield-halved text-warning me-1"></i>หลัก</span>` 
             : `<span class="fw-semibold">${escapeHtml(item.username)}</span>`;
 
-          const roleBadge = `<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><i class="fa-solid fa-user-shield me-1"></i>ผู้ดูแลระบบ (9)</span>`;
+          const roleBadge = (itemFlag === 9)
+            ? `<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><i class="fa-solid fa-crown me-1 text-warning"></i>ผู้ดูแลระบบสูงสุด (9)</span>`
+            : `<span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1"><i class="fa-solid fa-user-gear me-1"></i>ผู้ดูแลระบบ (8)</span>`;
 
           const statusBadge = item.isActive 
             ? `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="fa-solid fa-circle-check me-1"></i>เปิดใช้งาน</span>`
@@ -1781,6 +1827,17 @@
     }
 
     function openAddAdminModal() {
+      const isSuperAdmin = Boolean(currentUser && (parseInt(currentUser.personFlag, 10) === 9 || (currentUser.username && currentUser.username.toLowerCase() === 'admin')));
+      if (!isSuperAdmin) {
+        Swal.fire({
+          icon: 'error',
+          title: 'ไม่มีสิทธิ์เข้าถึง',
+          text: 'เฉพาะผู้ดูแลระบบสูงสุดเท่านั้นที่สามารถเพิ่มข้อมูลผู้ดูแลระบบได้',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
       Swal.fire({
         title: '<i class="fa-solid fa-user-plus text-success me-2"></i>เพิ่มข้อมูลผู้ดูแลระบบ',
         html: `
@@ -1805,11 +1862,11 @@
             <input id="swal-add-lastname" class="swal-input-custom" placeholder="เช่น ใจดี">
           </div>
           <div class="swal-form-group">
-            <label class="swal-form-label">ประเภทผู้ใช้งาน</label>
-            <div class="form-control-plaintext py-2 px-3 bg-light rounded border text-start" style="font-size:0.88rem;">
-              <span class="badge bg-primary me-1"><i class="fa-solid fa-user-shield me-1"></i>ผู้ดูแลระบบ (9)</span>
-              <span class="text-muted">(กำหนดสำหรับหน้าจอนี้เท่านั้น)</span>
-            </div>
+            <label class="swal-form-label">ประเภทผู้ใช้งาน<span class="req">*</span></label>
+            <select id="swal-add-personflag" class="swal-input-custom">
+              <option value="8" selected>ผู้ดูแลระบบ (8)</option>
+              <option value="9">ผู้ดูแลระบบสูงสุด (9)</option>
+            </select>
           </div>
           <div class="swal-form-group">
             <label class="swal-form-label">สถานะการใช้งาน<span class="req">*</span></label>
@@ -1832,6 +1889,7 @@
           const nickname = $('#swal-add-nickname').val().trim();
           const firstname = $('#swal-add-firstname').val().trim();
           const lastname = $('#swal-add-lastname').val().trim();
+          const personFlag = parseInt($('#swal-add-personflag').val(), 10) || 8;
           const isActive = ($('#swal-add-isactive').val() === 'true');
 
           if (!username) { Swal.showValidationMessage('กรุณากรอก "ชื่อผู้ใช้"'); return false; }
@@ -1848,7 +1906,7 @@
             lastname, 
             createdBy: creator,
             isActive: isActive,
-            personFlag: 9
+            personFlag: personFlag
           };
         }
       }).then((result) => {
@@ -1886,7 +1944,8 @@
             createdAt: "วันนี้",
             createdBy: payload.createdBy,
             isActive: payload.isActive,
-            personFlag: 9,
+            personFlag: payload.personFlag || 8,
+            roleTitle: payload.personFlag === 9 ? "ผู้ดูแลระบบสูงสุด" : "ผู้ดูแลระบบ",
             isProtected: false
           });
           renderAdminTable(currentAdminData);
@@ -1902,7 +1961,55 @@
         return;
       }
 
+      const isSuperAdmin = Boolean(currentUser && (parseInt(currentUser.personFlag, 10) === 9 || (currentUser.username && currentUser.username.toLowerCase() === 'admin')));
+      const isSelf = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === user.username.toLowerCase());
+
+      // สิทธิ์: ผู้ดูแลระบบ (8) แก้ไขได้เฉพาะของตัวเองเท่านั้น
+      if (!isSuperAdmin && !isSelf) {
+        Swal.fire({
+          icon: 'error',
+          title: 'ไม่มีสิทธิ์เข้าถึง',
+          text: 'คุณสามารถแก้ไขได้เฉพาะข้อมูลของตัวเองเท่านั้น',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
       const isSystemAdmin = (user.username.toLowerCase() === 'admin');
+      const targetFlag = parseInt(user.personFlag, 10) || (isSystemAdmin ? 9 : 8);
+
+      // ฟิลด์ประเภทผู้ใช้งาน:
+      // ถ้าเป็นผู้ดูแลระบบสูงสุด และเป้าหมายไม่ใช่ admin หลัก: สามารถเปลี่ยนประเภทได้
+      // ถ้าเป็น admin หลัก หรือผู้แก้ไขเป็น flag 8: แสดง badge ล็อคไว้
+      let roleFieldHtml = '';
+      if (isSuperAdmin && !isSystemAdmin) {
+        roleFieldHtml = `
+          <div class="swal-form-group">
+            <label class="swal-form-label">ประเภทผู้ใช้งาน<span class="req">*</span></label>
+            <select id="swal-edit-personflag" class="swal-input-custom">
+              <option value="8" ${targetFlag === 8 ? 'selected' : ''}>ผู้ดูแลระบบ (8)</option>
+              <option value="9" ${targetFlag === 9 ? 'selected' : ''}>ผู้ดูแลระบบสูงสุด (9)</option>
+            </select>
+          </div>
+        `;
+      } else {
+        const displayRoleName = (targetFlag === 9) ? "ผู้ดูแลระบบสูงสุด (9)" : "ผู้ดูแลระบบ (8)";
+        roleFieldHtml = `
+          <div class="swal-form-group">
+            <label class="swal-form-label">ประเภทผู้ใช้งาน</label>
+            <div class="form-control-plaintext py-2 px-3 bg-light rounded border text-start" style="font-size:0.88rem;">
+              <span class="badge ${targetFlag === 9 ? 'bg-primary' : 'bg-info-subtle text-dark border'} me-1">
+                <i class="fa-solid ${targetFlag === 9 ? 'fa-crown' : 'fa-user-gear'} me-1"></i>${displayRoleName}
+              </span>
+              <span class="text-muted">${isSystemAdmin ? '(บัญชีหลักของระบบ)' : '(ไม่สามารถเปลี่ยนประเภทของตัวเองได้)'}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      // สถานะการใช้งาน:
+      // ถ้าเป็น admin หลัก หรือผู้แก้ไขเป็น flag 8 แก้ไขตนเอง: ห้ามปิดการใช้งาน
+      const disableStatus = (isSystemAdmin || !isSuperAdmin);
 
       Swal.fire({
         title: '<i class="fa-solid fa-pen-to-square text-primary me-2"></i>แก้ไขข้อมูลผู้ดูแลระบบ',
@@ -1928,20 +2035,14 @@
             <label class="swal-form-label">นามสกุล (Last Name)<span class="opt">(ไม่บังคับ/Optional)</span></label>
             <input id="swal-edit-lastname" class="swal-input-custom" value="${escapeHtml(user.lastname || '')}">
           </div>
-          <div class="swal-form-group">
-            <label class="swal-form-label">ประเภทผู้ใช้งาน</label>
-            <div class="form-control-plaintext py-2 px-3 bg-light rounded border text-start" style="font-size:0.88rem;">
-              <span class="badge bg-primary me-1"><i class="fa-solid fa-user-shield me-1"></i>ผู้ดูแลระบบ (9)</span>
-              <span class="text-muted">(กำหนดสำหรับหน้าจอนี้เท่านั้น)</span>
-            </div>
-          </div>
+          ${roleFieldHtml}
           <div class="swal-form-group">
             <label class="swal-form-label">สถานะการใช้งาน<span class="req">*</span></label>
-            <select id="swal-edit-isactive" class="swal-input-custom" ${isSystemAdmin ? 'disabled' : ''}>
+            <select id="swal-edit-isactive" class="swal-input-custom" ${disableStatus ? 'disabled' : ''}>
               <option value="true" ${user.isActive ? 'selected' : ''}>เปิดใช้งาน (Active)</option>
               <option value="false" ${!user.isActive ? 'selected' : ''}>ปิดการใช้งาน (Inactive)</option>
             </select>
-            ${isSystemAdmin ? '<small class="text-muted" style="font-size:0.75rem;">* บัญชี admin หลักต้องเปิดใช้งานเสมอ</small>' : ''}
+            ${disableStatus ? '<small class="text-muted" style="font-size:0.75rem;">* ไม่อนุญาตให้ปิดการใช้งานบัญชีนี้</small>' : ''}
           </div>
         `,
         showCancelButton: true,
@@ -1956,7 +2057,18 @@
           const password = $('#swal-edit-password').val().trim();
           const firstname = $('#swal-edit-firstname').val().trim();
           const lastname = $('#swal-edit-lastname').val().trim();
-          const isActive = isSystemAdmin ? true : ($('#swal-edit-isactive').val() === 'true');
+
+          let selectedFlag = targetFlag;
+          if (isSuperAdmin && !isSystemAdmin && $('#swal-edit-personflag').length) {
+            selectedFlag = parseInt($('#swal-edit-personflag').val(), 10) || targetFlag;
+          }
+
+          let isActive = user.isActive;
+          if (!disableStatus) {
+            isActive = ($('#swal-edit-isactive').val() === 'true');
+          } else {
+            isActive = true;
+          }
 
           if (!nickname) { Swal.showValidationMessage('กรุณากรอก "ชื่อเล่น"'); return false; }
 
@@ -1970,7 +2082,7 @@
             lastname, 
             updatedBy: updater,
             isActive: isActive,
-            personFlag: 9
+            personFlag: selectedFlag
           };
         }
       }).then((result) => {
@@ -1992,8 +2104,14 @@
                 currentUser.nickname = payload.nickname;
                 currentUser.firstname = payload.firstname;
                 currentUser.lastname = payload.lastname;
+                if (payload.personFlag) {
+                  currentUser.personFlag = payload.personFlag;
+                }
                 sessionStorage.setItem("jm_current_user", JSON.stringify(currentUser));
-                $('#header-user-name').text(`${currentUser.nickname} (${currentUser.username})`);
+                const isSuper = (parseInt(currentUser.personFlag, 10) === 9 || currentUser.username.toLowerCase() === 'admin');
+                const roleName = isSuper ? "ผู้ดูแลระบบสูงสุด" : "ผู้ดูแลระบบ";
+                const display = currentUser.nickname ? `${currentUser.nickname} (${currentUser.username})` : currentUser.username;
+                $('#header-user-name').html(`${escapeHtml(display)} <span class="badge ${isSuper ? 'bg-warning text-dark' : 'bg-info-subtle text-dark border'} ms-1" style="font-size:0.75rem; font-weight:normal;"><i class="fa-solid ${isSuper ? 'fa-crown' : 'fa-user-gear'} me-1"></i>${roleName}</span>`);
               }
               loadAdminTableData();
             } else {
@@ -2012,6 +2130,7 @@
             u.firstname = payload.firstname;
             u.lastname = payload.lastname;
             u.isActive = payload.isActive;
+            if (payload.personFlag) u.personFlag = payload.personFlag;
           }
           renderAdminTable(currentAdminData);
           Swal.fire({ icon: 'success', title: 'สำเร็จ (จำลอง)', timer: 1500, showConfirmButton: false });
@@ -2020,11 +2139,32 @@
     }
 
     function confirmDeleteAdmin(username) {
+      const isSuperAdmin = Boolean(currentUser && (parseInt(currentUser.personFlag, 10) === 9 || (currentUser.username && currentUser.username.toLowerCase() === 'admin')));
+      if (!isSuperAdmin) {
+        Swal.fire({
+          icon: 'error',
+          title: 'ไม่มีสิทธิ์ลบข้อมูล',
+          text: 'เฉพาะผู้ดูแลระบบสูงสุดเท่านั้นที่มีสิทธิ์ลบข้อมูลผู้ดูแลระบบ',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
       if (username.toLowerCase() === 'admin') {
         Swal.fire({
           icon: 'error',
           title: 'ไม่อนุญาตให้ลบ',
           text: 'ไม่สามารถลบผู้ใช้งาน admin ได้ เนื่องจากเป็นผู้ดูแลระบบหลักของระบบ',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      if (currentUser && currentUser.username.toLowerCase() === username.toLowerCase()) {
+        Swal.fire({
+          icon: 'error',
+          title: 'ไม่อนุญาตให้ลบ',
+          text: 'ไม่สามารถลบบัญชีของตนเองได้ในขณะที่เข้าสู่ระบบอยู่',
           confirmButtonColor: '#1B3B36'
         });
         return;
