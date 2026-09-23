@@ -344,8 +344,13 @@ function loginUser(username, password) {
       var firstname = String(data[i][3] || "").trim();
       var lastname = String(data[i][4] || "").trim();
       var isActiveVal = data[i][9];
-      var personFlag = parseInt(data[i][10], 10) || (rowUser === "admin" ? 9 : 8);
-      var roleTitle = (personFlag === 9) ? "ผู้ดูแลระบบสูงสุด" : "ผู้ดูแลระบบ";
+      var parsedFlag = parseInt(data[i][10], 10);
+      var personFlag = isNaN(parsedFlag) ? (rowUser === "admin" ? 9 : 8) : parsedFlag;
+      var roleTitle = "ผู้ใช้งาน";
+      if (personFlag === 9) roleTitle = "ผู้ดูแลระบบระดับสูง";
+      else if (personFlag === 8) roleTitle = "ผู้ดูแลระบบ";
+      else if (personFlag === 2) roleTitle = "พนักงาน";
+      else if (personFlag === 1) roleTitle = "ลูกค้า";
       var deletedFlag = String(data[i][11] || "N").trim().toUpperCase();
 
       if (rowUser === cleanUsername) {
@@ -441,11 +446,19 @@ function getAdminUsers(requesterUsername) {
     var cleanRequester = String(requesterUsername || "").trim().toLowerCase();
     var requesterFlag = 9; // ค่าเริ่มต้นถ้าไม่ได้ส่งมา หรือเป็นระบบ
     if (cleanRequester) {
-      for (var k = 1; k < data.length; k++) {
-        if (String(data[k][0] || "").trim().toLowerCase() === cleanRequester) {
-          requesterFlag = parseInt(data[k][10], 10) || (cleanRequester === "admin" ? 9 : 8);
-          break;
-        }
+      var requesterRecord = getAdminRecord(cleanRequester);
+      if (!requesterRecord || requesterRecord.deletedFlag === "Y" || !requesterRecord.isActive) {
+        return {
+          success: false,
+          message: "บัญชีของคุณถูกระงับ ปิดการใช้งาน หรือไม่มีสิทธิ์เข้าถึงข้อมูลผู้ดูแลระบบ"
+        };
+      }
+      requesterFlag = requesterRecord.personFlag;
+      if (requesterFlag !== 8 && requesterFlag !== 9 && cleanRequester !== "admin") {
+        return {
+          success: false,
+          message: "คุณไม่มีสิทธิ์เข้าถึงข้อมูลผู้ดูแลระบบ"
+        };
       }
     }
 
@@ -496,6 +509,8 @@ function getAdminUsers(requesterUsername) {
     return {
       success: true,
       sheetName: SHEET_NAME_ADMIN,
+      personFlag: requesterFlag,
+      roleTitle: (requesterFlag === 9) ? "ผู้ดูแลระบบสูงสุด" : "ผู้ดูแลระบบ",
       data: userList
     };
   } catch (err) {
@@ -764,14 +779,26 @@ function generateNextCustomerId() {
 }
 
 /**
- * ดึงรายการข้อมูลลูกค้าทั้งหมดเพื่อแสดงใน Data Table
+ * ดึงรายการข้อมูลลูกค้า
+ * - ผู้ดูแลระบบ (8, 9): เห็นข้อมูลลูกค้าทุกคน
+ * - ลูกค้า (1): เห็นได้เฉพาะข้อมูลของตัวเองเท่านั้น
+ * - พนักงาน (2): ไม่มีสิทธิ์เข้าถึง
  */
-function getCustomers() {
+function getCustomers(requesterUsername) {
   try {
     initSheetIfNeeded();
     var sheet = getCustomerSheet();
     var data = sheet.getDataRange().getValues();
     var customerList = [];
+
+    var cleanRequester = String(requesterUsername || "").trim().toLowerCase();
+    var requesterRecord = cleanRequester ? getAdminRecord(cleanRequester) : null;
+    var requesterFlag = requesterRecord ? requesterRecord.personFlag : 9;
+
+    // ถ้าเป็นพนักงาน (person_flag = 2) ไม่มีสิทธิ์เข้าถึงข้อมูลลูกค้า
+    if (requesterRecord && requesterFlag === 2) {
+      return { success: false, message: "พนักงานไม่มีสิทธิ์เข้าถึงข้อมูลลูกค้า" };
+    }
 
     if (data.length > 1) {
       for (var i = 1; i < data.length; i++) {
@@ -785,6 +812,16 @@ function getCustomers() {
 
         // หากแถวว่างเปล่าให้ข้าม
         if (!customerId && !nickname && !phone) continue;
+
+        // ถ้าเป็นลูกค้า (person_flag = 1): ดูได้เฉพาะข้อมูลของตนเอง
+        if (requesterRecord && requesterFlag === 1) {
+          var matchId = (customerId.toLowerCase() === cleanRequester);
+          var matchNick = (nickname && requesterRecord.nickname && nickname.toLowerCase() === requesterRecord.nickname.toLowerCase());
+          var matchName = (firstname && requesterRecord.firstname && firstname.toLowerCase() === requesterRecord.firstname.toLowerCase());
+          if (!matchId && !matchNick && !matchName) {
+            continue;
+          }
+        }
 
         customerList.push({
           rowId: i + 1, // 1-based row index in Google Sheet
@@ -802,6 +839,7 @@ function getCustomers() {
     return {
       success: true,
       sheetName: SHEET_NAME_CUSTOMER,
+      personFlag: requesterFlag,
       data: customerList
     };
   } catch (err) {

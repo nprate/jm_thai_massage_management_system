@@ -1200,22 +1200,22 @@
       <!-- Backdrop สำหรับมือถือเมื่อเปิด Sidebar -->
       <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
 
-      <!-- 2.2.1 SIDEBAR MENU -->
-      <nav class="app-sidebar" id="app-sidebar">
+      <!-- 2.2.1 SIDEBAR MENU (เริ่มต้นซ่อนไว้ จนกว่าจะตรวจสอบสิทธิ์เรียบร้อย) -->
+      <nav class="app-sidebar" id="app-sidebar" style="display: none;">
         <div class="sidebar-heading">
           เมนูระบบ (System Menu)
         </div>
         <ul class="sidebar-menu">
           <!-- เมนู 1: ตามตัวแปร Sheet_Name_Admin (ข้อมูลผู้ดูแลระบบ) -->
-          <li class="sidebar-menu-item">
-            <a href="javascript:void(0)" class="sidebar-link active" id="menu-admin" onclick="switchSection('admin')">
+          <li class="sidebar-menu-item" id="nav-item-admin">
+            <a href="javascript:void(0)" class="sidebar-link" id="menu-admin" onclick="switchSection('admin')">
               <i class="fa-solid fa-users-gear"></i>
               <span id="sidebar-menu-admin-text">ข้อมูลผู้ดูแลระบบ</span>
             </a>
           </li>
 
           <!-- เมนู 2: ตามตัวแปร Sheet_Name_Customer (ข้อมูลลูกค้า) [ใหม่] -->
-          <li class="sidebar-menu-item">
+          <li class="sidebar-menu-item" id="nav-item-customer">
             <a href="javascript:void(0)" class="sidebar-link" id="menu-customer" onclick="switchSection('customer')">
               <i class="fa-solid fa-address-book"></i>
               <span id="sidebar-menu-customer-text">ข้อมูลลูกค้า</span>
@@ -1223,7 +1223,7 @@
           </li>
 
           <!-- เมนู 3: ตามตัวแปร Sheet_Name_Reservation (ข้อมูลการจอง) [ใหม่] -->
-          <li class="sidebar-menu-item">
+          <li class="sidebar-menu-item" id="nav-item-reservation">
             <a href="javascript:void(0)" class="sidebar-link" id="menu-reservation" onclick="switchSection('reservation')">
               <i class="fa-solid fa-calendar-days"></i>
               <span id="sidebar-menu-reservation-text">ข้อมูลการจอง</span>
@@ -1236,7 +1236,7 @@
       <main class="app-content">
 
         <!-- SECTION 1: จัดการข้อมูลผู้ดูแลระบบ (Admin) -->
-        <section id="section-admin" class="content-section active">
+        <section id="section-admin" class="content-section">
           <div class="page-title-box">
             <div class="page-title">
               <h3 id="admin-page-title"><i class="fa-solid fa-users-gear me-2 text-warning"></i>ข้อมูลผู้ดูแลระบบ</h3>
@@ -1287,7 +1287,7 @@
               <button class="btn btn-outline-secondary" onclick="loadCustomerTableData()" title="รีเฟรชข้อมูล">
                 <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
               </button>
-              <button class="btn btn-action-main" onclick="openAddCustomerModal()">
+              <button class="btn btn-action-main" id="btn-open-add-customer" onclick="openAddCustomerModal()">
                 <i class="fa-solid fa-user-plus"></i>
                 <span>เพิ่มข้อมูลลูกค้า</span>
               </button>
@@ -1453,6 +1453,9 @@
     // เริ่มต้นทำงานเมื่อเอกสารพร้อมใช้งาน
     // -------------------------------------------------------------
     $(document).ready(function() {
+      // ซ่อน Sidebar ไว้เริ่มต้น จนกว่าจะตรวจสอบสิทธิ์
+      $('#app-sidebar').hide();
+
       // ตรวจสอบสถานะการเข้าสู่ระบบจาก sessionStorage
       const savedUser = sessionStorage.getItem("jm_current_user");
       if (savedUser) {
@@ -1508,30 +1511,111 @@
      */
     function showLoginView() {
       $('#app-view').hide();
+      $('#app-sidebar').hide();
       $('#login-view').fadeIn(300);
+    }
+
+    /**
+     * กำหนดการแสดงผลของเมนู Sidebar ตามสิทธิ์ person_flag
+     * เงื่อนไขข้อ 2.1:
+     * 2.1.1. ให้ทำการซ่อน sidebar ก่อน เมื่อตรวจสอบสิทธิ์เรียบร้อยแล้วให้ทำการแสดงเมนูตามเงื่อนไข:
+     * 2.1.1.1. ถ้า person_flag มีค่าเท่ากับ 8 (ผู้ดูแลระบบ) หรือ 9 (ผู้ดูแลระบบระดับสูง): ให้แสดงเมนูทั้งหมด
+     * 2.1.1.2. ถ้า person_flag มีค่าเท่ากับ 2 (พนักงาน): ให้แสดงเมนูทั้งหมดยกเว้น เมนูผู้ดูแลระบบ และ เมนูข้อมูลลูกค้า (แสดงเฉพาะข้อมูลการจอง)
+     * 2.1.1.3. ถ้า person_flag มีค่าเท่ากับ 1 (ลูกค้า): ให้แสดง เมนูข้อมูลลูกค้า และ เมนูข้อมูลการจอง แต่ไม่แสดง เมนูผู้ดูแลระบบ
+     */
+    function applySidebarPermissions(user) {
+      const $sidebar = $('#app-sidebar');
+      // ซ่อน Sidebar ไว้ก่อนตรวจสอบสิทธิ์
+      $sidebar.hide();
+
+      if (!user) return;
+
+      const flag = parseInt(user.personFlag, 10);
+      const isSystemAdmin = Boolean(user.username && user.username.toLowerCase() === 'admin');
+
+      if (flag === 9 || flag === 8 || isSystemAdmin) {
+        // เงื่อนไข 2.1.1.1: ผู้ดูแลระบบ / ผู้ดูแลระบบระดับสูง -> แสดงทุกเมนู
+        $('#nav-item-admin').show();
+        $('#nav-item-customer').show();
+        $('#nav-item-reservation').show();
+      } else if (flag === 2) {
+        // เงื่อนไข 2.1.1.2: พนักงาน -> แสดงเฉพาะข้อมูลการจอง (ซ่อนผู้ดูแลระบบ และข้อมูลลูกค้า)
+        $('#nav-item-admin').hide();
+        $('#nav-item-customer').hide();
+        $('#nav-item-reservation').show();
+      } else if (flag === 1) {
+        // เงื่อนไข 2.1.1.3: ลูกค้า -> ซ่อนผู้ดูแลระบบ, แสดงข้อมูลลูกค้า และข้อมูลการจอง
+        $('#nav-item-admin').hide();
+        $('#nav-item-customer').show();
+        $('#nav-item-reservation').show();
+      } else {
+        // กรณีอื่นๆ (Fallback): แสดงเฉพาะเมนูข้อมูลการจอง
+        $('#nav-item-admin').hide();
+        $('#nav-item-customer').hide();
+        $('#nav-item-reservation').show();
+      }
+
+      // เมื่อตรวจสอบสิทธิ์และตั้งค่าการแสดงเมนูเรียบร้อยแล้ว จึงแสดง Sidebar
+      $sidebar.fadeIn(200);
     }
 
     function showAppView() {
       $('#login-view').hide();
       $('#app-view').css('display', 'flex').fadeIn(300);
 
-      // อัปเดตข้อมูลผู้เข้าใช้งานใน Header (ข้อ 1.2.1)
+      // อัปเดตข้อมูลผู้เข้าใช้งานและ Badge ตำแหน่งใน Header
       if (currentUser) {
-        const isSuper = (parseInt(currentUser.personFlag, 10) === 9 || (currentUser.username && currentUser.username.toLowerCase() === 'admin'));
-        const roleName = isSuper ? "ผู้ดูแลระบบสูงสุด" : "ผู้ดูแลระบบ";
+        const flag = parseInt(currentUser.personFlag, 10);
+        let roleName = currentUser.roleTitle || "ผู้ใช้งาน";
+        let badgeClass = "bg-secondary text-white";
+        let iconClass = "fa-user";
+
+        if (flag === 9 || (currentUser.username && currentUser.username.toLowerCase() === 'admin')) {
+          roleName = "ผู้ดูแลระบบระดับสูง";
+          badgeClass = "bg-warning text-dark";
+          iconClass = "fa-crown";
+        } else if (flag === 8) {
+          roleName = "ผู้ดูแลระบบ";
+          badgeClass = "bg-info-subtle text-dark border";
+          iconClass = "fa-user-gear";
+        } else if (flag === 2) {
+          roleName = "พนักงาน";
+          badgeClass = "bg-success-subtle text-success-emphasis border";
+          iconClass = "fa-user-tie";
+        } else if (flag === 1) {
+          roleName = "ลูกค้า";
+          badgeClass = "bg-primary-subtle text-primary border";
+          iconClass = "fa-user";
+        }
+
         const display = currentUser.nickname ? `${currentUser.nickname} (${currentUser.username})` : currentUser.username;
-        $('#header-user-name').html(`${escapeHtml(display)} <span class="badge ${isSuper ? 'bg-warning text-dark' : 'bg-info-subtle text-dark border'} ms-1" style="font-size:0.75rem; font-weight:normal;"><i class="fa-solid ${isSuper ? 'fa-crown' : 'fa-user-gear'} me-1"></i>${roleName}</span>`);
+        $('#header-user-name').html(`${escapeHtml(display)} <span class="badge ${badgeClass} ms-1" style="font-size:0.75rem; font-weight:normal;"><i class="fa-solid ${iconClass} me-1"></i>${roleName}</span>`);
         $('#header-user-avatar').attr('title', roleName);
       }
 
-      // โหลดข้อมูลตามเซกชันเริ่มต้น
-      if (activeSection === 'admin') {
-        loadAdminTableData();
-      } else if (activeSection === 'customer') {
-        loadCustomerTableData();
-      } else if (activeSection === 'reservation') {
-        loadCalendarData(currentCalendarYear, currentCalendarMonth);
+      // ซ่อน/แสดง เมนู Sidebar ตามสิทธิ์ person_flag
+      applySidebarPermissions(currentUser);
+
+      // กำหนดหน้าจอเริ่มต้นตามสิทธิ์ผู้ใช้งาน
+      $('.content-section').removeClass('active');
+      const flag = currentUser ? parseInt(currentUser.personFlag, 10) : 0;
+      let initialSection = activeSection || 'admin';
+
+      if (flag === 2) {
+        // พนักงาน: เริ่มต้นที่หน้าจอข้อมูลการจองเท่านั้น
+        initialSection = 'reservation';
+      } else if (flag === 1) {
+        // ลูกค้า: หากหน้าจอเดิมเป็น admin ให้เปลี่ยนเป็น reservation
+        if (initialSection === 'admin') {
+          initialSection = 'reservation';
+        }
+      } else if (flag === 8 || flag === 9 || (currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin')) {
+        if (!activeSection) {
+          initialSection = 'admin';
+        }
       }
+
+      switchSection(initialSection);
     }
 
     function toggleSidebar() {
@@ -1541,18 +1625,60 @@
 
     /**
      * สลับระหว่างเมนูผู้ดูแลระบบ, เมนูข้อมูลลูกค้า, และ เมนูข้อมูลการจอง
+     * มีเงื่อนไขการตรวจสอบสิทธิ์ก่อนเสมอ
      */
     function switchSection(section) {
+      // 1. ตรวจสอบสถานะการเข้าสู่ระบบ
+      if (!currentUser) {
+        showLoginView();
+        return;
+      }
+
+      const personFlag = parseInt(currentUser.personFlag, 10);
+      const isSystemAdmin = Boolean(currentUser.username && currentUser.username.toLowerCase() === 'admin');
+
+      // 2. ตรวจสอบสิทธิ์การเข้าถึงแต่ละเมนู
+      if (section === 'admin') {
+        if (personFlag !== 8 && personFlag !== 9 && !isSystemAdmin) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'ไม่มีสิทธิ์เข้าถึง',
+            text: 'คุณไม่มีสิทธิ์ในการเข้าถึงหน้าจอข้อมูลผู้ดูแลระบบ',
+            confirmButtonColor: '#1B3B36'
+          });
+          switchSection('reservation');
+          return;
+        }
+      } else if (section === 'customer') {
+        // พนักงาน (person_flag = 2) ไม่มีสิทธิ์เข้าถึงหน้าจอข้อมูลลูกค้า
+        if (personFlag === 2) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'ไม่มีสิทธิ์เข้าถึง',
+            text: 'พนักงานไม่มีสิทธิ์ในการเข้าถึงหน้าจอข้อมูลลูกค้า',
+            confirmButtonColor: '#1B3B36'
+          });
+          switchSection('reservation');
+          return;
+        }
+      }
+
       activeSection = section;
 
       // จัดการ Active class ที่ Sidebar
       $('.sidebar-link').removeClass('active');
+      // ซ่อนหน้าจอทั้งหมดทันทีก่อนเปิดหน้าจอที่เกี่ยวข้อง
       $('.content-section').removeClass('active');
 
       if (section === 'admin') {
         $('#menu-admin').addClass('active');
-        $('#section-admin').addClass('active');
+
+        // ทำการซ่อนหน้าจอผู้ดูแลระบบไว้ก่อน ไม่ให้เห็นจนกว่าจะตรวจสอบสิทธิ์และโหลดข้อมูลเสร็จ
+        $('#section-admin').removeClass('active');
+
+        // ดึงข้อมูลและตรวจสอบสิทธิ์กับ Server -> เมื่อเสร็จเรียบร้อยจึงแสดงหน้าจอ
         loadAdminTableData();
+
       } else if (section === 'customer') {
         $('#menu-customer').addClass('active');
         $('#section-customer').addClass('active');
@@ -1627,16 +1753,29 @@
           })
           .loginUser(username, password);
       } else {
-        // Mock fallback สำหรับ Browser Preview
+        // Mock fallback สำหรับ Browser Preview (รองรับการทดสอบทุกสิทธิ์)
         setTimeout(() => {
           $btnLogin.prop('disabled', false).html('<i class="fa-solid fa-right-to-bracket me-2"></i> เข้าสู่ระบบ');
-          if (username.toLowerCase() === 'admin' && password === '1234') {
-            currentUser = { username: 'admin', nickname: 'แอดมิน', firstname: 'ผู้ดูแลระบบ', lastname: 'JM Thai Massage' };
+          let mockUser = null;
+          const u = username.toLowerCase();
+
+          if (u === 'admin' && password === '1234') {
+            mockUser = { username: 'admin', nickname: 'แอดมิน', firstname: 'ผู้ดูแลระบบ', lastname: 'JM Thai Massage', personFlag: 9, roleTitle: 'ผู้ดูแลระบบระดับสูง' };
+          } else if (u === 'manager' && password === '1234') {
+            mockUser = { username: 'manager', nickname: 'ผู้จัดการ', firstname: 'สมศักดิ์', lastname: 'ใจดี', personFlag: 8, roleTitle: 'ผู้ดูแลระบบ' };
+          } else if (u === 'staff' && password === '1234') {
+            mockUser = { username: 'staff', nickname: 'หมอนวดกานต์', firstname: 'กานดา', lastname: 'รักงาน', personFlag: 2, roleTitle: 'พนักงาน' };
+          } else if (u === 'customer' && password === '1234') {
+            mockUser = { username: 'customer', nickname: 'คุณสมชาย', firstname: 'สมชาย', lastname: 'สบายดี', personFlag: 1, roleTitle: 'ลูกค้า' };
+          }
+
+          if (mockUser) {
+            currentUser = mockUser;
             sessionStorage.setItem("jm_current_user", JSON.stringify(currentUser));
             Swal.fire({
               icon: 'success',
               title: 'เข้าสู่ระบบสำเร็จ',
-              text: `ยินดีต้อนรับ คุณ${currentUser.nickname}`,
+              text: `ยินดีต้อนรับ คุณ${currentUser.nickname} (${currentUser.roleTitle})`,
               timer: 1500,
               showConfirmButton: false
             }).then(() => {
@@ -1646,7 +1785,7 @@
             Swal.fire({
               icon: 'error',
               title: 'เข้าสู่ระบบไม่สำเร็จ',
-              text: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (ทดสอบ: admin / 1234)',
+              text: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (ทดสอบ: admin/manager/staff/customer รหัส 1234)',
               confirmButtonColor: '#1B3B36'
             });
           }
@@ -1669,6 +1808,7 @@
         if (result.isConfirmed) {
           sessionStorage.removeItem("jm_current_user");
           currentUser = null;
+          $('#app-sidebar').hide();
           showLoginView();
         }
       });
@@ -1677,23 +1817,66 @@
     // =============================================================
     // โมดูล 1: ผู้ดูแลระบบ (Admin CRUD)
     // =============================================================
-    function loadAdminTableData() {
+    function loadAdminTableData(callback) {
       const requester = (currentUser && currentUser.username) ? currentUser.username : '';
+
+      // ซ่อนหน้าจอผู้ดูแลระบบทันทีในระหว่างตรวจสอบสิทธิ์
+      $('#section-admin').removeClass('active');
+
       if (typeof google !== 'undefined' && google.script && google.script.run) {
-        Swal.showLoading();
+        Swal.fire({
+          title: 'กำลังตรวจสอบสิทธิ์และโหลดข้อมูล...',
+          text: 'ระบบกำลังตรวจสอบสิทธิ์การเข้าถึง กรุณารอสักครู่',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
         google.script.run
           .withSuccessHandler(function(response) {
             Swal.close();
             if (response.success) {
+              // ซิงค์สิทธิ์ person_flag และ roleTitle ล่าสุดจาก Server
+              if (response.personFlag && currentUser) {
+                currentUser.personFlag = response.personFlag;
+                sessionStorage.setItem("jm_current_user", JSON.stringify(currentUser));
+
+                const isSuper = (parseInt(currentUser.personFlag, 10) === 9 || (currentUser.username && currentUser.username.toLowerCase() === 'admin'));
+                const roleName = isSuper ? "ผู้ดูแลระบบสูงสุด" : "ผู้ดูแลระบบ";
+                const display = currentUser.nickname ? `${currentUser.nickname} (${currentUser.username})` : currentUser.username;
+                $('#header-user-name').html(`${escapeHtml(display)} <span class="badge ${isSuper ? 'bg-warning text-dark' : 'bg-info-subtle text-dark border'} ms-1" style="font-size:0.75rem; font-weight:normal;"><i class="fa-solid ${isSuper ? 'fa-crown' : 'fa-user-gear'} me-1"></i>${roleName}</span>`);
+              }
+
               currentAdminData = response.data || [];
               renderAdminTable(currentAdminData);
+
+              // *** เมื่อตรวจสอบสิทธิ์และโหลดข้อมูลเรียบร้อยแล้ว จึงแสดงหน้าจอให้เห็นตามเงื่อนไขที่สัมพันธ์กัน ***
+              $('#section-admin').addClass('active');
+
+              if (typeof callback === 'function') {
+                callback();
+              }
             } else {
-              Swal.fire({ icon: 'error', title: 'ไม่สามารถโหลดข้อมูลได้', text: response.message, confirmButtonColor: '#1B3B36' });
+              // หากไม่ผ่านการตรวจสอบสิทธิ์ ซ่อนหน้าจอไว้
+              $('#section-admin').removeClass('active');
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถเข้าถึงได้',
+                text: response.message || 'คุณไม่มีสิทธิ์เข้าถึงข้อมูลผู้ดูแลระบบ',
+                confirmButtonColor: '#1B3B36'
+              }).then(() => {
+                switchSection('reservation');
+              });
             }
           })
           .withFailureHandler(function(err) {
             Swal.close();
-            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'โหลดข้อมูลล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
+            $('#section-admin').removeClass('active');
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: 'โหลดข้อมูลล้มเหลว: ' + (err.message || err),
+              confirmButtonColor: '#1B3B36'
+            });
           })
           .getAdminUsers(requester);
       } else {
@@ -1712,6 +1895,10 @@
           }
         ];
         renderAdminTable(currentAdminData);
+        $('#section-admin').addClass('active');
+        if (typeof callback === 'function') {
+          callback();
+        }
       }
     }
 
