@@ -1682,7 +1682,12 @@
 
       } else if (section === 'customer') {
         $('#menu-customer').addClass('active');
-        $('#section-customer').addClass('active');
+
+        // ทำการซ่อนหน้าจอผู้ดูแลระบบและหน้าจอข้อมูลลูกค้าไว้ก่อน ไม่ให้เห็นจนกว่าจะตรวจสอบสิทธิ์และโหลดข้อมูลเสร็จ
+        $('#section-admin').removeClass('active');
+        $('#section-customer').removeClass('active');
+
+        // ดึงข้อมูลและตรวจสอบสิทธิ์กับ Server -> เมื่อเสร็จเรียบร้อยจึงแสดงหน้าจอตามเงื่อนไขที่สัมพันธ์กัน
         loadCustomerTableData();
       } else if (section === 'reservation') {
         $('#menu-reservation').addClass('active');
@@ -1767,7 +1772,26 @@
           } else if (u === 'staff' && password === '1234') {
             mockUser = { username: 'staff', nickname: 'หมอนวดกานต์', firstname: 'กานดา', lastname: 'รักงาน', personFlag: 2, roleTitle: 'พนักงาน' };
           } else if (u === 'customer' && password === '1234') {
-            mockUser = { username: 'customer', nickname: 'คุณสมชาย', firstname: 'สมชาย', lastname: 'สบายดี', personFlag: 1, roleTitle: 'ลูกค้า' };
+            mockUser = { username: 'JM0001', nickname: 'คุณนิด', firstname: 'นิตยา', lastname: 'สุขใจ', phone: '0812345678', personFlag: 1, roleTitle: 'ลูกค้า' };
+          } else if (u.indexOf('jm') === 0) {
+            // ตรวจสอบกับข้อมูลลูกค้าในรายการ (currentCustomerData)
+            const matchedCust = currentCustomerData.find(c => String(c.customerId || '').toLowerCase() === u);
+            if (matchedCust) {
+              const expectedPass = matchedCust.pwd || matchedCust.phone || '1234';
+              if (password === expectedPass || password === matchedCust.phone || password === '1234') {
+                mockUser = {
+                  username: matchedCust.customerId,
+                  nickname: matchedCust.nickname || matchedCust.customerId,
+                  firstname: matchedCust.firstname || '',
+                  lastname: matchedCust.lastname || '',
+                  phone: matchedCust.phone || '',
+                  personFlag: 1,
+                  roleTitle: 'ลูกค้า'
+                };
+              }
+            } else if (password === '1234' || password.length >= 8) {
+              mockUser = { username: username.toUpperCase(), nickname: 'ลูกค้า ' + username.toUpperCase(), firstname: '', lastname: '', personFlag: 1, roleTitle: 'ลูกค้า' };
+            }
           }
 
           if (mockUser) {
@@ -2408,70 +2432,156 @@
     // โมดูล 2: ข้อมูลลูกค้า (Customer CRUD - Sheet_Name_Customer)
     // ฟิลด์: 1.1 ชื่อเล่น(Req), 1.2 ชื่อจริง(Opt), 1.3 นามสกุล(Opt), 1.4 เบอร์โทร(Req), 1.5 วันที่สร้าง, 1.6 อัปเดตล่าสุด
     // =============================================================
-    function loadCustomerTableData() {
+    function loadCustomerTableData(callback) {
       const requester = (currentUser && currentUser.username) ? currentUser.username : '';
 
-      // ซ่อน/แสดง ปุ่มเพิ่มลูกค้าตามสิทธิ์ (ลูกค้า = 1 ไม่สามารถเพิ่มข้อมูลลูกค้าคนอื่นได้)
-      if (currentUser && parseInt(currentUser.personFlag, 10) === 1) {
-        $('#btn-open-add-customer').hide();
-      } else {
-        $('#btn-open-add-customer').show();
-      }
+      // ซ่อนหน้าจอผู้ดูแลระบบและหน้าจอข้อมูลลูกค้าทันทีในระหว่างตรวจสอบสิทธิ์
+      $('#section-admin').removeClass('active');
+      $('#section-customer').removeClass('active');
 
       if (typeof google !== 'undefined' && google.script && google.script.run) {
-        Swal.showLoading();
+        Swal.fire({
+          title: 'กำลังตรวจสอบสิทธิ์และโหลดข้อมูล...',
+          text: 'ระบบกำลังตรวจสอบสิทธิ์การเข้าถึงข้อมูลลูกค้า กรุณารอสักครู่',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
         google.script.run
           .withSuccessHandler(function(response) {
             Swal.close();
             if (response.success) {
+              if (response.personFlag && currentUser) {
+                currentUser.personFlag = response.personFlag;
+                sessionStorage.setItem("jm_current_user", JSON.stringify(currentUser));
+              }
+
+              const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+
+              // เงื่อนไขสิทธิ์การเพิ่มข้อมูลลูกค้า:
+              // - ผู้ดูแลระบบระดับสูงสุด (9) และ ผู้ดูแลระบบ (8): สามารถเพิ่มข้อมูลได้ (แสดงปุ่มเพิ่ม)
+              // - ลูกค้า (1): ไม่สามารถเพิ่มข้อมูลได้ (ซ่อนปุ่มเพิ่ม)
+              if (userFlag === 1) {
+                $('#btn-open-add-customer').hide();
+              } else {
+                $('#btn-open-add-customer').show();
+              }
+
               currentCustomerData = response.data || [];
               renderCustomerTable(currentCustomerData);
+
+              // *** เมื่อตรวจสอบสิทธิ์และโหลดข้อมูลเรียบร้อยแล้ว จึงแสดงหน้าจอข้อมูลลูกค้า ***
+              $('#section-customer').addClass('active');
+
+              if (typeof callback === 'function') {
+                callback();
+              }
             } else {
-              Swal.fire({ icon: 'error', title: 'ไม่สามารถโหลดข้อมูลลูกค้าได้', text: response.message, confirmButtonColor: '#1B3B36' });
+              // หากไม่ผ่านการตรวจสอบสิทธิ์ ซ่อนหน้าจอไว้
+              $('#section-customer').removeClass('active');
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถเข้าถึงได้',
+                text: response.message || 'คุณไม่มีสิทธิ์เข้าถึงหน้าจอข้อมูลลูกค้า',
+                confirmButtonColor: '#1B3B36'
+              }).then(() => {
+                switchSection('reservation');
+              });
             }
           })
           .withFailureHandler(function(err) {
             Swal.close();
-            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'โหลดข้อมูลล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
+            $('#section-customer').removeClass('active');
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: 'โหลดข้อมูลล้มเหลว: ' + (err.message || err),
+              confirmButtonColor: '#1B3B36'
+            });
           })
           .getCustomers(requester);
       } else {
         // Mock fallback สำหรับ Browser Preview
-        currentCustomerData = [
-          {
-            rowId: 2,
-            customerId: "JM0001",
-            nickname: "คุณนิด2",
-            firstname: "นิตยา2",
-            lastname: "สุขใจ2",
-            phone: "081-234-56789",
-            createDate: "18/09/2026 18:12",
-            createdBy: "admin",
-            updateDate: "18/09/2026 18:31",
-            updatedBy: "admin",
-            isActive: true,
-            personFlag: 1,
-            roleTitle: "ลูกค้า",
-            deletedFlag: "N"
-          },
-          {
-            rowId: 3,
-            customerId: "JM0002",
-            nickname: "คุณหน่อย",
-            firstname: "",
-            lastname: "",
-            phone: "0812345678",
-            createDate: "18/09/2026 19:30",
-            createdBy: "admin",
-            updateDate: "18/09/2026 19:30",
-            updatedBy: "admin",
-            isActive: true,
-            personFlag: 1,
-            roleTitle: "ลูกค้า",
-            deletedFlag: "N"
+        Swal.fire({
+          title: 'กำลังตรวจสอบสิทธิ์และโหลดข้อมูล...',
+          text: 'ระบบกำลังตรวจสอบสิทธิ์การเข้าถึงข้อมูลลูกค้า กรุณารอสักครู่',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
+        setTimeout(() => {
+          Swal.close();
+          const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+
+          if (userFlag === 2) {
+            $('#section-customer').removeClass('active');
+            Swal.fire({
+              icon: 'error',
+              title: 'ไม่สามารถเข้าถึงได้',
+              text: 'พนักงานไม่มีสิทธิ์เข้าถึงข้อมูลลูกค้า',
+              confirmButtonColor: '#1B3B36'
+            }).then(() => {
+              switchSection('reservation');
+            });
+            return;
           }
-        ];
-        renderCustomerTable(currentCustomerData);
+
+          if (userFlag === 1) {
+            $('#btn-open-add-customer').hide();
+          } else {
+            $('#btn-open-add-customer').show();
+          }
+
+          currentCustomerData = [
+            {
+              rowId: 2,
+              customerId: "JM0001",
+              pwd: "0861111111",
+              nickname: "คุณนิด2",
+              firstname: "นิตยา2",
+              lastname: "สุขใจ2",
+              phone: "0861111111",
+              createDate: "18/09/2026 18:12",
+              createdBy: "admin",
+              updateDate: "18/09/2026 18:31",
+              updatedBy: "admin",
+              isActive: true,
+              personFlag: 1,
+              roleTitle: "ลูกค้า",
+              deletedFlag: "N"
+            },
+            {
+              rowId: 3,
+              customerId: "JM0002",
+              pwd: "0812345678",
+              nickname: "คุณหน่อย",
+              firstname: "",
+              lastname: "",
+              phone: "0812345678",
+              createDate: "18/09/2026 19:30",
+              createdBy: "admin",
+              updateDate: "18/09/2026 19:30",
+              updatedBy: "admin",
+              isActive: true,
+              personFlag: 1,
+              roleTitle: "ลูกค้า",
+              deletedFlag: "N"
+            }
+          ];
+
+          // ถ้าเป็นลูกค้า (1) ให้เห็นเฉพาะแถวที่เป็นของตนเอง
+          if (userFlag === 1) {
+            const currentU = (currentUser && currentUser.username) ? currentUser.username.toLowerCase() : 'jm0001';
+            currentCustomerData = currentCustomerData.filter(c => String(c.customerId || '').toLowerCase() === currentU);
+          }
+
+          renderCustomerTable(currentCustomerData);
+          $('#section-customer').addClass('active');
+
+          if (typeof callback === 'function') {
+            callback();
+          }
+        }, 300);
       }
     }
 
@@ -2483,26 +2593,50 @@
       const $tbody = $('#customerTableBody');
       $tbody.empty();
 
-      const isCustomerUser = Boolean(currentUser && parseInt(currentUser.personFlag, 10) === 1);
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSuperAdmin = (userFlag === 9 || (currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin'));
+      const isAdmin = (userFlag === 8);
+      const isCustomerUser = (userFlag === 1);
+      const currentUserNameLower = (currentUser && currentUser.username) ? currentUser.username.toLowerCase() : '';
 
       if (!dataList || dataList.length === 0) {
         $tbody.append('<tr><td colspan="9" class="text-center py-4 text-muted">ไม่พบข้อมูลลูกค้า</td></tr>');
       } else {
         dataList.forEach((cust, index) => {
-          let actionButtons = `
-            <div class="action-btn-group">
+          let actionButtons = `<div class="action-btn-group">`;
+
+          // 1. ปุ่มแก้ไขข้อมูลลูกค้า (Edit)
+          // - ผู้ดูแลระบบระดับสูงสุด (9) และ ผู้ดูแลระบบ (8): สามารถแก้ไขได้ทุกคน
+          // - ลูกค้า (1): สามารถแก้ไขได้เฉพาะข้อมูลของตัวเองเท่านั้น
+          let canEdit = false;
+          if (isSuperAdmin || isAdmin) {
+            canEdit = true;
+          } else if (isCustomerUser) {
+            const custIdLower = String(cust.customerId || '').trim().toLowerCase();
+            if (custIdLower === currentUserNameLower || dataList.length === 1) {
+              canEdit = true;
+            }
+          }
+
+          if (canEdit) {
+            actionButtons += `
               <button class="btn btn-table-action btn-table-edit" title="แก้ไขข้อมูลลูกค้า" onclick="openEditCustomerModal(${cust.rowId})">
                 <i class="fa-solid fa-pen-to-square"></i>
               </button>
-          `;
-          // ลูกค้า (person_flag = 1) ไม่มีสิทธิ์ลบข้อมูล
-          if (!isCustomerUser) {
+            `;
+          }
+
+          // 2. ปุ่มลบข้อมูลลูกค้า (Delete)
+          // - เฉพาะผู้ดูแลระบบระดับสูงสุด (person_flag = 9) เท่านั้นที่สามารถลบข้อมูลลูกค้าได้
+          // - ผู้ดูแลระบบ (person_flag = 8) และ ลูกค้า (person_flag = 1) ไม่สามารถลบข้อมูลลูกค้าได้
+          if (isSuperAdmin) {
             actionButtons += `
               <button class="btn btn-table-action btn-table-delete" title="ลบข้อมูลลูกค้า" onclick="confirmDeleteCustomer(${cust.rowId}, '${escapeHtml(cust.nickname)}')">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
             `;
           }
+
           actionButtons += `</div>`;
 
           const customerIdBadge = `<span class="badge bg-dark-subtle text-dark border border-secondary-subtle px-2 py-1 font-monospace fw-semibold"><i class="fa-solid fa-id-card-clip text-warning me-1"></i>${escapeHtml(cust.customerId || '-')}</span>`;
@@ -2546,6 +2680,17 @@
      * - created_by บันทึก username ของผู้ล็อกอิน
      */
     function openAddCustomerModal() {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      if (userFlag === 1) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์เพิ่มข้อมูล',
+          text: 'ลูกค้าไม่มีสิทธิ์เพิ่มข้อมูลลูกค้าใหม่',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
       Swal.fire({
         title: '<i class="fa-solid fa-user-plus text-success me-2"></i>เพิ่มข้อมูลลูกค้า',
         html: `
@@ -2554,8 +2699,14 @@
             <input id="swal-cust-nickname" class="swal-input-custom" placeholder="เช่น นิด, แนน, บอย" autocomplete="off">
           </div>
           <div class="swal-form-group">
-            <label class="swal-form-label">เบอร์โทรศัพท์ (Phone Number)<span class="req">*</span></label>
-            <input id="swal-cust-phone" type="tel" class="swal-input-custom" placeholder="เช่น 0812345678" autocomplete="tel">
+            <label class="swal-form-label">เบอร์โทรศัพท์ (Phone Number)<span class="req">* (ตัวเลข 10 หลัก)</span></label>
+            <input id="swal-cust-phone" type="tel" class="swal-input-custom" placeholder="เช่น 0861111111" autocomplete="tel" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)">
+            <small class="text-muted" style="font-size:0.75rem;">* กรอกเฉพาะตัวเลข 10 หลักเท่านั้น เช่น 0861111111</small>
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">รหัสผ่าน (Password)<span class="opt">(หากไม่ระบุ จะใช้เบอร์โทรเป็นรหัสผ่าน)</span></label>
+            <input id="swal-cust-password" type="password" class="swal-input-custom" placeholder="ปล่อยว่างไว้เพื่อใช้เบอร์โทรศัพท์เป็นรหัสผ่าน" autocomplete="new-password">
+            <small class="text-muted" style="font-size:0.75rem;">* ครั้งแรกระบบจะใช้เบอร์โทรศัพท์เป็นรหัสผ่านเข้าสู่ระบบโดยอัตโนมัติ</small>
           </div>
           <div class="swal-form-group">
             <label class="swal-form-label">ชื่อจริง (First Name)<span class="opt">(ไม่บังคับ/Optional)</span></label>
@@ -2574,6 +2725,9 @@
           </div>
         `,
         didOpen: () => {
+          $('#swal-cust-phone').on('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+          });
           $('#swal-cust-active').on('change', function() {
             $('#swal-cust-active-label').text(this.checked ? 'เปิดใช้งาน (Active)' : 'ปิดการใช้งาน (Inactive)');
           });
@@ -2587,7 +2741,8 @@
         focusConfirm: false,
         preConfirm: () => {
           const nickname = $('#swal-cust-nickname').val().trim();
-          const phone = $('#swal-cust-phone').val().trim();
+          const phone = $('#swal-cust-phone').val().trim().replace(/[^0-9]/g, '');
+          const password = $('#swal-cust-password').val().trim();
           const firstname = $('#swal-cust-firstname').val().trim();
           const lastname = $('#swal-cust-lastname').val().trim();
           const isActive = $('#swal-cust-active').is(':checked');
@@ -2601,9 +2756,13 @@
             Swal.showValidationMessage('กรุณากรอก "เบอร์โทรศัพท์" ของลูกค้า');
             return false;
           }
+          if (!/^[0-9]{10}$/.test(phone)) {
+            Swal.showValidationMessage('เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น (เช่น 0861111111)');
+            return false;
+          }
 
           const currentUsername = (currentUser && currentUser.username) ? currentUser.username : 'admin';
-          return { nickname, phone, firstname, lastname, isActive, createdBy: currentUsername, personFlag: 1 };
+          return { nickname, phone, password, firstname, lastname, isActive, createdBy: currentUsername, personFlag: 1 };
         }
       }).then((result) => {
         if (result.isConfirmed && result.value) {
@@ -2643,6 +2802,7 @@
           currentCustomerData.push({
             rowId: currentCustomerData.length + 2,
             customerId: nextId,
+            pwd: payload.password || payload.phone,
             nickname: payload.nickname,
             firstname: payload.firstname,
             lastname: payload.lastname,
@@ -2672,6 +2832,22 @@
         return;
       }
 
+      // ตรวจสอบสิทธิ์กรณีเป็นลูกค้า (1): แก้ไขได้เฉพาะข้อมูลของตนเองเท่านั้น
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      if (userFlag === 1) {
+        const custIdLower = String(customer.customerId || '').trim().toLowerCase();
+        const currentUserNameLower = (currentUser && currentUser.username) ? currentUser.username.toLowerCase() : '';
+        if (custIdLower !== currentUserNameLower && currentCustomerData.length > 1) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'ไม่มีสิทธิ์แก้ไข',
+            text: 'ลูกค้าสามารถแก้ไขได้เฉพาะข้อมูลของตนเองเท่านั้น',
+            confirmButtonColor: '#1B3B36'
+          });
+          return;
+        }
+      }
+
       const isActiveChecked = (customer.isActive !== false && String(customer.isActive).toLowerCase() !== 'false');
 
       Swal.fire({
@@ -2687,8 +2863,13 @@
             <input id="swal-edit-cust-nickname" class="swal-input-custom" value="${escapeHtml(customer.nickname || '')}">
           </div>
           <div class="swal-form-group">
-            <label class="swal-form-label">เบอร์โทรศัพท์ (Phone Number)<span class="req">*</span></label>
-            <input id="swal-edit-cust-phone" type="tel" class="swal-input-custom" value="${escapeHtml(customer.phone || '')}">
+            <label class="swal-form-label">เบอร์โทรศัพท์ (Phone Number)<span class="req">* (ตัวเลข 10 หลัก)</span></label>
+            <input id="swal-edit-cust-phone" type="tel" class="swal-input-custom" value="${escapeHtml(String(customer.phone || '').replace(/[^0-9]/g, '').slice(0, 10))}" placeholder="เช่น 0861111111" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)">
+            <small class="text-muted" style="font-size:0.75rem;">* กรอกเฉพาะตัวเลข 10 หลักเท่านั้น เช่น 0861111111</small>
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">รหัสผ่านใหม่ (Password)<span class="opt">(หากไม่เปลี่ยนให้เว้นว่างไว้)</span></label>
+            <input id="swal-edit-cust-password" type="password" class="swal-input-custom" placeholder="ปล่อยว่างไว้หากใช้รหัสผ่านเดิม" autocomplete="new-password">
           </div>
           <div class="swal-form-group">
             <label class="swal-form-label">ชื่อจริง (First Name)<span class="opt">(ไม่บังคับ/Optional)</span></label>
@@ -2707,6 +2888,9 @@
           </div>
         `,
         didOpen: () => {
+          $('#swal-edit-cust-phone').on('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+          });
           $('#swal-edit-cust-active').on('change', function() {
             $('#swal-edit-cust-active-label').text(this.checked ? 'เปิดใช้งาน (Active)' : 'ปิดการใช้งาน (Inactive)');
           });
@@ -2720,7 +2904,8 @@
         focusConfirm: false,
         preConfirm: () => {
           const nickname = $('#swal-edit-cust-nickname').val().trim();
-          const phone = $('#swal-edit-cust-phone').val().trim();
+          const phone = $('#swal-edit-cust-phone').val().trim().replace(/[^0-9]/g, '');
+          const password = $('#swal-edit-cust-password').val().trim();
           const firstname = $('#swal-edit-cust-firstname').val().trim();
           const lastname = $('#swal-edit-cust-lastname').val().trim();
           const isActive = $('#swal-edit-cust-active').is(':checked');
@@ -2733,9 +2918,13 @@
             Swal.showValidationMessage('กรุณากรอก "เบอร์โทรศัพท์" ของลูกค้า');
             return false;
           }
+          if (!/^[0-9]{10}$/.test(phone)) {
+            Swal.showValidationMessage('เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น (เช่น 0861111111)');
+            return false;
+          }
 
           const currentUsername = (currentUser && currentUser.username) ? currentUser.username : 'admin';
-          return { rowId: customer.rowId, nickname, phone, firstname, lastname, isActive, updatedBy: currentUsername, personFlag: 1 };
+          return { rowId: customer.rowId, nickname, phone, password, firstname, lastname, isActive, updatedBy: currentUsername, personFlag: 1 };
         }
       }).then((result) => {
         if (result.isConfirmed && result.value) {
@@ -2765,6 +2954,9 @@
         setTimeout(() => {
           const c = currentCustomerData.find(x => x.rowId === payload.rowId);
           if (c) {
+            if (payload.password) {
+              c.pwd = payload.password;
+            }
             c.nickname = payload.nickname;
             c.phone = payload.phone;
             c.firstname = payload.firstname;
@@ -2784,6 +2976,18 @@
      * เงื่อนไข: ปุ่มยกเลิกอยู่ด้านซ้าย และ ปุ่มยืนยันอยู่ด้านขวา
      */
     function confirmDeleteCustomer(rowId, nickname) {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSuperAdmin = (userFlag === 9 || (currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin'));
+      if (!isSuperAdmin) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์ลบข้อมูล',
+          text: 'เฉพาะผู้ดูแลระบบระดับสูงสุด (person_flag = 9) เท่านั้นที่สามารถลบข้อมูลลูกค้าได้',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
       Swal.fire({
         title: 'ยืนยันการลบข้อมูลลูกค้า?',
         html: `คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลลูกค้า <b>"${escapeHtml(nickname)}"</b>?<br><small class="text-danger">ระบบจะทำเครื่องหมายลบ (Soft Delete) และไม่แสดงในรายการ</small>`,
@@ -3002,7 +3206,7 @@
                 customerId: "JM0001",
                 customerNickname: "สมชาย",
                 customerFullName: "สมชาย ใจดี",
-                customerPhone: "081-234-5678",
+                customerPhone: "0812345678",
                 timeSlot: "17:30",
                 date: todayStr,
                 status: "ยืนยันแล้ว",
@@ -3011,11 +3215,11 @@
               }
             ],
             "19:00": [
-              { rowId: 3, reservationId: "BK0002", customerId: "JM0001", customerNickname: "สมชาย", customerPhone: "081-234-5678", timeSlot: "19:00", date: todayStr, status: "ยืนยันแล้ว" },
-              { rowId: 4, reservationId: "BK0003", customerId: "JM0002", customerNickname: "วิภา", customerPhone: "089-987-6543", timeSlot: "19:00", date: todayStr, status: "ยืนยันแล้ว" },
-              { rowId: 5, reservationId: "BK0004", customerId: "JM0001", customerNickname: "นิดา", customerPhone: "082-111-2233", timeSlot: "19:00", date: todayStr, status: "ยืนยันแล้ว" },
-              { rowId: 6, reservationId: "BK0005", customerId: "JM0002", customerNickname: "กานดา", customerPhone: "083-444-5566", timeSlot: "19:00", date: todayStr, status: "ยืนยันแล้ว" },
-              { rowId: 7, reservationId: "BK0006", customerId: "JM0001", customerNickname: "ประเสริฐ", customerPhone: "086-777-8899", timeSlot: "19:00", date: todayStr, status: "ยืนยันแล้ว" }
+              { rowId: 3, reservationId: "BK0002", customerId: "JM0001", customerNickname: "สมชาย", customerPhone: "0812345678", timeSlot: "19:00", date: todayStr, status: "ยืนยันแล้ว" },
+              { rowId: 4, reservationId: "BK0003", customerId: "JM0002", customerNickname: "วิภา", customerPhone: "0899876543", timeSlot: "19:00", date: todayStr, status: "ยืนยันแล้ว" },
+              { rowId: 5, reservationId: "BK0004", customerId: "JM0001", customerNickname: "นิดา", customerPhone: "0821112233", timeSlot: "19:00", date: todayStr, status: "ยืนยันแล้ว" },
+              { rowId: 6, reservationId: "BK0005", customerId: "JM0002", customerNickname: "กานดา", customerPhone: "0834445566", timeSlot: "19:00", date: todayStr, status: "ยืนยันแล้ว" },
+              { rowId: 7, reservationId: "BK0006", customerId: "JM0001", customerNickname: "ประเสริฐ", customerPhone: "0867778899", timeSlot: "19:00", date: todayStr, status: "ยืนยันแล้ว" }
             ]
           };
 
