@@ -25,6 +25,12 @@ const SHEET_NAME_SETTING_TIME = "ตั้งค่าตัวเลือก�
  */
 function doGet(e) {
   try {
+    // กรณีเรียกด้วย ?action=setupCustomer เพื่อสั่งรันอัปเดต Schema ข้อมูลลูกค้าผ่าน URL ได้ทันที
+    if (e && e.parameter && (e.parameter.action === "setupCustomer" || e.parameter.setupCustomer === "true")) {
+      var res = setupCustomerSheetSchema();
+      return HtmlService.createHtmlOutput("<div style='font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #c3e6cb;background:#d4edda;border-radius:10px;'><h2 style='color:#155724;margin-top:0;'>✅ อัปเดต Schema สำเร็จ</h2><p style='color:#155724;font-size:16px;'>" + res.message + "</p><hr style='border:0;border-top:1px solid #c3e6cb;margin:20px 0;'><p style='color:#6c757d;font-size:14px;'>Google Sheet ของท่านได้รับการตั้งค่าหัวตาราง 12 คอลัมน์ภาษาอังกฤษและเติมข้อมูลเรียบร้อยแล้ว ท่านสามารถปิดหน้านี้แล้วเปิดใช้งานระบบได้ตามปกติ</p></div>");
+    }
+
     // ตรวจสอบและสร้างชีตพร้อมข้อมูลเริ่มต้นหากยังไม่มี
     initSheetIfNeeded();
 
@@ -110,6 +116,171 @@ function getSettingTimeSheet() {
     sheet = ss.insertSheet(SHEET_NAME_SETTING_TIME);
   }
   return sheet;
+}
+
+/**
+ * Event Trigger เมื่อเปิด Google Sheet
+ * สร้างเมนูจัดการระบบเพื่อให้ผู้ใช้กดอัปเดต Schema ได้สะดวกจากหน้าต่าง Google Sheet โดยตรง
+ */
+function onOpen() {
+  try {
+    SpreadsheetApp.getUi()
+      .createMenu("⚙️ จัดการระบบ (JM System)")
+      .addItem("🔄 ตรวจสอบและอัปเดต Schema ข้อมูลลูกค้า (Customer Schema)", "setupCustomerSheetSchema")
+      .addItem("🔄 ตรวจสอบและตั้งค่า Schema ทั้งหมด (Init All Sheets)", "initSheetIfNeeded")
+      .addToUi();
+  } catch (e) {
+    // ในกรณีเรียกจาก Web App ไม่มี UI Spreadsheet ให้ข้าม
+  }
+}
+
+/**
+ * ตั้งค่าและอัปเดต Schema ของชีตข้อมูลลูกค้า (Sheet_Name_Customer) ให้เป็น 12 คอลัมน์ภาษาอังกฤษ
+ * รองรับการ Auto-Migrate จาก 7 หรือ 8 คอลัมน์เดิม โดยข้อมูลเดิม (เช่น JM0001, JM0002) ไม่สูญหาย
+ * สามารถกดเรียกใช้ (Run) ได้โดยตรงจาก Apps Script Editor หรือผ่านเมนูของ Google Sheet
+ */
+function setupCustomerSheetSchema() {
+  try {
+    var sheet = getCustomerSheet();
+    var lastRow = sheet.getLastRow();
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    var customerHeaders = [
+      "customer_id",  // 1. รหัสลูกค้า
+      "nick_name",    // 2. ชื่อเล่น
+      "first_name",   // 3. ชื่อจริง
+      "last_name",    // 4. นามสกุล
+      "phone_number", // 5. เบอร์โทร
+      "create_date",  // 6. วันที่สร้าง
+      "created_by",   // 7. ผู้สร้าง (username)
+      "update_date",  // 8. อัปเดตล่าสุด
+      "updated_by",   // 9. ผู้อัปเดต (username)
+      "is_active",    // 10. สถานะการใช้งาน (true/false)
+      "person_flag",  // 11. ประเภทผู้ใช้ (1: ลูกค้า)
+      "deleted_flag"  // 12. สถานะการลบ (N: ใช้งานได้, Y: ถูกลบ)
+    ];
+
+    // ตรวจสอบจำนวนคอลัมน์ของตาราง (grid columns) ให้มีอย่างน้อย 12 คอลัมน์
+    if (sheet.getMaxColumns() < 12) {
+      sheet.insertColumnsAfter(sheet.getMaxColumns(), 12 - sheet.getMaxColumns());
+    }
+
+    if (lastRow === 0) {
+      sheet.appendRow(customerHeaders);
+      var headerRange = sheet.getRange(1, 1, 1, customerHeaders.length);
+      headerRange.setBackground("#1B3B36")
+        .setFontColor("#FFFFFF")
+        .setFontWeight("bold")
+        .setHorizontalAlignment("center")
+        .setVerticalAlignment("middle");
+      sheet.setRowHeight(1, 40);
+      sheet.setFrozenRows(1);
+
+      sheet.appendRow([
+        "JM0001", "คุณนิด", "นิตยา", "สุขใจ", "081-234-5678",
+        nowStr, "admin", nowStr, "admin", true, 1, "N"
+      ]);
+
+      for (var c = 1; c <= customerHeaders.length; c++) {
+        sheet.autoResizeColumn(c);
+      }
+      return { success: true, message: "สร้างชีตข้อมูลลูกค้า 12 คอลัมน์สำเร็จ" };
+    }
+
+    // ตรวจสอบตำแหน่งของคอลัมน์เดิมในแถวที่ 1 เพื่อรองรับการ Migrate จากชีตแบบเดิม
+    var row1 = sheet.getRange(1, 1, 1, Math.min(sheet.getMaxColumns(), 15)).getValues()[0];
+    var updateColIndex = -1;
+    for (var c = 0; c < row1.length; c++) {
+      var cellVal = String(row1[c] || "").trim().toLowerCase();
+      if (cellVal.indexOf("อัปเดต") !== -1 || cellVal === "update_date") {
+        updateColIndex = c + 1; // 1-based index
+        break;
+      }
+    }
+
+    // หากคอลัมน์ "อัปเดตล่าสุด" อยู่ที่ตำแหน่งที่ 7 แสดงว่ายังไม่ได้แทรกคอลัมน์ "created_by" ให้แทรกคอลัมน์ก่อนหน้าคอลัมน์ 7
+    if (updateColIndex === 7) {
+      sheet.insertColumnBefore(7);
+      if (sheet.getMaxColumns() < 12) {
+        sheet.insertColumnsAfter(sheet.getMaxColumns(), 12 - sheet.getMaxColumns());
+      }
+    }
+
+    // กำหนด Header แถวที่ 1 ให้เป็น 12 คอลัมน์ภาษาอังกฤษอย่างสมบูรณ์
+    var hRange = sheet.getRange(1, 1, 1, customerHeaders.length);
+    hRange.setValues([customerHeaders]);
+    hRange.setBackground("#1B3B36")
+      .setFontColor("#FFFFFF")
+      .setFontWeight("bold")
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle");
+    sheet.setRowHeight(1, 40);
+    sheet.setFrozenRows(1);
+
+    // Backfill เติมข้อมูลให้กับแถวเดิมตั้งแต่แถวที่ 2 เป็นต้นไป (แบบ Batch เพื่อความรวดเร็วและปลอดภัย)
+    var totalRows = sheet.getLastRow();
+    if (totalRows >= 2) {
+      var numRows = totalRows - 1;
+      var dataRange = sheet.getRange(2, 1, numRows, 12);
+      var values = dataRange.getValues();
+
+      for (var i = 0; i < values.length; i++) {
+        // 1. customer_id (ถ้ายังไม่มีรหัส ให้สร้างรหัส JM0001, JM0002... ตามลำดับ)
+        if (!values[i][0] || String(values[i][0]).trim() === "") {
+          values[i][0] = "JM" + ("0000" + (i + 1)).slice(-4);
+        }
+        // 6. create_date (ถ้าว่าง ให้ใช้วันที่ปัจจุบัน)
+        if (!values[i][5] || String(values[i][5]).trim() === "") {
+          values[i][5] = nowStr;
+        }
+        // 7. created_by (ผู้สร้าง - ค่าเริ่มต้น admin)
+        if (!values[i][6] || String(values[i][6]).trim() === "") {
+          values[i][6] = "admin";
+        }
+        // 8. update_date (ถ้าว่าง ให้ใช้วันที่สร้าง หรือวันที่ปัจจุบัน)
+        if (!values[i][7] || String(values[i][7]).trim() === "") {
+          values[i][7] = values[i][5] || nowStr;
+        }
+        // 9. updated_by (ผู้อัปเดต - ค่าเริ่มต้น admin)
+        if (!values[i][8] || String(values[i][8]).trim() === "") {
+          values[i][8] = "admin";
+        }
+        // 10. is_active (สถานะใช้งาน true/false - ค่าเริ่มต้น true)
+        if (values[i][9] === "" || values[i][9] === null || values[i][9] === undefined) {
+          values[i][9] = true;
+        }
+        // 11. person_flag (ประเภทผู้ใช้ 1: ลูกค้า)
+        if (!values[i][10] || isNaN(values[i][10])) {
+          values[i][10] = 1;
+        }
+        // 12. deleted_flag (สถานะการลบ N: ใช้งานได้, Y: ถูกลบ)
+        if (!values[i][11] || String(values[i][11]).trim() === "") {
+          values[i][11] = "N";
+        }
+      }
+
+      dataRange.setValues(values);
+
+      // จัดการ Alignment ของข้อมูลในตาราง
+      sheet.getRange(2, 1, numRows, 1).setHorizontalAlignment("center");
+      sheet.getRange(2, 5, numRows, 1).setHorizontalAlignment("center");
+      sheet.getRange(2, 6, numRows, 4).setHorizontalAlignment("center");
+      sheet.getRange(2, 10, numRows, 3).setHorizontalAlignment("center");
+    }
+
+    // ปรับความกว้างคอลัมน์อัตโนมัติ
+    for (var colIdx = 1; colIdx <= customerHeaders.length; colIdx++) {
+      sheet.autoResizeColumn(colIdx);
+    }
+
+    try {
+      SpreadsheetApp.getActiveSpreadsheet().toast("อัปเดต Schema ข้อมูลลูกค้าเป็น 12 คอลัมน์ภาษาอังกฤษเรียบร้อยแล้ว", "สำเร็จ", 5);
+    } catch (e) {}
+
+    return { success: true, message: "อัปเดต Schema ข้อมูลลูกค้า 12 คอลัมน์ภาษาอังกฤษและเติมข้อมูลครบถ้วนสำเร็จ" };
+  } catch (err) {
+    return { success: false, message: "เกิดข้อผิดพลาดในการอัปเดต Schema: " + err.message };
+  }
 }
 
 /**
@@ -200,55 +371,7 @@ function initSheetIfNeeded() {
   }
 
   // 2. ตรวจสอบชีตข้อมูลลูกค้า (Sheet_Name_Customer)
-  var customerSheet = getCustomerSheet();
-  var customerLastRow = customerSheet.getLastRow();
-  var customerHeaders = ["รหัสลูกค้า", "ชื่อเล่น", "ชื่อจริง", "นามสกุล", "เบอร์โทร", "วันที่สร้าง", "อัปเดตล่าสุด"];
-
-  if (customerLastRow === 0) {
-    customerSheet.appendRow(customerHeaders);
-    var custHeaderRange = customerSheet.getRange(1, 1, 1, customerHeaders.length);
-    custHeaderRange.setBackground("#1B3B36");
-    custHeaderRange.setFontColor("#FFFFFF");
-    custHeaderRange.setFontWeight("bold");
-    custHeaderRange.setHorizontalAlignment("center");
-    custHeaderRange.setVerticalAlignment("middle");
-    customerSheet.setRowHeight(1, 40);
-    customerSheet.setFrozenRows(1);
-
-    // เพิ่มข้อมูลลูกค้าตัวอย่างเริ่มต้น พร้อมรหัส JM0001
-    customerSheet.appendRow(["JM0001", "คุณนิด", "นิตยา", "สุขใจ", "081-234-5678", nowStr, nowStr]);
-
-    for (var c = 1; c <= customerHeaders.length; c++) {
-      customerSheet.autoResizeColumn(c);
-    }
-  } else {
-    // กรณีมีข้อมูลอยู่แล้ว แต่ยังไม่มีคอลัมน์ "รหัสลูกค้า" ในคอลัมน์แรก (Auto-migration)
-    var firstHeader = String(customerSheet.getRange(1, 1).getValue() || "").trim();
-    if (firstHeader !== "รหัสลูกค้า") {
-      customerSheet.insertColumnBefore(1);
-      customerSheet.getRange(1, 1).setValue("รหัสลูกค้า");
-      customerSheet.getRange(1, 1)
-        .setBackground("#1B3B36")
-        .setFontColor("#FFFFFF")
-        .setFontWeight("bold")
-        .setHorizontalAlignment("center")
-        .setVerticalAlignment("middle");
-      customerSheet.setRowHeight(1, 40);
-
-      // สร้างรหัสลูกค้าเริ่มต้น (JM0001, JM0002, ...) ให้กับข้อมูลแถวเดิมที่มีอยู่
-      var totalRows = customerSheet.getLastRow();
-      var count = 1;
-      for (var r = 2; r <= totalRows; r++) {
-        var existingVal = customerSheet.getRange(r, 1).getValue();
-        if (!existingVal) {
-          var codeStr = "JM" + ("0000" + count).slice(-4);
-          customerSheet.getRange(r, 1).setValue(codeStr);
-          count++;
-        }
-      }
-      customerSheet.autoResizeColumn(1);
-    }
-  }
+  setupCustomerSheetSchema();
 
   // 3. ตรวจสอบชีต "ตั้งค่าตัวเลือกเวลาการจอง" (Sheet_Name_Setting_Selection_Reservation_Time)
   // ฟิลด์: 2.1.1.4.1 เวลาที่จอง, 2.1.1.4.2 วันที่สร้าง, 2.1.1.4.3 วันที่อัปเดต
@@ -746,12 +869,16 @@ function deleteAdminUser(username, operatorUsername) {
 
 // ==============================================================================
 // CRUD: ข้อมูลลูกค้า (Customer Management - Sheet_Name_Customer)
-// ฟิลด์: 1.รหัสลูกค้า 2.ชื่อเล่น(Req) 3.ชื่อจริง(Opt) 4.นามสกุล(Opt) 5.เบอร์โทร(Req) 6.วันที่สร้าง 7.อัปเดตล่าสุด
+// Schema 12 คอลัมน์:
+// 1. customer_id, 2. nick_name, 3. first_name, 4. last_name, 5. phone_number,
+// 6. create_date, 7. created_by, 8. update_date, 9. updated_by, 10. is_active,
+// 11. person_flag (ค่า 1: ลูกค้า), 12. deleted_flag (N: ใช้งานได้, Y: ถูกลบ)
 // ==============================================================================
 
 /**
  * สร้างรหัสลูกค้าอัตโนมัติ (Pattern: JM ตามด้วยตัวเลข 4 หลัก เริ่มต้น JM0001)
  * รันลำดับ number ถัดไปเสมอเมื่อทำการเพิ่มข้อมูลลูกค้าใหม่
+ * โดยตรวจสอบจากทุกแถวใน Sheet (รวมแถวที่ถูก Soft Delete) เพื่อไม่ให้รหัสซ้ำค่าเดิม
  */
 function generateNextCustomerId() {
   var sheet = getCustomerSheet();
@@ -780,7 +907,7 @@ function generateNextCustomerId() {
 
 /**
  * ดึงรายการข้อมูลลูกค้า
- * - ผู้ดูแลระบบ (8, 9): เห็นข้อมูลลูกค้าทุกคน
+ * - ผู้ดูแลระบบ (8, 9): เห็นข้อมูลลูกค้าทุกคน (เฉพาะที่ deleted_flag !== 'Y')
  * - ลูกค้า (1): เห็นได้เฉพาะข้อมูลของตัวเองเท่านั้น
  * - พนักงาน (2): ไม่มีสิทธิ์เข้าถึง
  */
@@ -807,11 +934,19 @@ function getCustomers(requesterUsername) {
         var firstname = String(data[i][2] || "").trim();
         var lastname = String(data[i][3] || "").trim();
         var phone = String(data[i][4] || "").trim();
-        var createdAt = data[i][5] ? formatDateDisplay(data[i][5]) : "-";
-        var updatedAt = data[i][6] ? formatDateDisplay(data[i][6]) : "-";
+        var createDate = data[i][5] ? formatDateDisplay(data[i][5]) : "-";
+        var createdBy = String(data[i][6] || "").trim() || "-";
+        var updateDate = data[i][7] ? formatDateDisplay(data[i][7]) : "-";
+        var updatedBy = String(data[i][8] || "").trim() || "-";
+        var isActive = (data[i][9] === false || String(data[i][9]).toLowerCase() === "false") ? false : true;
+        var personFlag = parseInt(data[i][10], 10) || 1;
+        var deletedFlag = String(data[i][11] || "N").trim().toUpperCase();
 
         // หากแถวว่างเปล่าให้ข้าม
         if (!customerId && !nickname && !phone) continue;
+
+        // Soft Delete Check: ถ้ามีค่า deleted_flag เป็น "Y" ให้ข้าม ไม่นำมาแสดงผล
+        if (deletedFlag === "Y") continue;
 
         // ถ้าเป็นลูกค้า (person_flag = 1): ดูได้เฉพาะข้อมูลของตนเอง
         if (requesterRecord && requesterFlag === 1) {
@@ -830,8 +965,14 @@ function getCustomers(requesterUsername) {
           firstname: firstname,
           lastname: lastname,
           phone: phone,
-          createdAt: createdAt,
-          updatedAt: updatedAt
+          createDate: createDate,
+          createdBy: createdBy,
+          updateDate: updateDate,
+          updatedBy: updatedBy,
+          isActive: isActive,
+          personFlag: personFlag,
+          roleTitle: "ลูกค้า",
+          deletedFlag: deletedFlag
         });
       }
     }
@@ -848,8 +989,8 @@ function getCustomers(requesterUsername) {
 }
 
 /**
- * เพิ่มข้อมูลลูกค้าใหม่ (สร้างรหัสอัตโนมัติ เช่น JM0001)
- * @param {object} customerData { nickname, firstname, lastname, phone }
+ * เพิ่มข้อมูลลูกค้าใหม่ (สร้างรหัสอัตโนมัติ เช่น JM0001, JM0002)
+ * @param {object} customerData { nickname, firstname, lastname, phone, isActive, createdBy }
  */
 function addCustomer(customerData) {
   try {
@@ -860,20 +1001,41 @@ function addCustomer(customerData) {
     var firstname = String(customerData.firstname || "").trim();
     var lastname = String(customerData.lastname || "").trim();
     var phone = String(customerData.phone || "").trim();
+    var createdBy = String(customerData.createdBy || "admin").trim();
+    var updatedBy = createdBy;
+    var isActive = (customerData.isActive !== false && String(customerData.isActive).toLowerCase() !== "false");
+    var personFlag = 1; // หน้าจอข้อมูลลูกค้า กำหนดเป็น 1 เสมอ
+    var deletedFlag = "N"; // ใช้งานได้
 
-    // ข้อกำหนด 1.1: ชื่อเล่น (เป็น required)
+    // ชื่อเล่น (Required)
     if (!nickname) {
       return { success: false, message: "กรุณากรอก 'ชื่อเล่น' ของลูกค้า" };
     }
-    // ข้อกำหนด 1.4: เบอร์โทร (เป็น required)
+    // เบอร์โทร (Required)
     if (!phone) {
-      return { success: false, message: "กรุณากรอก 'เบอร์โทร' ของลูกค้า" };
+      return { success: false, message: "กรุณากรอก 'เบอร์โทรศัพท์' ของลูกค้า" };
     }
 
     var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
-    // ฟิลด์ตามข้อกำหนด: 1.รหัสลูกค้า, 2.ชื่อเล่น, 3.ชื่อจริง, 4.นามสกุล, 5.เบอร์โทร, 6.วันที่สร้าง, 7.อัปเดตล่าสุด
-    sheet.appendRow([customerId, nickname, firstname, lastname, phone, nowStr, nowStr]);
+    // ฟิลด์ตาม Schema 12 คอลัมน์:
+    // 1. customer_id, 2. nick_name, 3. first_name, 4. last_name, 5. phone_number,
+    // 6. create_date, 7. created_by, 8. update_date, 9. updated_by, 10. is_active,
+    // 11. person_flag, 12. deleted_flag
+    sheet.appendRow([
+      customerId,
+      nickname,
+      firstname,
+      lastname,
+      phone,
+      nowStr,
+      createdBy,
+      nowStr,
+      updatedBy,
+      isActive,
+      personFlag,
+      deletedFlag
+    ]);
 
     return {
       success: true,
@@ -886,8 +1048,8 @@ function addCustomer(customerData) {
 }
 
 /**
- * แก้ไขข้อมูลลูกค้า (รหัสลูกค้าเป็น readonly ไม่เปลี่ยนแปลง)
- * @param {object} customerData { rowId, nickname, firstname, lastname, phone }
+ * แก้ไขข้อมูลลูกค้า (รหัสลูกค้า customer_id เป็น readonly ไม่เปลี่ยนแปลง)
+ * @param {object} customerData { rowId, nickname, firstname, lastname, phone, isActive, updatedBy }
  */
 function updateCustomer(customerData) {
   try {
@@ -897,6 +1059,8 @@ function updateCustomer(customerData) {
     var firstname = String(customerData.firstname || "").trim();
     var lastname = String(customerData.lastname || "").trim();
     var phone = String(customerData.phone || "").trim();
+    var updatedBy = String(customerData.updatedBy || "admin").trim();
+    var isActive = (customerData.isActive !== false && String(customerData.isActive).toLowerCase() !== "false");
 
     if (isNaN(rowId) || rowId < 2 || rowId > sheet.getLastRow()) {
       return { success: false, message: "ไม่พบตำแหน่งข้อมูลลูกค้าที่ต้องการแก้ไข" };
@@ -906,17 +1070,20 @@ function updateCustomer(customerData) {
       return { success: false, message: "กรุณากรอก 'ชื่อเล่น' ของลูกค้า" };
     }
     if (!phone) {
-      return { success: false, message: "กรุณากรอก 'เบอร์โทร' ของลูกค้า" };
+      return { success: false, message: "กรุณากรอก 'เบอร์โทรศัพท์' ของลูกค้า" };
     }
 
     var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
-    // คอลัมน์ 1 คือ รหัสลูกค้า (ห้ามแก้ไข)
-    sheet.getRange(rowId, 2).setValue(nickname);
-    sheet.getRange(rowId, 3).setValue(firstname);
-    sheet.getRange(rowId, 4).setValue(lastname);
-    sheet.getRange(rowId, 5).setValue(phone);
-    sheet.getRange(rowId, 7).setValue(nowStr); // อัปเดตล่าสุด
+    // คอลัมน์ 1 (customer_id) ห้ามแก้ไข
+    sheet.getRange(rowId, 2).setValue(nickname);     // 2. nick_name
+    sheet.getRange(rowId, 3).setValue(firstname);    // 3. first_name
+    sheet.getRange(rowId, 4).setValue(lastname);     // 4. last_name
+    sheet.getRange(rowId, 5).setValue(phone);        // 5. phone_number
+    sheet.getRange(rowId, 8).setValue(nowStr);       // 8. update_date
+    sheet.getRange(rowId, 9).setValue(updatedBy);    // 9. updated_by
+    sheet.getRange(rowId, 10).setValue(isActive);    // 10. is_active
+    sheet.getRange(rowId, 11).setValue(1);           // 11. person_flag = 1 (ลูกค้า)
 
     return {
       success: true,
@@ -928,19 +1095,28 @@ function updateCustomer(customerData) {
 }
 
 /**
- * ลบข้อมูลลูกค้าตาม rowId
- * @param {number} rowId
+ * ลบข้อมูลลูกค้า (Soft Delete)
+ * ไม่ลบแถวทิ้ง แต่เปลี่ยนค่า deleted_flag เป็น 'Y' พร้อมบันทึก update_date, updated_by และตั้ง is_active = false
+ * @param {number|object} rowId
+ * @param {string} [updatedBy]
  */
-function deleteCustomer(rowId) {
+function deleteCustomer(rowId, updatedBy) {
   try {
     var sheet = getCustomerSheet();
-    var targetRow = parseInt(rowId, 10);
+    var targetRow = (typeof rowId === "object" && rowId !== null) ? parseInt(rowId.rowId, 10) : parseInt(rowId, 10);
+    var userWhoDeleted = (typeof rowId === "object" && rowId !== null && rowId.updatedBy) ? String(rowId.updatedBy).trim() : String(updatedBy || "admin").trim();
 
     if (isNaN(targetRow) || targetRow < 2 || targetRow > sheet.getLastRow()) {
       return { success: false, message: "ไม่พบตำแหน่งข้อมูลลูกค้าที่ต้องการลบ" };
     }
 
-    sheet.deleteRow(targetRow);
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    // Soft delete: เปลี่ยนค่าในคอลัมน์ที่เกี่ยวข้อง
+    sheet.getRange(targetRow, 8).setValue(nowStr);         // 8. update_date
+    sheet.getRange(targetRow, 9).setValue(userWhoDeleted);  // 9. updated_by
+    sheet.getRange(targetRow, 10).setValue(false);          // 10. is_active = false
+    sheet.getRange(targetRow, 12).setValue("Y");           // 12. deleted_flag = 'Y'
 
     return {
       success: true,
