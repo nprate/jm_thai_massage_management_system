@@ -17,6 +17,7 @@
 const GOOGLE_SHEET_ID = "1seXuWUYbsSL8VoyDlMj1V9vfuGPQtDoYGwjuGBzOlaU";
 const SHEET_NAME_ADMIN = "ข้อมูลผู้ดูแลระบบ";
 const SHEET_NAME_CUSTOMER = "ข้อมูลลูกค้า";
+const SHEET_NAME_STAFF = "ข้อมูลพนักงาน";
 const SHEET_NAME_RESERVATION = "ข้อมูลการจอง";
 const SHEET_NAME_SETTING_TIME = "ตั้งค่าตัวเลือกเวลาการจอง";
 
@@ -28,7 +29,13 @@ function doGet(e) {
     // กรณีเรียกด้วย ?action=setupCustomer เพื่อสั่งรันอัปเดต Schema ข้อมูลลูกค้าผ่าน URL ได้ทันที
     if (e && e.parameter && (e.parameter.action === "setupCustomer" || e.parameter.setupCustomer === "true")) {
       var res = setupCustomerSheetSchema();
-      return HtmlService.createHtmlOutput("<div style='font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #c3e6cb;background:#d4edda;border-radius:10px;'><h2 style='color:#155724;margin-top:0;'>✅ อัปเดต Schema สำเร็จ</h2><p style='color:#155724;font-size:16px;'>" + res.message + "</p><hr style='border:0;border-top:1px solid #c3e6cb;margin:20px 0;'><p style='color:#6c757d;font-size:14px;'>Google Sheet ของท่านได้รับการตั้งค่าหัวตาราง 12 คอลัมน์ภาษาอังกฤษและเติมข้อมูลเรียบร้อยแล้ว ท่านสามารถปิดหน้านี้แล้วเปิดใช้งานระบบได้ตามปกติ</p></div>");
+      return HtmlService.createHtmlOutput("<div style='font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #c3e6cb;background:#d4edda;border-radius:10px;'><h2 style='color:#155724;margin-top:0;'>✅ อัปเดต Schema สำเร็จ</h2><p style='color:#155724;font-size:16px;'>" + res.message + "</p><hr style='border:0;border-top:1px solid #c3e6cb;margin:20px 0;'><p style='color:#6c757d;font-size:14px;'>Google Sheet ของท่านได้รับการตั้งค่าหัวตาราง 13 คอลัมน์ภาษาอังกฤษและเติมข้อมูลเรียบร้อยแล้ว ท่านสามารถปิดหน้านี้แล้วเปิดใช้งานระบบได้ตามปกติ</p></div>");
+    }
+
+    // กรณีเรียกด้วย ?action=setupStaff เพื่อสั่งรันอัปเดต Schema ข้อมูลพนักงานผ่าน URL ได้ทันที
+    if (e && e.parameter && (e.parameter.action === "setupStaff" || e.parameter.setupStaff === "true")) {
+      var resStaff = setupStaffSheetSchema();
+      return HtmlService.createHtmlOutput("<div style='font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #c3e6cb;background:#d4edda;border-radius:10px;'><h2 style='color:#155724;margin-top:0;'>✅ อัปเดต Schema ข้อมูลพนักงานสำเร็จ</h2><p style='color:#155724;font-size:16px;'>" + resStaff.message + "</p><hr style='border:0;border-top:1px solid #c3e6cb;margin:20px 0;'><p style='color:#6c757d;font-size:14px;'>Google Sheet ข้อมูลพนักงาน (Sheet_Name_Staff) ได้รับการตั้งค่าหัวตาราง 13 คอลัมน์ภาษาอังกฤษและเติมข้อมูลเรียบร้อยแล้ว ท่านสามารถปิดหน้านี้แล้วเปิดใช้งานระบบได้ตามปกติ</p></div>");
     }
 
     // ตรวจสอบและสร้างชีตพร้อมข้อมูลเริ่มต้นหากยังไม่มี
@@ -53,6 +60,7 @@ function getSystemSettings() {
     systemSubName: "ระบบบริหารจัดการข้อมูลร้านนวดแผนไทยเจเอ็ม",
     sheetNameAdmin: SHEET_NAME_ADMIN,
     sheetNameCustomer: SHEET_NAME_CUSTOMER,
+    sheetNameStaff: SHEET_NAME_STAFF,
     sheetNameReservation: SHEET_NAME_RESERVATION,
     sheetNameSettingTime: SHEET_NAME_SETTING_TIME,
     googleSheetId: GOOGLE_SHEET_ID
@@ -95,6 +103,18 @@ function getCustomerSheet() {
 }
 
 /**
+ * Helper: ดึงหรือสร้างชีต "ข้อมูลพนักงาน" (Sheet_Name_Staff)
+ */
+function getStaffSheet() {
+  var ss = getSpreadsheet();
+  var sheet = ss.getSheetByName(SHEET_NAME_STAFF);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME_STAFF);
+  }
+  return sheet;
+}
+
+/**
  * Helper: ดึงหรือสร้างชีต "ข้อมูลการจอง" (Sheet_Name_Reservation)
  */
 function getReservationSheet() {
@@ -127,6 +147,7 @@ function onOpen() {
     SpreadsheetApp.getUi()
       .createMenu("⚙️ จัดการระบบ (JM System)")
       .addItem("🔄 ตรวจสอบและอัปเดต Schema ข้อมูลลูกค้า (Customer Schema)", "setupCustomerSheetSchema")
+      .addItem("🔄 ตรวจสอบและอัปเดต Schema ข้อมูลพนักงาน (Staff Schema)", "setupStaffSheetSchema")
       .addItem("🔄 ตรวจสอบและตั้งค่า Schema ทั้งหมด (Init All Sheets)", "initSheetIfNeeded")
       .addToUi();
   } catch (e) {
@@ -296,6 +317,179 @@ function setupCustomerSheetSchema() {
 }
 
 /**
+ * ตั้งค่าและอัปเดต Schema ของชีตข้อมูลพนักงาน (Sheet_Name_Staff) ให้เป็น 13 คอลัมน์ภาษาอังกฤษ
+ * Schema:
+ * 1. staff_id (ขึ้นต้นด้วย JMC ตามด้วยเลข 3 หลัก เช่น JMC001, JMC002... running number ไม่ซ้ำเดิม)
+ * 2. pwd (รหัสผ่าน login ค่าเริ่มต้นเป็น phone_number)
+ * 3. nick_name (ชื่อเล่น)
+ * 4. first_name (ชื่อจริง)
+ * 5. last_name (นามสกุล)
+ * 6. phone_number (เบอร์โทร ตัวเลข 10 หลักล้วน เช่น 0861111111)
+ * 7. create_date (วันที่สร้าง)
+ * 8. created_by (ผู้สร้าง โดยนำ username ที่ login มาบันทึก)
+ * 9. update_date (อัปเดตล่าสุด)
+ * 10. updated_by (ผู้อัปเดต โดยนำ username ที่ login มาบันทึก)
+ * 11. is_active (true: เปิดใช้งาน, false: ปิดการใช้งาน)
+ * 12. person_flag (2: พนักงาน เท่านั้น)
+ * 13. deleted_flag (N: ใช้งานได้, Y: ถูกลบ soft delete)
+ */
+function setupStaffSheetSchema() {
+  try {
+    var sheet = getStaffSheet();
+    var lastRow = sheet.getLastRow();
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    var staffHeaders = [
+      "staff_id",     // 1. รหัสพนักงาน (ใช้ login)
+      "pwd",          // 2. รหัสผ่าน login (ค่าเริ่มต้นเป็น phone_number)
+      "nick_name",    // 3. ชื่อเล่น
+      "first_name",   // 4. ชื่อจริง
+      "last_name",    // 5. นามสกุล
+      "phone_number", // 6. เบอร์โทร (10 หลัก)
+      "create_date",  // 7. วันที่สร้าง
+      "created_by",   // 8. ผู้สร้าง (username)
+      "update_date",  // 9. อัปเดตล่าสุด
+      "updated_by",   // 10. ผู้อัปเดต (username)
+      "is_active",    // 11. สถานะการใช้งาน (true/false)
+      "person_flag",  // 12. ประเภทผู้ใช้ (2: พนักงาน เสมอ)
+      "deleted_flag"  // 13. สถานะการลบ (N: ใช้งานได้, Y: ถูกลบ)
+    ];
+
+    if (sheet.getMaxColumns() < 13) {
+      sheet.insertColumnsAfter(sheet.getMaxColumns(), 13 - sheet.getMaxColumns());
+    }
+
+    if (lastRow === 0) {
+      sheet.appendRow(staffHeaders);
+      var headerRange = sheet.getRange(1, 1, 1, staffHeaders.length);
+      headerRange.setBackground("#1B3B36")
+        .setFontColor("#FFFFFF")
+        .setFontWeight("bold")
+        .setHorizontalAlignment("center")
+        .setVerticalAlignment("middle");
+      sheet.setRowHeight(1, 40);
+      sheet.setFrozenRows(1);
+
+      // แถวเริ่มต้น: staff_id = JMC001, pwd = phone_number, person_flag = 2
+      sheet.appendRow([
+        "JMC001", "0891234567", "หมอน้อย", "สมใจ", "ใจดี", "0891234567",
+        nowStr, "admin", nowStr, "admin", true, 2, "N"
+      ]);
+
+      try {
+        sheet.getRange(2, 1).setNumberFormat("@");
+        sheet.getRange(2, 2).setNumberFormat("@");
+        sheet.getRange(2, 6).setNumberFormat("@");
+      } catch (e) {}
+
+      for (var c = 1; c <= staffHeaders.length; c++) {
+        sheet.autoResizeColumn(c);
+      }
+      return { success: true, message: "สร้างชีตข้อมูลพนักงาน 13 คอลัมน์ (พร้อม pwd) สำเร็จ" };
+    }
+
+    // Auto-migrate กรณีมีชีตเดิมอยู่แล้ว
+    var row1 = sheet.getRange(1, 1, 1, Math.min(sheet.getMaxColumns(), 16)).getValues()[0];
+    var col2Val = String(row1[1] || "").trim().toLowerCase();
+    if (col2Val !== "pwd" && row1[0] && String(row1[0]).toLowerCase().indexOf("staff") !== -1) {
+      sheet.insertColumnBefore(2);
+      if (sheet.getMaxColumns() < 13) {
+        sheet.insertColumnsAfter(sheet.getMaxColumns(), 13 - sheet.getMaxColumns());
+      }
+    }
+
+    var hRange = sheet.getRange(1, 1, 1, staffHeaders.length);
+    hRange.setValues([staffHeaders]);
+    hRange.setBackground("#1B3B36")
+      .setFontColor("#FFFFFF")
+      .setFontWeight("bold")
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle");
+    sheet.setRowHeight(1, 40);
+    sheet.setFrozenRows(1);
+
+    var totalRows = sheet.getLastRow();
+    if (totalRows >= 2) {
+      var numRows = totalRows - 1;
+      var dataRange = sheet.getRange(2, 1, numRows, 13);
+      var values = dataRange.getValues();
+
+      for (var i = 0; i < values.length; i++) {
+        // 1. staff_id
+        if (!values[i][0] || String(values[i][0]).trim() === "") {
+          values[i][0] = "JMC" + ("000" + (i + 1)).slice(-3);
+        }
+        // 6. phone_number (ตัวเลข 10 หลัก)
+        var phoneVal = String(values[i][5] || "").trim();
+        var cleanPhone = phoneVal.replace(/[^0-9]/g, '');
+        if (cleanPhone.length === 9 && (cleanPhone.charAt(0) === '8' || cleanPhone.charAt(0) === '9' || cleanPhone.charAt(0) === '6')) {
+          cleanPhone = "0" + cleanPhone;
+        }
+        if (cleanPhone.length === 10) {
+          values[i][5] = cleanPhone;
+        }
+        // 2. pwd
+        if (!values[i][1] || String(values[i][1]).trim() === "") {
+          values[i][1] = cleanPhone || phoneVal || "1234";
+        }
+        // 7. create_date
+        if (!values[i][6] || String(values[i][6]).trim() === "") {
+          values[i][6] = nowStr;
+        }
+        // 8. created_by
+        if (!values[i][7] || String(values[i][7]).trim() === "") {
+          values[i][7] = "admin";
+        }
+        // 9. update_date
+        if (!values[i][8] || String(values[i][8]).trim() === "") {
+          values[i][8] = values[i][6] || nowStr;
+        }
+        // 10. updated_by
+        if (!values[i][9] || String(values[i][9]).trim() === "") {
+          values[i][9] = "admin";
+        }
+        // 11. is_active
+        if (values[i][10] === "" || values[i][10] === null || values[i][10] === undefined) {
+          values[i][10] = true;
+        }
+        // 12. person_flag = 2 (พนักงาน เสมอ)
+        values[i][11] = 2;
+        // 13. deleted_flag
+        if (!values[i][12] || String(values[i][12]).trim() === "") {
+          values[i][12] = "N";
+        }
+      }
+
+      dataRange.setValues(values);
+
+      try {
+        sheet.getRange(2, 1, numRows, 1).setNumberFormat("@");
+        sheet.getRange(2, 2, numRows, 1).setNumberFormat("@");
+        sheet.getRange(2, 6, numRows, 1).setNumberFormat("@");
+      } catch (e) {}
+
+      sheet.getRange(2, 1, numRows, 1).setHorizontalAlignment("center");
+      sheet.getRange(2, 2, numRows, 1).setHorizontalAlignment("center");
+      sheet.getRange(2, 6, numRows, 1).setHorizontalAlignment("center");
+      sheet.getRange(2, 7, numRows, 4).setHorizontalAlignment("center");
+      sheet.getRange(2, 11, numRows, 3).setHorizontalAlignment("center");
+    }
+
+    for (var colIdx = 1; colIdx <= staffHeaders.length; colIdx++) {
+      sheet.autoResizeColumn(colIdx);
+    }
+
+    try {
+      SpreadsheetApp.getActiveSpreadsheet().toast("อัปเดต Schema ข้อมูลพนักงานเป็น 13 คอลัมน์ (พร้อม pwd) เรียบร้อยแล้ว", "สำเร็จ", 5);
+    } catch (e) {}
+
+    return { success: true, message: "อัปเดต Schema ข้อมูลพนักงาน 13 คอลัมน์ (พร้อม pwd) และเติมรหัสผ่านเริ่มต้นเรียบร้อยแล้ว" };
+  } catch (err) {
+    return { success: false, message: "เกิดข้อผิดพลาดในการอัปเดต Schema พนักงาน: " + err.message };
+  }
+}
+
+/**
  * เริ่มต้นโครงสร้างตารางและสร้างบัญชี Admin / ชีตลูกค้า / ชีตเวลา / ชีตการจอง เริ่มต้น (หากยังไม่มี)
  */
 function initSheetIfNeeded() {
@@ -385,6 +579,9 @@ function initSheetIfNeeded() {
   // 2. ตรวจสอบชีตข้อมูลลูกค้า (Sheet_Name_Customer)
   setupCustomerSheetSchema();
 
+  // 2.1 ตรวจสอบชีตข้อมูลพนักงาน (Sheet_Name_Staff)
+  setupStaffSheetSchema();
+
   // 3. ตรวจสอบชีต "ตั้งค่าตัวเลือกเวลาการจอง" (Sheet_Name_Setting_Selection_Reservation_Time)
   // ฟิลด์: 2.1.1.4.1 เวลาที่จอง, 2.1.1.4.2 วันที่สร้าง, 2.1.1.4.3 วันที่อัปเดต
   var timeSheet = getSettingTimeSheet();
@@ -470,7 +667,65 @@ function loginUser(username, password) {
       return { success: false, message: "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน" };
     }
 
-    // 1. ตรวจสอบการล็อกอินของลูกค้า (รหัสลูกค้าขึ้นต้นด้วย "JM" ตามด้วยเลข 4 หลัก เช่น JM0001)
+    // 1. ตรวจสอบการล็อกอินของพนักงาน (รหัสพนักงานขึ้นต้นด้วย "JMC" ตามด้วยเลข 3 หลัก เช่น JMC001)
+    if (cleanUsername.indexOf("jmc") === 0) {
+      var staffSheet = getStaffSheet();
+      var staffData = staffSheet.getDataRange().getValues();
+
+      if (staffData.length > 1) {
+        for (var s = 1; s < staffData.length; s++) {
+          var rowStaffId = String(staffData[s][0] || "").trim().toLowerCase();
+          if (rowStaffId === cleanUsername) {
+            var staffPhone = String(staffData[s][5] || "").trim().replace(/[^0-9]/g, '');
+            if (/^\d{9}$/.test(staffPhone)) {
+              staffPhone = "0" + staffPhone;
+            }
+            // password: ครั้งแรกใช้เบอร์โทรศัพท์ phone_number หรือตามฟิลด์ pwd ใน sheet
+            var rowStaffPwd = String(staffData[s][1] || "").trim();
+            var expectedStaffPwd = rowStaffPwd || staffPhone;
+
+            var staffNickname = String(staffData[s][2] || "").trim();
+            var staffFirstname = String(staffData[s][3] || "").trim();
+            var staffLastname = String(staffData[s][4] || "").trim();
+            var staffIsActive = staffData[s][10];
+            var staffDeletedFlag = String(staffData[s][12] || "N").trim().toUpperCase();
+
+            // ตรวจสอบ Soft Delete
+            if (staffDeletedFlag === "Y") {
+              return { success: false, message: "บัญชีพนักงานนี้ถูกระงับหรือลบข้อมูลออกจากระบบแล้ว" };
+            }
+
+            // ตรวจสอบสถานะการเปิดใช้งาน (is_active)
+            if (staffIsActive === false || String(staffIsActive).toLowerCase() === "false") {
+              return { success: false, message: "บัญชีพนักงานนี้ถูกปิดการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" };
+            }
+
+            // ตรวจสอบรหัสผ่าน (ตรงกับ pwd หรือตรงกับเบอร์โทรศัพท์)
+            if (cleanPassword === expectedStaffPwd || cleanPassword === staffPhone) {
+              return {
+                success: true,
+                user: {
+                  username: String(staffData[s][0] || "").trim(), // e.g. "JMC001"
+                  nickname: staffNickname || String(staffData[s][0] || "").trim(),
+                  firstname: staffFirstname,
+                  lastname: staffLastname,
+                  phone: staffPhone,
+                  personFlag: 2, // พนักงาน
+                  roleTitle: "พนักงาน",
+                  isActive: true,
+                  displayName: staffNickname ? (staffNickname + (staffFirstname ? " (" + staffFirstname + ")" : "")) : String(staffData[s][0] || "").trim()
+                }
+              };
+            } else {
+              return { success: false, message: "รหัสผ่านไม่ถูกต้อง (สำหรับพนักงานเข้าใช้งานครั้งแรก ให้ใช้เบอร์โทรศัพท์)" };
+            }
+          }
+        }
+      }
+      return { success: false, message: "ไม่พบรหัสพนักงานนี้ในระบบ (" + username + ")" };
+    }
+
+    // 2. ตรวจสอบการล็อกอินของลูกค้า (รหัสลูกค้าขึ้นต้นด้วย "JM" ตามด้วยเลข 4 หลัก เช่น JM0001)
     if (cleanUsername.indexOf("jm") === 0) {
       var custSheet = getCustomerSheet();
       var custData = custSheet.getDataRange().getValues();
@@ -528,8 +783,7 @@ function loginUser(username, password) {
       return { success: false, message: "ไม่พบรหัสลูกค้านี้ในระบบ (" + username + ")" };
     }
 
-    // 2. ตรวจสอบการล็อกอินของผู้ดูแลระบบ (Admin Sheet)
-    // หมายเหตุ: การล็อกอินของพนักงาน (person_flag = 2) จะมีการสร้าง sheet ข้อมูลสำหรับพนักงาน login แยกต่างหากในภายหลัง
+    // 3. ตรวจสอบการล็อกอินของผู้ดูแลระบบ (Admin Sheet)
     var sheet = getAdminSheet();
     var data = sheet.getDataRange().getValues();
     
@@ -595,7 +849,7 @@ function loginUser(username, password) {
 // ==============================================================================
 
 /**
- * ค้นหาข้อมูลผู้ดูแลระบบ หรือข้อมูลลูกค้าตาม username
+ * ค้นหาข้อมูลผู้ดูแลระบบ, ลูกค้า หรือพนักงานตาม username
  */
 function getAdminRecord(username) {
   try {
@@ -653,6 +907,38 @@ function getAdminRecord(username) {
             isActive: (custData[j][10] === false || String(custData[j][10]).toLowerCase() === "false") ? false : true,
             personFlag: 1, // ลูกค้า
             deletedFlag: String(custData[j][12] || "N").trim().toUpperCase()
+          };
+        }
+      }
+    }
+
+    // 3. หากไม่พบ ให้ค้นหาในชีตข้อมูลพนักงาน (Staff Sheet)
+    var staffSheet = getStaffSheet();
+    var staffData = staffSheet.getDataRange().getValues();
+    if (staffData.length > 1) {
+      for (var k = 1; k < staffData.length; k++) {
+        var staffId = String(staffData[k][0] || "").trim().toLowerCase();
+        if (staffId === cleanUser) {
+          var staffPhone = String(staffData[k][5] || "").trim().replace(/[^0-9]/g, '');
+          if (/^\d{9}$/.test(staffPhone)) {
+            staffPhone = "0" + staffPhone;
+          }
+          var staffPwd = String(staffData[k][1] || "").trim() || staffPhone;
+          return {
+            rowIndex: k + 1,
+            username: String(staffData[k][0] || "").trim(),
+            password: staffPwd,
+            nickname: String(staffData[k][2] || "").trim(),
+            firstname: String(staffData[k][3] || "").trim(),
+            lastname: String(staffData[k][4] || "").trim(),
+            phone: staffPhone,
+            createdAt: staffData[k][6],
+            createdBy: String(staffData[k][7] || "").trim(),
+            updatedAt: staffData[k][8],
+            updatedBy: String(staffData[k][9] || "").trim(),
+            isActive: (staffData[k][10] === false || String(staffData[k][10]).toLowerCase() === "false") ? false : true,
+            personFlag: 2, // พนักงาน
+            deletedFlag: String(staffData[k][12] || "N").trim().toUpperCase()
           };
         }
       }
@@ -1300,6 +1586,342 @@ function deleteCustomer(rowId, updatedBy) {
     };
   } catch (err) {
     return { success: false, message: "เกิดข้อผิดพลาดในการลบข้อมูลลูกค้า: " + err.message };
+  }
+}
+
+// ==============================================================================
+// CRUD: ข้อมูลพนักงาน (Staff Management - Sheet_Name_Staff)
+// Schema 13 คอลัมน์:
+// 1. staff_id (ขึ้นต้นด้วย JMC ตามด้วยเลข 3 หลัก เช่น JMC001, JMC002...)
+// 2. pwd (รหัสผ่าน login ค่าเริ่มต้นเป็น phone_number)
+// 3. nick_name (ชื่อเล่น)
+// 4. first_name (ชื่อจริง)
+// 5. last_name (นามสกุล)
+// 6. phone_number (เบอร์โทร ตัวเลข 10 หลักล้วน)
+// 7. create_date (วันที่สร้าง)
+// 8. created_by (ผู้สร้าง โดยนำ username ที่ login มาบันทึก)
+// 9. update_date (อัปเดตล่าสุด)
+// 10. updated_by (ผู้อัปเดต โดยนำ username ที่ login มาบันทึก)
+// 11. is_active (true/false)
+// 12. person_flag (2: พนักงาน เสมอ)
+// 13. deleted_flag (N: ใช้งานได้, Y: ถูกลบ soft delete)
+// ==============================================================================
+
+/**
+ * สร้างรหัสพนักงานอัตโนมัติ (Pattern: JMC ตามด้วยตัวเลข 3 หลัก เริ่มต้น JMC001)
+ * รันลำดับ number ถัดไปเสมอเมื่อทำการเพิ่มข้อมูลพนักงานใหม่
+ * โดยตรวจสอบจากทุกแถวใน Sheet (รวมแถวที่ถูก Soft Delete) เพื่อไม่ให้รหัสซ้ำค่าเดิม
+ */
+function generateNextStaffId() {
+  var sheet = getStaffSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    return "JMC001";
+  }
+
+  var idValues = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  var maxNum = 0;
+
+  for (var i = 0; i < idValues.length; i++) {
+    var val = String(idValues[i][0] || "").trim();
+    var match = val.match(/^JMC(\d+)$/i);
+    if (match) {
+      var num = parseInt(match[1], 10);
+      if (num > maxNum) {
+        maxNum = num;
+      }
+    }
+  }
+
+  var nextNum = maxNum + 1;
+  return nextNum < 1000 ? "JMC" + ("000" + nextNum).slice(-3) : "JMC" + nextNum;
+}
+
+/**
+ * ดึงรายการข้อมูลพนักงาน
+ * - ผู้ดูแลระบบ (8, 9): เห็นข้อมูลพนักงานทุกคน (เฉพาะที่ deleted_flag !== 'Y')
+ * - พนักงาน (2): เห็นได้เฉพาะข้อมูลของตัวเองเท่านั้น
+ * - ลูกค้า (1): ไม่มีสิทธิ์เข้าถึง
+ */
+function getStaffs(requesterUsername) {
+  try {
+    initSheetIfNeeded();
+    var sheet = getStaffSheet();
+    var data = sheet.getDataRange().getValues();
+    var staffList = [];
+
+    var cleanRequester = String(requesterUsername || "").trim().toLowerCase();
+    var requesterRecord = cleanRequester ? getAdminRecord(cleanRequester) : null;
+    var requesterFlag = requesterRecord ? requesterRecord.personFlag : 9;
+
+    // ถ้าเป็นลูกค้า (person_flag = 1) ไม่มีสิทธิ์เข้าถึงข้อมูลพนักงาน
+    if (requesterRecord && requesterFlag === 1) {
+      return { success: false, message: "ลูกค้าไม่มีสิทธิ์เข้าถึงข้อมูลพนักงาน" };
+    }
+
+    if (data.length > 1) {
+      for (var i = 1; i < data.length; i++) {
+        var staffId = String(data[i][0] || "").trim();
+        var pwd = String(data[i][1] || "").trim();
+        var nickname = String(data[i][2] || "").trim();
+        var firstname = String(data[i][3] || "").trim();
+        var lastname = String(data[i][4] || "").trim();
+        var phone = String(data[i][5] || "").trim().replace(/[^0-9]/g, '');
+        if (/^\d{9}$/.test(phone)) {
+          phone = "0" + phone;
+        }
+        var createDate = data[i][6] ? formatDateDisplay(data[i][6]) : "-";
+        var createdBy = String(data[i][7] || "").trim() || "-";
+        var updateDate = data[i][8] ? formatDateDisplay(data[i][8]) : "-";
+        var updatedBy = String(data[i][9] || "").trim() || "-";
+        var isActive = (data[i][10] === false || String(data[i][10]).toLowerCase() === "false") ? false : true;
+        var personFlag = parseInt(data[i][11], 10) || 2;
+        var deletedFlag = String(data[i][12] || "N").trim().toUpperCase();
+
+        // หากแถวว่างเปล่าให้ข้าม
+        if (!staffId && !nickname && !phone) continue;
+
+        // Soft Delete Check: ถ้ามีค่า deleted_flag เป็น "Y" ให้ข้าม ไม่นำมาแสดงผล
+        if (deletedFlag === "Y") continue;
+
+        // ถ้าเป็นพนักงาน (person_flag = 2): ดูได้เฉพาะข้อมูลของตนเอง
+        if (requesterRecord && requesterFlag === 2) {
+          var matchId = (staffId.toLowerCase() === cleanRequester);
+          var matchNick = (nickname && requesterRecord.nickname && nickname.toLowerCase() === requesterRecord.nickname.toLowerCase());
+          var matchName = (firstname && requesterRecord.firstname && firstname.toLowerCase() === requesterRecord.firstname.toLowerCase());
+          if (!matchId && !matchNick && !matchName) {
+            continue;
+          }
+        }
+
+        staffList.push({
+          rowId: i + 1, // 1-based row index in Google Sheet
+          staffId: staffId || "-",
+          pwd: pwd || phone,
+          nickname: nickname,
+          firstname: firstname,
+          lastname: lastname,
+          phone: phone,
+          createDate: createDate,
+          createdBy: createdBy,
+          updateDate: updateDate,
+          updatedBy: updatedBy,
+          isActive: isActive,
+          personFlag: personFlag,
+          roleTitle: "พนักงาน",
+          deletedFlag: deletedFlag
+        });
+      }
+    }
+
+    return {
+      success: true,
+      sheetName: SHEET_NAME_STAFF,
+      personFlag: requesterFlag,
+      data: staffList
+    };
+  } catch (err) {
+    return { success: false, message: "ไม่สามารถดึงข้อมูลพนักงานได้: " + err.message };
+  }
+}
+
+/**
+ * เพิ่มข้อมูลพนักงานใหม่ (สร้างรหัสอัตโนมัติ เช่น JMC001, JMC002)
+ * @param {object} staffData { nickname, firstname, lastname, phone, password, isActive, createdBy }
+ */
+function addStaff(staffData) {
+  try {
+    initSheetIfNeeded();
+    var sheet = getStaffSheet();
+    var staffId = generateNextStaffId();
+    var nickname = String(staffData.nickname || "").trim();
+    var firstname = String(staffData.firstname || "").trim();
+    var lastname = String(staffData.lastname || "").trim();
+    var rawPhone = String(staffData.phone || "").trim();
+    var phone = rawPhone.replace(/[^0-9]/g, '');
+    // รหัสผ่าน: หากไม่ระบุ ให้ใช้เบอร์โทรศัพท์ phone_number เป็นรหัสผ่านเริ่มต้น
+    var password = String(staffData.password || staffData.pwd || "").trim();
+    if (!password) {
+      password = phone;
+    }
+    var createdBy = String(staffData.createdBy || "admin").trim();
+    var updatedBy = createdBy;
+    var isActive = (staffData.isActive !== false && String(staffData.isActive).toLowerCase() !== "false");
+    var personFlag = 2; // หน้าจอข้อมูลพนักงาน กำหนดเป็น 2 เสมอ
+    var deletedFlag = "N"; // ใช้งานได้
+
+    // ตรวจสอบสิทธิ์: ผู้ดูแลระบบ (8) และ ผู้ดูแลระบบระดับสูงสุด (9) เท่านั้นที่เพิ่มพนักงานได้
+    var creatorRecord = createdBy ? getAdminRecord(createdBy) : null;
+    var creatorFlag = creatorRecord ? creatorRecord.personFlag : 9;
+    if (creatorFlag !== 9 && creatorFlag !== 8) {
+      return { success: false, message: "เฉพาะผู้ดูแลระบบ (person_flag = 8 หรือ 9) เท่านั้นที่สามารถเพิ่มข้อมูลพนักงานได้" };
+    }
+
+    // ชื่อเล่น (Required)
+    if (!nickname) {
+      return { success: false, message: "กรุณากรอก 'ชื่อเล่น' ของพนักงาน" };
+    }
+    // เบอร์โทร (Required - ต้องเป็นตัวเลข 10 หลักเท่านั้น เช่น 0861111111)
+    if (!rawPhone) {
+      return { success: false, message: "กรุณากรอก 'เบอร์โทรศัพท์' ของพนักงาน" };
+    }
+    if (!/^[0-9]{10}$/.test(phone)) {
+      return { success: false, message: "เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น (เช่น 0861111111)" };
+    }
+
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    // ฟิลด์ตาม Schema 13 คอลัมน์:
+    // 1. staff_id, 2. pwd, 3. nick_name, 4. first_name, 5. last_name, 6. phone_number,
+    // 7. create_date, 8. created_by, 9. update_date, 10. updated_by, 11. is_active,
+    // 12. person_flag, 13. deleted_flag
+    sheet.appendRow([
+      staffId,
+      password,
+      nickname,
+      firstname,
+      lastname,
+      phone,
+      nowStr,
+      createdBy,
+      nowStr,
+      updatedBy,
+      isActive,
+      personFlag,
+      deletedFlag
+    ]);
+
+    var newRow = sheet.getLastRow();
+    try {
+      sheet.getRange(newRow, 1).setNumberFormat("@");
+      sheet.getRange(newRow, 2).setNumberFormat("@").setValue(password);
+      sheet.getRange(newRow, 6).setNumberFormat("@").setValue(phone);
+      sheet.getRange(newRow, 1, 1, 2).setHorizontalAlignment("center");
+      sheet.getRange(newRow, 6).setHorizontalAlignment("center");
+      sheet.getRange(newRow, 7, 1, 4).setHorizontalAlignment("center");
+      sheet.getRange(newRow, 11, 1, 3).setHorizontalAlignment("center");
+    } catch (e) {}
+
+    return {
+      success: true,
+      staffId: staffId,
+      message: "เพิ่มข้อมูลพนักงาน '" + nickname + "' (รหัส: " + staffId + ") เรียบร้อยแล้ว"
+    };
+  } catch (err) {
+    return { success: false, message: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลพนักงาน: " + err.message };
+  }
+}
+
+/**
+ * แก้ไขข้อมูลพนักงาน (รหัสพนักงาน staff_id เป็น readonly ไม่เปลี่ยนแปลง)
+ * @param {object} staffData { rowId, nickname, firstname, lastname, phone, password, isActive, updatedBy }
+ */
+function updateStaff(staffData) {
+  try {
+    var sheet = getStaffSheet();
+    var rowId = parseInt(staffData.rowId, 10);
+    var nickname = String(staffData.nickname || "").trim();
+    var firstname = String(staffData.firstname || "").trim();
+    var lastname = String(staffData.lastname || "").trim();
+    var rawPhone = String(staffData.phone || "").trim();
+    var phone = rawPhone.replace(/[^0-9]/g, '');
+    var password = String(staffData.password || staffData.pwd || "").trim();
+    var updatedBy = String(staffData.updatedBy || "admin").trim();
+    var isActive = (staffData.isActive !== false && String(staffData.isActive).toLowerCase() !== "false");
+
+    if (isNaN(rowId) || rowId < 2 || rowId > sheet.getLastRow()) {
+      return { success: false, message: "ไม่พบตำแหน่งข้อมูลพนักงานที่ต้องการแก้ไข" };
+    }
+
+    // ตรวจสอบสิทธิ์การแก้ไขข้อมูลพนักงาน
+    var updaterRecord = updatedBy ? getAdminRecord(updatedBy) : null;
+    var updaterFlag = updaterRecord ? updaterRecord.personFlag : 9;
+
+    // พนักงาน (person_flag = 2): อนุญาตให้แก้ไขได้เฉพาะข้อมูลของตัวเองเท่านั้น
+    if (updaterFlag === 2) {
+      var currentStaffId = String(sheet.getRange(rowId, 1).getValue() || "").trim().toLowerCase();
+      var cleanUpdater = updatedBy.toLowerCase();
+      if (currentStaffId !== cleanUpdater) {
+        return { success: false, message: "พนักงานสามารถแก้ไขได้เฉพาะข้อมูลของตนเองเท่านั้น" };
+      }
+      isActive = true; // พนักงานแก้ไขโปรไฟล์ตนเอง ห้ามปิดสถานะ
+    } else if (updaterFlag !== 9 && updaterFlag !== 8) {
+      return { success: false, message: "คุณไม่มีสิทธิ์แก้ไขข้อมูลพนักงาน" };
+    }
+
+    if (!nickname) {
+      return { success: false, message: "กรุณากรอก 'ชื่อเล่น' ของพนักงาน" };
+    }
+    // เบอร์โทร (Required - ต้องเป็นตัวเลข 10 หลักเท่านั้น เช่น 0861111111)
+    if (!rawPhone) {
+      return { success: false, message: "กรุณากรอก 'เบอร์โทรศัพท์' ของพนักงาน" };
+    }
+    if (!/^[0-9]{10}$/.test(phone)) {
+      return { success: false, message: "เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น (เช่น 0861111111)" };
+    }
+
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    // คอลัมน์ 1 (staff_id) ห้ามแก้ไข
+    // คอลัมน์ 2 (pwd) แก้ไขเมื่อมีการกรอกรหัสผ่านใหม่
+    if (password) {
+      sheet.getRange(rowId, 2).setNumberFormat("@").setValue(password);
+    }
+    sheet.getRange(rowId, 3).setValue(nickname);     // 3. nick_name
+    sheet.getRange(rowId, 4).setValue(firstname);    // 4. first_name
+    sheet.getRange(rowId, 5).setValue(lastname);     // 5. last_name
+    sheet.getRange(rowId, 6).setNumberFormat("@").setValue(phone);        // 6. phone_number
+    sheet.getRange(rowId, 9).setValue(nowStr);       // 9. update_date
+    sheet.getRange(rowId, 10).setValue(updatedBy);   // 10. updated_by
+    sheet.getRange(rowId, 11).setValue(isActive);    // 11. is_active
+    sheet.getRange(rowId, 12).setValue(2);           // 12. person_flag = 2 (พนักงาน)
+
+    return {
+      success: true,
+      message: "แก้ไขข้อมูลพนักงาน '" + nickname + "' เรียบร้อยแล้ว"
+    };
+  } catch (err) {
+    return { success: false, message: "เกิดข้อผิดพลาดในการแก้ไขข้อมูลพนักงาน: " + err.message };
+  }
+}
+
+/**
+ * ลบข้อมูลพนักงาน (Soft Delete)
+ * ไม่ลบแถวทิ้ง แต่เปลี่ยนค่า deleted_flag เป็น 'Y' พร้อมบันทึก update_date, updated_by และตั้ง is_active = false
+ * @param {number|object} rowId
+ * @param {string} [updatedBy]
+ */
+function deleteStaff(rowId, updatedBy) {
+  try {
+    var sheet = getStaffSheet();
+    var targetRow = (typeof rowId === "object" && rowId !== null) ? parseInt(rowId.rowId, 10) : parseInt(rowId, 10);
+    var userWhoDeleted = (typeof rowId === "object" && rowId !== null && rowId.updatedBy) ? String(rowId.updatedBy).trim() : String(updatedBy || "admin").trim();
+
+    if (isNaN(targetRow) || targetRow < 2 || targetRow > sheet.getLastRow()) {
+      return { success: false, message: "ไม่พบตำแหน่งข้อมูลพนักงานที่ต้องการลบ" };
+    }
+
+    // ตรวจสอบสิทธิ์: เฉพาะผู้ดูแลระบบระดับสูงสุด (person_flag = 9) เท่านั้นที่สามารถลบข้อมูลพนักงานได้
+    var deleterRecord = userWhoDeleted ? getAdminRecord(userWhoDeleted) : null;
+    var deleterFlag = deleterRecord ? deleterRecord.personFlag : 9;
+    if (deleterFlag !== 9) {
+      return { success: false, message: "เฉพาะผู้ดูแลระบบระดับสูงสุด (person_flag = 9) เท่านั้นที่สามารถลบข้อมูลพนักงานได้" };
+    }
+
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    // Soft delete: เปลี่ยนค่าในคอลัมน์ที่เกี่ยวข้องตาม Schema 13 คอลัมน์
+    sheet.getRange(targetRow, 9).setValue(nowStr);          // 9. update_date
+    sheet.getRange(targetRow, 10).setValue(userWhoDeleted); // 10. updated_by
+    sheet.getRange(targetRow, 11).setValue(false);          // 11. is_active = false
+    sheet.getRange(targetRow, 13).setValue("Y");            // 13. deleted_flag = 'Y'
+
+    return {
+      success: true,
+      message: "ลบข้อมูลพนักงานเรียบร้อยแล้ว"
+    };
+  } catch (err) {
+    return { success: false, message: "เกิดข้อผิดพลาดในการลบข้อมูลพนักงาน: " + err.message };
   }
 }
 

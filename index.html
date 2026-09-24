@@ -1222,7 +1222,15 @@
             </a>
           </li>
 
-          <!-- เมนู 3: ตามตัวแปร Sheet_Name_Reservation (ข้อมูลการจอง) [ใหม่] -->
+          <!-- เมนู 3: ตามตัวแปร Sheet_Name_Staff (ข้อมูลพนักงาน) [ใหม่] -->
+          <li class="sidebar-menu-item" id="nav-item-staff">
+            <a href="javascript:void(0)" class="sidebar-link" id="menu-staff" onclick="switchSection('staff')">
+              <i class="fa-solid fa-user-nurse"></i>
+              <span id="sidebar-menu-staff-text">ข้อมูลพนักงาน</span>
+            </a>
+          </li>
+
+          <!-- เมนู 4: ตามตัวแปร Sheet_Name_Reservation (ข้อมูลการจอง) [ใหม่] -->
           <li class="sidebar-menu-item" id="nav-item-reservation">
             <a href="javascript:void(0)" class="sidebar-link" id="menu-reservation" onclick="switchSection('reservation')">
               <i class="fa-solid fa-calendar-days"></i>
@@ -1243,7 +1251,7 @@
               <p>จัดการรายชื่อผู้ดูแลระบบ สามารถเพิ่ม แก้ไข และลบข้อมูลได้</p>
             </div>
             <div class="d-flex gap-2 flex-wrap">
-              <button class="btn btn-outline-secondary" onclick="loadAdminTableData()" title="รีเฟรชข้อมูล">
+              <button class="btn btn-outline-secondary" id="btn-refresh-admin" onclick="loadAdminTableData(true)" title="รีเฟรชข้อมูล">
                 <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
               </button>
               <button class="btn btn-action-main" id="btn-open-add-admin" onclick="openAddAdminModal()">
@@ -1284,7 +1292,7 @@
               <p>จัดการรายชื่อและเบอร์โทรลูกค้า สามารถเพิ่ม แก้ไข และลบข้อมูลได้</p>
             </div>
             <div class="d-flex gap-2 flex-wrap">
-              <button class="btn btn-outline-secondary" onclick="loadCustomerTableData()" title="รีเฟรชข้อมูล">
+              <button class="btn btn-outline-secondary" id="btn-refresh-customer" onclick="loadCustomerTableData(true)" title="รีเฟรชข้อมูล">
                 <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
               </button>
               <button class="btn btn-action-main" id="btn-open-add-customer" onclick="openAddCustomerModal()">
@@ -1318,6 +1326,48 @@
           </div>
         </section>
 
+        <!-- SECTION: จัดการข้อมูลพนักงาน (Staff) [ใหม่] -->
+        <section id="section-staff" class="content-section">
+          <div class="page-title-box">
+            <div class="page-title">
+              <h3 id="staff-page-title"><i class="fa-solid fa-user-nurse me-2 text-warning"></i>ข้อมูลพนักงาน</h3>
+              <p>จัดการรายชื่อและข้อมูลพนักงาน สามารถเพิ่ม แก้ไข และลบข้อมูลได้</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              <button class="btn btn-outline-secondary" id="btn-refresh-staff" onclick="loadStaffTableData(true)" title="รีเฟรชข้อมูล">
+                <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
+              </button>
+              <button class="btn btn-action-main" id="btn-open-add-staff" onclick="openAddStaffModal()">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>เพิ่มข้อมูลพนักงาน</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="table-responsive">
+              <table id="staffDataTable" class="table table-hover align-middle w-100">
+                <thead>
+                  <tr>
+                    <th style="width: 100px;" class="text-center">รหัสพนักงาน</th>
+                    <th>ชื่อเล่น (Nickname)</th>
+                    <th>ชื่อจริง (Firstname)</th>
+                    <th>นามสกุล (Lastname)</th>
+                    <th>เบอร์โทรศัพท์</th>
+                    <th style="width: 110px;" class="text-center">สถานะ</th>
+                    <th style="width: 140px;">วันที่สร้าง / ผู้สร้าง</th>
+                    <th style="width: 140px;">อัปเดตล่าสุด / ผู้อัปเดต</th>
+                    <th style="width: 100px;" class="text-center">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="staffTableBody">
+                  <!-- ข้อมูลพนักงาน -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <!-- SECTION 3: จัดการข้อมูลการจอง (Reservation Calendar) [ใหม่] -->
         <section id="section-reservation" class="content-section">
           <div class="page-title-box">
@@ -1326,7 +1376,7 @@
               <p>แสดงปฏิทินการนัดหมาย จองคิวนวดแผนไทย และโควตาในแต่ละรอบเวลา (สูงสุด 5 คนต่อช่วงเวลา)</p>
             </div>
             <div class="d-flex gap-2 flex-wrap align-items-center">
-              <button class="btn btn-outline-secondary" onclick="loadCalendarData(currentCalendarYear, currentCalendarMonth)" title="รีเฟรชข้อมูลปฏิทิน">
+              <button class="btn btn-outline-secondary" id="btn-refresh-reservation" onclick="loadCalendarData(currentCalendarYear, currentCalendarMonth, true)" title="รีเฟรชข้อมูลปฏิทิน">
                 <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
               </button>
               <button class="btn btn-primary" style="background-color: var(--spa-primary); border-color: var(--spa-primary);" onclick="goToCurrentMonth()">
@@ -1353,7 +1403,7 @@
 
               <div class="d-flex align-items-center gap-2">
                 <span id="calendar-permission-badge" class="calendar-permission-badge editable">
-                  <i class="fa-solid fa-circle-notch fa-spin"></i> กำลังตรวจสอบสิทธิ์...
+                  <i class="fa-solid fa-circle-notch fa-spin"></i> กำลังโหลดข้อมูล...
                 </span>
               </div>
             </div>
@@ -1434,11 +1484,14 @@
     // -------------------------------------------------------------
     let currentAdminData = [];
     let currentCustomerData = [];
+    let currentStaffData = [];
     let adminDataTableInstance = null;
     let customerDataTableInstance = null;
+    let staffDataTableInstance = null;
     let currentUser = null;
     let sheetNameAdmin = "ข้อมูลผู้ดูแลระบบ";
     let sheetNameCustomer = "ข้อมูลลูกค้า";
+    let sheetNameStaff = "ข้อมูลพนักงาน";
     let sheetNameReservation = "ข้อมูลการจอง";
     let sheetNameSettingTime = "ตั้งค่าตัวเลือกเวลาการจอง";
     let activeSection = "admin";
@@ -1493,6 +1546,11 @@
                 $('#sidebar-menu-customer-text').text(sheetNameCustomer);
                 $('#customer-page-title').html('<i class="fa-solid fa-address-book me-2 text-warning"></i>' + sheetNameCustomer);
               }
+              if (config.sheetNameStaff) {
+                sheetNameStaff = config.sheetNameStaff;
+                $('#sidebar-menu-staff-text').text(sheetNameStaff);
+                $('#staff-page-title').html('<i class="fa-solid fa-user-nurse me-2 text-warning"></i>' + sheetNameStaff);
+              }
               if (config.sheetNameReservation) {
                 sheetNameReservation = config.sheetNameReservation;
                 $('#sidebar-menu-reservation-text').text(sheetNameReservation);
@@ -1518,11 +1576,10 @@
 
     /**
      * กำหนดการแสดงผลของเมนู Sidebar ตามสิทธิ์ person_flag
-     * เงื่อนไขข้อ 2.1:
-     * 2.1.1. ให้ทำการซ่อน sidebar ก่อน เมื่อตรวจสอบสิทธิ์เรียบร้อยแล้วให้ทำการแสดงเมนูตามเงื่อนไข:
-     * 2.1.1.1. ถ้า person_flag มีค่าเท่ากับ 8 (ผู้ดูแลระบบ) หรือ 9 (ผู้ดูแลระบบระดับสูง): ให้แสดงเมนูทั้งหมด
-     * 2.1.1.2. ถ้า person_flag มีค่าเท่ากับ 2 (พนักงาน): ให้แสดงเมนูทั้งหมดยกเว้น เมนูผู้ดูแลระบบ และ เมนูข้อมูลลูกค้า (แสดงเฉพาะข้อมูลการจอง)
-     * 2.1.1.3. ถ้า person_flag มีค่าเท่ากับ 1 (ลูกค้า): ให้แสดง เมนูข้อมูลลูกค้า และ เมนูข้อมูลการจอง แต่ไม่แสดง เมนูผู้ดูแลระบบ
+     * เงื่อนไข:
+     * - ผู้ดูแลระบบระดับสูงสุด (9) / ผู้ดูแลระบบ (8): แสดงทุกเมนู (ผู้ดูแลระบบ, ข้อมูลลูกค้า, ข้อมูลพนักงาน, ข้อมูลการจอง)
+     * - พนักงาน (2): แสดงเฉพาะ ข้อมูลพนักงาน และ ข้อมูลการจอง (ซ่อนผู้ดูแลระบบ และ ข้อมูลลูกค้า)
+     * - ลูกค้า (1): แสดงเฉพาะ ข้อมูลลูกค้า และ ข้อมูลการจอง (ซ่อนผู้ดูแลระบบ และ ข้อมูลพนักงาน)
      */
     function applySidebarPermissions(user) {
       const $sidebar = $('#app-sidebar');
@@ -1535,24 +1592,28 @@
       const isSystemAdmin = Boolean(user.username && user.username.toLowerCase() === 'admin');
 
       if (flag === 9 || flag === 8 || isSystemAdmin) {
-        // เงื่อนไข 2.1.1.1: ผู้ดูแลระบบ / ผู้ดูแลระบบระดับสูง -> แสดงทุกเมนู
+        // ผู้ดูแลระบบ / ผู้ดูแลระบบระดับสูง -> แสดงทุกเมนู
         $('#nav-item-admin').show();
         $('#nav-item-customer').show();
+        $('#nav-item-staff').show();
         $('#nav-item-reservation').show();
       } else if (flag === 2) {
-        // เงื่อนไข 2.1.1.2: พนักงาน -> แสดงเฉพาะข้อมูลการจอง (ซ่อนผู้ดูแลระบบ และข้อมูลลูกค้า)
+        // พนักงาน -> แสดงเฉพาะข้อมูลพนักงาน และข้อมูลการจอง (ซ่อนผู้ดูแลระบบ และข้อมูลลูกค้า)
         $('#nav-item-admin').hide();
         $('#nav-item-customer').hide();
+        $('#nav-item-staff').show();
         $('#nav-item-reservation').show();
       } else if (flag === 1) {
-        // เงื่อนไข 2.1.1.3: ลูกค้า -> ซ่อนผู้ดูแลระบบ, แสดงข้อมูลลูกค้า และข้อมูลการจอง
+        // ลูกค้า -> ซ่อนผู้ดูแลระบบ และข้อมูลพนักงาน, แสดงข้อมูลลูกค้า และข้อมูลการจอง
         $('#nav-item-admin').hide();
         $('#nav-item-customer').show();
+        $('#nav-item-staff').hide();
         $('#nav-item-reservation').show();
       } else {
-        // กรณีอื่นๆ (Fallback): แสดงเฉพาะเมนูข้อมูลการจอง
+        // Fallback: แสดงเฉพาะเมนูข้อมูลการจอง
         $('#nav-item-admin').hide();
         $('#nav-item-customer').hide();
+        $('#nav-item-staff').hide();
         $('#nav-item-reservation').show();
       }
 
@@ -1582,7 +1643,7 @@
         } else if (flag === 2) {
           roleName = "พนักงาน";
           badgeClass = "bg-success-subtle text-success-emphasis border";
-          iconClass = "fa-user-tie";
+          iconClass = "fa-user-nurse";
         } else if (flag === 1) {
           roleName = "ลูกค้า";
           badgeClass = "bg-primary-subtle text-primary border";
@@ -1603,11 +1664,13 @@
       let initialSection = activeSection || 'admin';
 
       if (flag === 2) {
-        // พนักงาน: เริ่มต้นที่หน้าจอข้อมูลการจองเท่านั้น
-        initialSection = 'reservation';
+        // พนักงาน: หากหน้าจอเดิมเป็น admin หรือ customer ให้เปลี่ยนเป็น reservation
+        if (initialSection === 'admin' || initialSection === 'customer') {
+          initialSection = 'reservation';
+        }
       } else if (flag === 1) {
-        // ลูกค้า: หากหน้าจอเดิมเป็น admin ให้เปลี่ยนเป็น reservation
-        if (initialSection === 'admin') {
+        // ลูกค้า: หากหน้าจอเดิมเป็น admin หรือ staff ให้เปลี่ยนเป็น reservation
+        if (initialSection === 'admin' || initialSection === 'staff') {
           initialSection = 'reservation';
         }
       } else if (flag === 8 || flag === 9 || (currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin')) {
@@ -1625,7 +1688,7 @@
     }
 
     /**
-     * สลับระหว่างเมนูผู้ดูแลระบบ, เมนูข้อมูลลูกค้า, และ เมนูข้อมูลการจอง
+     * สลับระหว่างเมนูผู้ดูแลระบบ, เมนูข้อมูลลูกค้า, เมนูข้อมูลพนักงาน และ เมนูข้อมูลการจอง
      * มีเงื่อนไขการตรวจสอบสิทธิ์ก่อนเสมอ
      */
     function switchSection(section) {
@@ -1662,37 +1725,38 @@
           switchSection('reservation');
           return;
         }
+      } else if (section === 'staff') {
+        // ลูกค้า (person_flag = 1) ไม่มีสิทธิ์เข้าถึงหน้าจอข้อมูลพนักงาน
+        if (personFlag === 1) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'ไม่มีสิทธิ์เข้าถึง',
+            text: 'ลูกค้าไม่มีสิทธิ์ในการเข้าถึงหน้าจอข้อมูลพนักงาน',
+            confirmButtonColor: '#1B3B36'
+          });
+          switchSection('reservation');
+          return;
+        }
       }
 
       activeSection = section;
 
       // จัดการ Active class ที่ Sidebar
       $('.sidebar-link').removeClass('active');
-      // ซ่อนหน้าจอทั้งหมดทันทีก่อนเปิดหน้าจอที่เกี่ยวข้อง
+      $('#menu-' + section).addClass('active');
+
+      // แสดงหน้าจอที่เลือกทันที (ไม่ต้องซ่อนหรือรอตรวจสอบสิทธิ์ซ้ำซ้อน)
       $('.content-section').removeClass('active');
+      $('#section-' + section).addClass('active');
 
       if (section === 'admin') {
-        $('#menu-admin').addClass('active');
-
-        // ทำการซ่อนหน้าจอผู้ดูแลระบบไว้ก่อน ไม่ให้เห็นจนกว่าจะตรวจสอบสิทธิ์และโหลดข้อมูลเสร็จ
-        $('#section-admin').removeClass('active');
-
-        // ดึงข้อมูลและตรวจสอบสิทธิ์กับ Server -> เมื่อเสร็จเรียบร้อยจึงแสดงหน้าจอ
-        loadAdminTableData();
-
+        loadAdminTableData(false);
       } else if (section === 'customer') {
-        $('#menu-customer').addClass('active');
-
-        // ทำการซ่อนหน้าจอผู้ดูแลระบบและหน้าจอข้อมูลลูกค้าไว้ก่อน ไม่ให้เห็นจนกว่าจะตรวจสอบสิทธิ์และโหลดข้อมูลเสร็จ
-        $('#section-admin').removeClass('active');
-        $('#section-customer').removeClass('active');
-
-        // ดึงข้อมูลและตรวจสอบสิทธิ์กับ Server -> เมื่อเสร็จเรียบร้อยจึงแสดงหน้าจอตามเงื่อนไขที่สัมพันธ์กัน
-        loadCustomerTableData();
+        loadCustomerTableData(false);
+      } else if (section === 'staff') {
+        loadStaffTableData(false);
       } else if (section === 'reservation') {
-        $('#menu-reservation').addClass('active');
-        $('#section-reservation').addClass('active');
-        loadCalendarData(currentCalendarYear, currentCalendarMonth);
+        loadCalendarData(currentCalendarYear, currentCalendarMonth, false);
       }
 
       // ปิด sidebar อัตโนมัติบนมือถือเมื่อคลิกเลือกเมนู
@@ -1770,9 +1834,28 @@
           } else if (u === 'manager' && password === '1234') {
             mockUser = { username: 'manager', nickname: 'ผู้จัดการ', firstname: 'สมศักดิ์', lastname: 'ใจดี', personFlag: 8, roleTitle: 'ผู้ดูแลระบบ' };
           } else if (u === 'staff' && password === '1234') {
-            mockUser = { username: 'staff', nickname: 'หมอนวดกานต์', firstname: 'กานดา', lastname: 'รักงาน', personFlag: 2, roleTitle: 'พนักงาน' };
+            mockUser = { username: 'JMC001', nickname: 'หมอน้อย', firstname: 'สมใจ', lastname: 'ใจดี', phone: '0891234567', personFlag: 2, roleTitle: 'พนักงาน' };
           } else if (u === 'customer' && password === '1234') {
             mockUser = { username: 'JM0001', nickname: 'คุณนิด', firstname: 'นิตยา', lastname: 'สุขใจ', phone: '0812345678', personFlag: 1, roleTitle: 'ลูกค้า' };
+          } else if (u.indexOf('jmc') === 0) {
+            // ตรวจสอบกับข้อมูลพนักงานในรายการ (currentStaffData)
+            const matchedStaff = currentStaffData.find(s => String(s.staffId || '').toLowerCase() === u);
+            if (matchedStaff) {
+              const expectedPass = matchedStaff.pwd || matchedStaff.phone || '1234';
+              if (password === expectedPass || password === matchedStaff.phone || password === '1234') {
+                mockUser = {
+                  username: matchedStaff.staffId,
+                  nickname: matchedStaff.nickname || matchedStaff.staffId,
+                  firstname: matchedStaff.firstname || '',
+                  lastname: matchedStaff.lastname || '',
+                  phone: matchedStaff.phone || '',
+                  personFlag: 2,
+                  roleTitle: 'พนักงาน'
+                };
+              }
+            } else if (password === '1234' || password.length >= 8) {
+              mockUser = { username: username.toUpperCase(), nickname: 'พนักงาน ' + username.toUpperCase(), firstname: '', lastname: '', personFlag: 2, roleTitle: 'พนักงาน' };
+            }
           } else if (u.indexOf('jm') === 0) {
             // ตรวจสอบกับข้อมูลลูกค้าในรายการ (currentCustomerData)
             const matchedCust = currentCustomerData.find(c => String(c.customerId || '').toLowerCase() === u);
@@ -1810,7 +1893,7 @@
             Swal.fire({
               icon: 'error',
               title: 'เข้าสู่ระบบไม่สำเร็จ',
-              text: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (ทดสอบ: admin/manager/staff/customer รหัส 1234)',
+              text: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (ทดสอบ: admin/manager/staff/customer รหัส 1234 หรือ JMC001/JM0001)',
               confirmButtonColor: '#1B3B36'
             });
           }
@@ -1842,24 +1925,30 @@
     // =============================================================
     // โมดูล 1: ผู้ดูแลระบบ (Admin CRUD)
     // =============================================================
-    function loadAdminTableData(callback) {
+    function loadAdminTableData(isManualRefresh, callback) {
+      if (typeof isManualRefresh === 'function') {
+        callback = isManualRefresh;
+        isManualRefresh = false;
+      }
       const requester = (currentUser && currentUser.username) ? currentUser.username : '';
 
-      // ซ่อนหน้าจอผู้ดูแลระบบทันทีในระหว่างตรวจสอบสิทธิ์
-      $('#section-admin').removeClass('active');
+      const $refreshIcon = $('#btn-refresh-admin i');
+      if (isManualRefresh) {
+        $refreshIcon.addClass('fa-spin');
+      }
+
+      // หากยังไม่มีข้อมูลมาก่อนเลย ให้แสดงสถานะกำลังโหลดในตาราง
+      if (!currentAdminData || currentAdminData.length === 0) {
+        if (!adminDataTableInstance) {
+          $('#adminTableBody').html('<tr><td colspan="8" class="text-center py-4 text-muted"><i class="fa-solid fa-circle-notch fa-spin me-2 text-warning"></i>กำลังโหลดข้อมูลผู้ดูแลระบบ...</td></tr>');
+        }
+      }
 
       if (typeof google !== 'undefined' && google.script && google.script.run) {
-        Swal.fire({
-          title: 'กำลังตรวจสอบสิทธิ์และโหลดข้อมูล...',
-          text: 'ระบบกำลังตรวจสอบสิทธิ์การเข้าถึง กรุณารอสักครู่',
-          allowOutsideClick: false,
-          didOpen: () => { Swal.showLoading(); }
-        });
-
         google.script.run
           .withSuccessHandler(function(response) {
-            Swal.close();
-            if (response.success) {
+            $refreshIcon.removeClass('fa-spin');
+            if (response && response.success) {
               // ซิงค์สิทธิ์ person_flag และ roleTitle ล่าสุดจาก Server
               if (response.personFlag && currentUser) {
                 currentUser.personFlag = response.personFlag;
@@ -1874,19 +1963,14 @@
               currentAdminData = response.data || [];
               renderAdminTable(currentAdminData);
 
-              // *** เมื่อตรวจสอบสิทธิ์และโหลดข้อมูลเรียบร้อยแล้ว จึงแสดงหน้าจอให้เห็นตามเงื่อนไขที่สัมพันธ์กัน ***
-              $('#section-admin').addClass('active');
-
               if (typeof callback === 'function') {
                 callback();
               }
             } else {
-              // หากไม่ผ่านการตรวจสอบสิทธิ์ ซ่อนหน้าจอไว้
-              $('#section-admin').removeClass('active');
               Swal.fire({
                 icon: 'error',
                 title: 'ไม่สามารถเข้าถึงได้',
-                text: response.message || 'คุณไม่มีสิทธิ์เข้าถึงข้อมูลผู้ดูแลระบบ',
+                text: (response && response.message) ? response.message : 'คุณไม่มีสิทธิ์เข้าถึงข้อมูลผู้ดูแลระบบ',
                 confirmButtonColor: '#1B3B36'
               }).then(() => {
                 switchSection('reservation');
@@ -1894,8 +1978,7 @@
             }
           })
           .withFailureHandler(function(err) {
-            Swal.close();
-            $('#section-admin').removeClass('active');
+            $refreshIcon.removeClass('fa-spin');
             Swal.fire({
               icon: 'error',
               title: 'เกิดข้อผิดพลาด',
@@ -1905,25 +1988,27 @@
           })
           .getAdminUsers(requester);
       } else {
-        currentAdminData = [
-          {
-            rowId: 2,
-            username: "admin",
-            nickname: "แอดมิน",
-            firstname: "ผู้ดูแลระบบสูงสุด",
-            lastname: "JM Thai Massage",
-            createdAt: "18/09/2026 14:00",
-            isActive: true,
-            personFlag: 9,
-            roleTitle: "ผู้ดูแลระบบสูงสุด",
-            isProtected: true
+        setTimeout(() => {
+          $refreshIcon.removeClass('fa-spin');
+          currentAdminData = [
+            {
+              rowId: 2,
+              username: "admin",
+              nickname: "แอดมิน",
+              firstname: "ผู้ดูแลระบบสูงสุด",
+              lastname: "JM Thai Massage",
+              createdAt: "18/09/2026 14:00",
+              isActive: true,
+              personFlag: 9,
+              roleTitle: "ผู้ดูแลระบบสูงสุด",
+              isProtected: true
+            }
+          ];
+          renderAdminTable(currentAdminData);
+          if (typeof callback === 'function') {
+            callback();
           }
-        ];
-        renderAdminTable(currentAdminData);
-        $('#section-admin').addClass('active');
-        if (typeof callback === 'function') {
-          callback();
-        }
+        }, 300);
       }
     }
 
@@ -2432,36 +2517,45 @@
     // โมดูล 2: ข้อมูลลูกค้า (Customer CRUD - Sheet_Name_Customer)
     // ฟิลด์: 1.1 ชื่อเล่น(Req), 1.2 ชื่อจริง(Opt), 1.3 นามสกุล(Opt), 1.4 เบอร์โทร(Req), 1.5 วันที่สร้าง, 1.6 อัปเดตล่าสุด
     // =============================================================
-    function loadCustomerTableData(callback) {
+    function loadCustomerTableData(isManualRefresh, callback) {
+      if (typeof isManualRefresh === 'function') {
+        callback = isManualRefresh;
+        isManualRefresh = false;
+      }
       const requester = (currentUser && currentUser.username) ? currentUser.username : '';
 
-      // ซ่อนหน้าจอผู้ดูแลระบบและหน้าจอข้อมูลลูกค้าทันทีในระหว่างตรวจสอบสิทธิ์
-      $('#section-admin').removeClass('active');
-      $('#section-customer').removeClass('active');
+      const $refreshIcon = $('#btn-refresh-customer i');
+      if (isManualRefresh) {
+        $refreshIcon.addClass('fa-spin');
+      }
+
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      // ปรับปุ่มเพิ่มข้อมูลลูกค้าทันทีตามสิทธิ์
+      if (userFlag === 1) {
+        $('#btn-open-add-customer').hide();
+      } else {
+        $('#btn-open-add-customer').show();
+      }
+
+      // หากยังไม่มีข้อมูลมาก่อนเลย ให้แสดงสถานะกำลังโหลดในตาราง
+      if (!currentCustomerData || currentCustomerData.length === 0) {
+        if (!customerDataTableInstance) {
+          $('#customerTableBody').html('<tr><td colspan="9" class="text-center py-4 text-muted"><i class="fa-solid fa-circle-notch fa-spin me-2 text-warning"></i>กำลังโหลดข้อมูลลูกค้า...</td></tr>');
+        }
+      }
 
       if (typeof google !== 'undefined' && google.script && google.script.run) {
-        Swal.fire({
-          title: 'กำลังตรวจสอบสิทธิ์และโหลดข้อมูล...',
-          text: 'ระบบกำลังตรวจสอบสิทธิ์การเข้าถึงข้อมูลลูกค้า กรุณารอสักครู่',
-          allowOutsideClick: false,
-          didOpen: () => { Swal.showLoading(); }
-        });
-
         google.script.run
           .withSuccessHandler(function(response) {
-            Swal.close();
-            if (response.success) {
+            $refreshIcon.removeClass('fa-spin');
+            if (response && response.success) {
               if (response.personFlag && currentUser) {
                 currentUser.personFlag = response.personFlag;
                 sessionStorage.setItem("jm_current_user", JSON.stringify(currentUser));
               }
 
-              const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
-
-              // เงื่อนไขสิทธิ์การเพิ่มข้อมูลลูกค้า:
-              // - ผู้ดูแลระบบระดับสูงสุด (9) และ ผู้ดูแลระบบ (8): สามารถเพิ่มข้อมูลได้ (แสดงปุ่มเพิ่ม)
-              // - ลูกค้า (1): ไม่สามารถเพิ่มข้อมูลได้ (ซ่อนปุ่มเพิ่ม)
-              if (userFlag === 1) {
+              const updatedFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+              if (updatedFlag === 1) {
                 $('#btn-open-add-customer').hide();
               } else {
                 $('#btn-open-add-customer').show();
@@ -2470,19 +2564,14 @@
               currentCustomerData = response.data || [];
               renderCustomerTable(currentCustomerData);
 
-              // *** เมื่อตรวจสอบสิทธิ์และโหลดข้อมูลเรียบร้อยแล้ว จึงแสดงหน้าจอข้อมูลลูกค้า ***
-              $('#section-customer').addClass('active');
-
               if (typeof callback === 'function') {
                 callback();
               }
             } else {
-              // หากไม่ผ่านการตรวจสอบสิทธิ์ ซ่อนหน้าจอไว้
-              $('#section-customer').removeClass('active');
               Swal.fire({
                 icon: 'error',
                 title: 'ไม่สามารถเข้าถึงได้',
-                text: response.message || 'คุณไม่มีสิทธิ์เข้าถึงหน้าจอข้อมูลลูกค้า',
+                text: (response && response.message) ? response.message : 'คุณไม่มีสิทธิ์เข้าถึงหน้าจอข้อมูลลูกค้า',
                 confirmButtonColor: '#1B3B36'
               }).then(() => {
                 switchSection('reservation');
@@ -2490,8 +2579,7 @@
             }
           })
           .withFailureHandler(function(err) {
-            Swal.close();
-            $('#section-customer').removeClass('active');
+            $refreshIcon.removeClass('fa-spin');
             Swal.fire({
               icon: 'error',
               title: 'เกิดข้อผิดพลาด',
@@ -2502,19 +2590,11 @@
           .getCustomers(requester);
       } else {
         // Mock fallback สำหรับ Browser Preview
-        Swal.fire({
-          title: 'กำลังตรวจสอบสิทธิ์และโหลดข้อมูล...',
-          text: 'ระบบกำลังตรวจสอบสิทธิ์การเข้าถึงข้อมูลลูกค้า กรุณารอสักครู่',
-          allowOutsideClick: false,
-          didOpen: () => { Swal.showLoading(); }
-        });
-
         setTimeout(() => {
-          Swal.close();
-          const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+          $refreshIcon.removeClass('fa-spin');
+          const mockUserFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
 
-          if (userFlag === 2) {
-            $('#section-customer').removeClass('active');
+          if (mockUserFlag === 2) {
             Swal.fire({
               icon: 'error',
               title: 'ไม่สามารถเข้าถึงได้',
@@ -2526,7 +2606,7 @@
             return;
           }
 
-          if (userFlag === 1) {
+          if (mockUserFlag === 1) {
             $('#btn-open-add-customer').hide();
           } else {
             $('#btn-open-add-customer').show();
@@ -2570,13 +2650,12 @@
           ];
 
           // ถ้าเป็นลูกค้า (1) ให้เห็นเฉพาะแถวที่เป็นของตนเอง
-          if (userFlag === 1) {
+          if (mockUserFlag === 1) {
             const currentU = (currentUser && currentUser.username) ? currentUser.username.toLowerCase() : 'jm0001';
             currentCustomerData = currentCustomerData.filter(c => String(c.customerId || '').toLowerCase() === currentU);
           }
 
           renderCustomerTable(currentCustomerData);
-          $('#section-customer').addClass('active');
 
           if (typeof callback === 'function') {
             callback();
@@ -3036,6 +3115,616 @@
     }
 
     // =============================================================
+    // โมดูล: ข้อมูลพนักงาน (Staff CRUD - Sheet_Name_Staff)
+    // ฟิลด์ Schema 13 คอลัมน์:
+    // 1. staff_id (JMC + 3 digits, e.g. JMC001), 2. pwd, 3. nick_name(Req),
+    // 4. first_name, 5. last_name, 6. phone_number(Req, 10 digits),
+    // 7. create_date, 8. created_by, 9. update_date, 10. updated_by,
+    // 11. is_active, 12. person_flag = 2 (พนักงาน), 13. deleted_flag (N/Y)
+    // =============================================================
+    function loadStaffTableData(isManualRefresh, callback) {
+      if (typeof isManualRefresh === 'function') {
+        callback = isManualRefresh;
+        isManualRefresh = false;
+      }
+      const requester = (currentUser && currentUser.username) ? currentUser.username : '';
+
+      const $refreshIcon = $('#btn-refresh-staff i');
+      if (isManualRefresh) {
+        $refreshIcon.addClass('fa-spin');
+      }
+
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      // ปรับปุ่มเพิ่มข้อมูลพนักงานทันทีตามสิทธิ์
+      if (userFlag === 2 || userFlag === 1) {
+        $('#btn-open-add-staff').hide();
+      } else {
+        $('#btn-open-add-staff').show();
+      }
+
+      // หากยังไม่มีข้อมูลมาก่อนเลย ให้แสดงสถานะกำลังโหลดในตาราง
+      if (!currentStaffData || currentStaffData.length === 0) {
+        if (!staffDataTableInstance) {
+          $('#staffTableBody').html('<tr><td colspan="10" class="text-center py-4 text-muted"><i class="fa-solid fa-circle-notch fa-spin me-2 text-warning"></i>กำลังโหลดข้อมูลพนักงาน...</td></tr>');
+        }
+      }
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            $refreshIcon.removeClass('fa-spin');
+            if (response && response.success) {
+              if (response.personFlag && currentUser) {
+                currentUser.personFlag = response.personFlag;
+                sessionStorage.setItem("jm_current_user", JSON.stringify(currentUser));
+              }
+
+              const updatedFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+              if (updatedFlag === 2 || updatedFlag === 1) {
+                $('#btn-open-add-staff').hide();
+              } else {
+                $('#btn-open-add-staff').show();
+              }
+
+              currentStaffData = response.data || [];
+              renderStaffTable(currentStaffData);
+
+              if (typeof callback === 'function') {
+                callback();
+              }
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถเข้าถึงได้',
+                text: (response && response.message) ? response.message : 'คุณไม่มีสิทธิ์เข้าถึงหน้าจอข้อมูลพนักงาน',
+                confirmButtonColor: '#1B3B36'
+              }).then(() => {
+                switchSection('reservation');
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            $refreshIcon.removeClass('fa-spin');
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: 'โหลดข้อมูลล้มเหลว: ' + (err.message || err),
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .getStaffs(requester);
+      } else {
+        // Mock fallback สำหรับ Browser Preview
+        setTimeout(() => {
+          $refreshIcon.removeClass('fa-spin');
+          const mockUserFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+
+          if (mockUserFlag === 1) {
+            Swal.fire({
+              icon: 'error',
+              title: 'ไม่สามารถเข้าถึงได้',
+              text: 'ลูกค้าไม่มีสิทธิ์เข้าถึงข้อมูลพนักงาน',
+              confirmButtonColor: '#1B3B36'
+            }).then(() => {
+              switchSection('reservation');
+            });
+            return;
+          }
+
+          if (mockUserFlag === 2) {
+            $('#btn-open-add-staff').hide();
+          } else {
+            $('#btn-open-add-staff').show();
+          }
+
+          currentStaffData = [
+            {
+              rowId: 2,
+              staffId: "JMC001",
+              pwd: "0891234567",
+              nickname: "หมอน้อย",
+              firstname: "สมใจ",
+              lastname: "ใจดี",
+              phone: "0891234567",
+              createDate: "18/09/2026 10:00",
+              createdBy: "admin",
+              updateDate: "18/09/2026 10:00",
+              updatedBy: "admin",
+              isActive: true,
+              personFlag: 2,
+              roleTitle: "พนักงาน",
+              deletedFlag: "N"
+            },
+            {
+              rowId: 3,
+              staffId: "JMC002",
+              pwd: "0897654321",
+              nickname: "หมอกานต์",
+              firstname: "กานดา",
+              lastname: "รักงาน",
+              phone: "0897654321",
+              createDate: "18/09/2026 11:30",
+              createdBy: "admin",
+              updateDate: "18/09/2026 11:30",
+              updatedBy: "admin",
+              isActive: true,
+              personFlag: 2,
+              roleTitle: "พนักงาน",
+              deletedFlag: "N"
+            }
+          ];
+
+          // ถ้าเป็นพนักงาน (2) ให้เห็นเฉพาะแถวที่เป็นของตนเอง
+          if (mockUserFlag === 2) {
+            const currentU = (currentUser && currentUser.username) ? currentUser.username.toLowerCase() : 'jmc001';
+            currentStaffData = currentStaffData.filter(s => String(s.staffId || '').toLowerCase() === currentU);
+          }
+
+          renderStaffTable(currentStaffData);
+
+          if (typeof callback === 'function') {
+            callback();
+          }
+        }, 300);
+      }
+    }
+
+    function renderStaffTable(dataList) {
+      if (staffDataTableInstance) {
+        staffDataTableInstance.destroy();
+      }
+
+      const $tbody = $('#staffTableBody');
+      $tbody.empty();
+
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSuperAdmin = (userFlag === 9 || (currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin'));
+      const isAdmin = (userFlag === 8);
+      const isStaffUser = (userFlag === 2);
+      const currentUserNameLower = (currentUser && currentUser.username) ? currentUser.username.toLowerCase() : '';
+
+      if (!dataList || dataList.length === 0) {
+        $tbody.append('<tr><td colspan="9" class="text-center py-4 text-muted">ไม่พบข้อมูลพนักงาน</td></tr>');
+      } else {
+        dataList.forEach((staff, index) => {
+          let actionButtons = `<div class="action-btn-group">`;
+
+          // 1. ปุ่มแก้ไขข้อมูลพนักงาน (Edit)
+          // - ผู้ดูแลระบบระดับสูงสุด (9) และ ผู้ดูแลระบบ (8): สามารถแก้ไขได้ทุกคน
+          // - พนักงาน (2): สามารถแก้ไขได้เฉพาะข้อมูลของตัวเองเท่านั้น
+          let canEdit = false;
+          if (isSuperAdmin || isAdmin) {
+            canEdit = true;
+          } else if (isStaffUser) {
+            const staffIdLower = String(staff.staffId || '').trim().toLowerCase();
+            if (staffIdLower === currentUserNameLower || dataList.length === 1) {
+              canEdit = true;
+            }
+          }
+
+          if (canEdit) {
+            actionButtons += `
+              <button class="btn btn-table-action btn-table-edit" title="แก้ไขข้อมูลพนักงาน" onclick="openEditStaffModal(${staff.rowId})">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+            `;
+          }
+
+          // 2. ปุ่มลบข้อมูลพนักงาน (Delete)
+          // - เฉพาะผู้ดูแลระบบระดับสูงสุด (person_flag = 9) เท่านั้นที่สามารถลบข้อมูลพนักงานได้
+          // - ผู้ดูแลระบบ (person_flag = 8) และ พนักงาน (person_flag = 2) ไม่สามารถลบข้อมูลพนักงานได้
+          if (isSuperAdmin) {
+            actionButtons += `
+              <button class="btn btn-table-action btn-table-delete" title="ลบข้อมูลพนักงาน" onclick="confirmDeleteStaff(${staff.rowId}, '${escapeHtml(staff.nickname)}')">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            `;
+          }
+
+          actionButtons += `</div>`;
+
+          const staffIdBadge = `<span class="badge bg-dark-subtle text-dark border border-secondary-subtle px-2 py-1 font-monospace fw-semibold"><i class="fa-solid fa-id-card-clip text-warning me-1"></i>${escapeHtml(staff.staffId || '-')}</span>`;
+          const statusBadge = (staff.isActive !== false && String(staff.isActive).toLowerCase() !== 'false')
+            ? `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="fa-solid fa-circle-check me-1"></i>เปิดใช้งาน</span>`
+            : `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1"><i class="fa-solid fa-circle-xmark me-1"></i>ปิดการใช้งาน</span>`;
+
+          const createdDisplay = `<div>${escapeHtml(staff.createDate || '-')}</div><small class="text-muted"><i class="fa-solid fa-user-pen me-1"></i>${escapeHtml(staff.createdBy || '-')}</small>`;
+          const updatedDisplay = `<div>${escapeHtml(staff.updateDate || '-')}</div><small class="text-muted"><i class="fa-solid fa-user-check me-1"></i>${escapeHtml(staff.updatedBy || '-')}</small>`;
+
+          const rowHtml = `
+            <tr>
+              <td class="text-center">${staffIdBadge}</td>
+              <td><span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-6">${escapeHtml(staff.nickname)}</span></td>
+              <td>${escapeHtml(staff.firstname || '-')}</td>
+              <td>${escapeHtml(staff.lastname || '-')}</td>
+              <td><i class="fa-solid fa-phone text-muted me-1 small"></i><b>${escapeHtml(staff.phone)}</b></td>
+              <td class="text-center">${statusBadge}</td>
+              <td class="text-muted small">${createdDisplay}</td>
+              <td class="text-muted small">${updatedDisplay}</td>
+              <td class="text-center">${actionButtons}</td>
+            </tr>
+          `;
+          $tbody.append(rowHtml);
+        });
+      }
+
+      staffDataTableInstance = $('#staffDataTable').DataTable({
+        responsive: true,
+        language: getDatatableThaiLang(),
+        pageLength: 10,
+        columnDefs: [{ orderable: false, targets: [8] }]
+      });
+    }
+
+    /**
+     * Modal เพิ่มข้อมูลพนักงาน (SweetAlert2)
+     * เงื่อนไข:
+     * - ไม่ต้องแสดง field "ประเภทผู้ใช้งาน" (บันทึก person_flag = 2 อัตโนมัติ)
+     * - เบอร์โทรศัพท์ กรอกได้เฉพาะตัวเลข 10 หลักเท่านั้น
+     * - ปุ่มยกเลิกอยู่ด้านซ้าย และ ปุ่มบันทึกอยู่ด้านขวา (reverseButtons: true)
+     */
+    function openAddStaffModal() {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      if (userFlag === 2 || userFlag === 1) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์เพิ่มข้อมูล',
+          text: 'คุณไม่มีสิทธิ์เพิ่มข้อมูลพนักงานใหม่',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      Swal.fire({
+        title: '<i class="fa-solid fa-user-plus text-success me-2"></i>เพิ่มข้อมูลพนักงาน',
+        html: `
+          <div class="swal-form-group">
+            <label class="swal-form-label">ชื่อเล่น (Nickname)<span class="req">*</span></label>
+            <input id="swal-staff-nickname" class="swal-input-custom" placeholder="เช่น นิด, กานต์, แดง" autocomplete="off">
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">เบอร์โทรศัพท์ (Phone Number)<span class="req">* (ตัวเลข 10 หลัก)</span></label>
+            <input id="swal-staff-phone" type="tel" class="swal-input-custom" placeholder="เช่น 0861111111" autocomplete="tel" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)">
+            <small class="text-muted" style="font-size:0.75rem;">* กรอกเฉพาะตัวเลข 10 หลักเท่านั้น เช่น 0861111111</small>
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">รหัสผ่าน (Password)<span class="opt">(หากไม่ระบุ จะใช้เบอร์โทรเป็นรหัสผ่าน)</span></label>
+            <input id="swal-staff-password" type="password" class="swal-input-custom" placeholder="ปล่อยว่างไว้เพื่อใช้เบอร์โทรศัพท์เป็นรหัสผ่าน" autocomplete="new-password">
+            <small class="text-muted" style="font-size:0.75rem;">* ครั้งแรกระบบจะใช้เบอร์โทรศัพท์เป็นรหัสผ่านเข้าสู่ระบบโดยอัตโนมัติ</small>
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">ชื่อจริง (First Name)<span class="opt">(ไม่บังคับ/Optional)</span></label>
+            <input id="swal-staff-firstname" class="swal-input-custom" placeholder="เช่น สมใจ">
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">นามสกุล (Last Name)<span class="opt">(ไม่บังคับ/Optional)</span></label>
+            <input id="swal-staff-lastname" class="swal-input-custom" placeholder="เช่น ใจดี">
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">สถานะการใช้งาน (Status)</label>
+            <div class="form-check form-switch mt-1">
+              <input class="form-check-input" type="checkbox" id="swal-staff-active" checked style="cursor: pointer; width: 2.5em; height: 1.25em;">
+              <label class="form-check-label ms-2" for="swal-staff-active" id="swal-staff-active-label">เปิดใช้งาน (Active)</label>
+            </div>
+          </div>
+        `,
+        didOpen: () => {
+          $('#swal-staff-phone').on('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+          });
+          $('#swal-staff-active').on('change', function() {
+            $('#swal-staff-active-label').text(this.checked ? 'เปิดใช้งาน (Active)' : 'ปิดการใช้งาน (Inactive)');
+          });
+        },
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-check me-1"></i> บันทึกข้อมูล',
+        cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+        reverseButtons: true, // ปุ่มยกเลิกอยู่ซ้าย ปุ่มยืนยันอยู่ขวา
+        confirmButtonColor: '#1B3B36',
+        cancelButtonColor: '#718096',
+        focusConfirm: false,
+        preConfirm: () => {
+          const nickname = $('#swal-staff-nickname').val().trim();
+          const phone = $('#swal-staff-phone').val().trim().replace(/[^0-9]/g, '');
+          const password = $('#swal-staff-password').val().trim();
+          const firstname = $('#swal-staff-firstname').val().trim();
+          const lastname = $('#swal-staff-lastname').val().trim();
+          const isActive = $('#swal-staff-active').is(':checked');
+
+          // ตรวจสอบเงื่อนไข Required (ชื่อเล่น และ เบอร์โทร)
+          if (!nickname) {
+            Swal.showValidationMessage('กรุณากรอก "ชื่อเล่น" ของพนักงาน');
+            return false;
+          }
+          if (!phone) {
+            Swal.showValidationMessage('กรุณากรอก "เบอร์โทรศัพท์" ของพนักงาน');
+            return false;
+          }
+          if (!/^[0-9]{10}$/.test(phone)) {
+            Swal.showValidationMessage('เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น (เช่น 0861111111)');
+            return false;
+          }
+
+          const currentUsername = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+          return { nickname, phone, password, firstname, lastname, isActive, createdBy: currentUsername, personFlag: 2 };
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value) {
+          submitAddStaff(result.value);
+        }
+      });
+    }
+
+    function submitAddStaff(payload) {
+      Swal.fire({ title: 'กำลังบันทึกข้อมูลพนักงาน...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            if (response.success) {
+              Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: response.message, timer: 1800, showConfirmButton: false });
+              loadStaffTableData();
+            } else {
+              Swal.fire({ icon: 'error', title: 'ไม่สามารถบันทึกได้', text: response.message, confirmButtonColor: '#1B3B36' });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'บันทึกข้อมูลล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
+          })
+          .addStaff(payload);
+      } else {
+        setTimeout(() => {
+          let maxNum = 0;
+          currentStaffData.forEach(s => {
+            const m = String(s.staffId || '').match(/^JMC(\d+)$/i);
+            if (m) {
+              const n = parseInt(m[1], 10);
+              if (n > maxNum) maxNum = n;
+            }
+          });
+          const nextNum = maxNum + 1;
+          const nextId = nextNum < 1000 ? "JMC" + ("000" + nextNum).slice(-3) : "JMC" + nextNum;
+          currentStaffData.push({
+            rowId: currentStaffData.length + 2,
+            staffId: nextId,
+            pwd: payload.password || payload.phone,
+            nickname: payload.nickname,
+            firstname: payload.firstname,
+            lastname: payload.lastname,
+            phone: payload.phone,
+            createDate: "วันนี้",
+            createdBy: payload.createdBy || "admin",
+            updateDate: "วันนี้",
+            updatedBy: payload.createdBy || "admin",
+            isActive: payload.isActive,
+            personFlag: 2,
+            roleTitle: "พนักงาน",
+            deletedFlag: "N"
+          });
+          renderStaffTable(currentStaffData);
+          Swal.fire({ icon: 'success', title: 'สำเร็จ (จำลอง: ' + nextId + ')', timer: 1500, showConfirmButton: false });
+        }, 500);
+      }
+    }
+
+    /**
+     * Modal แก้ไขข้อมูลพนักงาน (SweetAlert2)
+     * เงื่อนไข:
+     * - ไม่ต้องแสดง field "ประเภทผู้ใช้งาน" (บันทึก person_flag = 2 อัตโนมัติ)
+     * - เบอร์โทรศัพท์ กรอกได้เฉพาะตัวเลข 10 หลักเท่านั้น
+     * - ปุ่มยกเลิกอยู่ด้านซ้าย และ ปุ่มบันทึกอยู่ด้านขวา (reverseButtons: true)
+     */
+    function openEditStaffModal(rowId) {
+      const staff = currentStaffData.find(s => s.rowId === rowId);
+      if (!staff) {
+        Swal.fire({ icon: 'error', title: 'ไม่พบข้อมูลพนักงาน', confirmButtonColor: '#1B3B36' });
+        return;
+      }
+
+      // ตรวจสอบสิทธิ์กรณีเป็นพนักงาน (2): แก้ไขได้เฉพาะข้อมูลของตนเองเท่านั้น
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      if (userFlag === 2) {
+        const staffIdLower = String(staff.staffId || '').trim().toLowerCase();
+        const currentUserNameLower = (currentUser && currentUser.username) ? currentUser.username.toLowerCase() : '';
+        if (staffIdLower !== currentUserNameLower && currentStaffData.length > 1) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'ไม่มีสิทธิ์แก้ไข',
+            text: 'พนักงานสามารถแก้ไขได้เฉพาะข้อมูลของตนเองเท่านั้น',
+            confirmButtonColor: '#1B3B36'
+          });
+          return;
+        }
+      }
+
+      const isActiveChecked = (staff.isActive !== false && String(staff.isActive).toLowerCase() !== 'false');
+
+      Swal.fire({
+        title: '<i class="fa-solid fa-pen-to-square text-primary me-2"></i>แก้ไขข้อมูลพนักงาน',
+        html: `
+          <div class="swal-form-group">
+            <label class="swal-form-label">รหัสพนักงาน (Staff ID)</label>
+            <input id="swal-edit-staff-id" class="swal-input-custom font-monospace fw-bold" value="${escapeHtml(staff.staffId || '')}" readonly>
+            <small class="text-muted" style="font-size:0.75rem;">* รหัสพนักงานถูกสร้างอัตโนมัติ ไม่สามารถแก้ไขได้</small>
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">ชื่อเล่น (Nickname)<span class="req">*</span></label>
+            <input id="swal-edit-staff-nickname" class="swal-input-custom" value="${escapeHtml(staff.nickname || '')}">
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">เบอร์โทรศัพท์ (Phone Number)<span class="req">* (ตัวเลข 10 หลัก)</span></label>
+            <input id="swal-edit-staff-phone" type="tel" class="swal-input-custom" value="${escapeHtml(String(staff.phone || '').replace(/[^0-9]/g, '').slice(0, 10))}" placeholder="เช่น 0861111111" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)">
+            <small class="text-muted" style="font-size:0.75rem;">* กรอกเฉพาะตัวเลข 10 หลักเท่านั้น เช่น 0861111111</small>
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">รหัสผ่านใหม่ (Password)<span class="opt">(หากไม่เปลี่ยนให้เว้นว่างไว้)</span></label>
+            <input id="swal-edit-staff-password" type="password" class="swal-input-custom" placeholder="ปล่อยว่างไว้หากใช้รหัสผ่านเดิม" autocomplete="new-password">
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">ชื่อจริง (First Name)<span class="opt">(ไม่บังคับ/Optional)</span></label>
+            <input id="swal-edit-staff-firstname" class="swal-input-custom" value="${escapeHtml(staff.firstname || '')}">
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">นามสกุล (Last Name)<span class="opt">(ไม่บังคับ/Optional)</span></label>
+            <input id="swal-edit-staff-lastname" class="swal-input-custom" value="${escapeHtml(staff.lastname || '')}">
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">สถานะการใช้งาน (Status)</label>
+            <div class="form-check form-switch mt-1">
+              <input class="form-check-input" type="checkbox" id="swal-edit-staff-active" ${isActiveChecked ? 'checked' : ''} style="cursor: pointer; width: 2.5em; height: 1.25em;">
+              <label class="form-check-label ms-2" for="swal-edit-staff-active" id="swal-edit-staff-active-label">${isActiveChecked ? 'เปิดใช้งาน (Active)' : 'ปิดการใช้งาน (Inactive)'}</label>
+            </div>
+          </div>
+        `,
+        didOpen: () => {
+          $('#swal-edit-staff-phone').on('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+          });
+          $('#swal-edit-staff-active').on('change', function() {
+            $('#swal-edit-staff-active-label').text(this.checked ? 'เปิดใช้งาน (Active)' : 'ปิดการใช้งาน (Inactive)');
+          });
+        },
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-check me-1"></i> บันทึกการแก้ไข',
+        cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+        reverseButtons: true, // ปุ่มยกเลิกอยู่ซ้าย ปุ่มยืนยันอยู่ขวา
+        confirmButtonColor: '#1B3B36',
+        cancelButtonColor: '#718096',
+        focusConfirm: false,
+        preConfirm: () => {
+          const nickname = $('#swal-edit-staff-nickname').val().trim();
+          const phone = $('#swal-edit-staff-phone').val().trim().replace(/[^0-9]/g, '');
+          const password = $('#swal-edit-staff-password').val().trim();
+          const firstname = $('#swal-edit-staff-firstname').val().trim();
+          const lastname = $('#swal-edit-staff-lastname').val().trim();
+          const isActive = $('#swal-edit-staff-active').is(':checked');
+
+          if (!nickname) {
+            Swal.showValidationMessage('กรุณากรอก "ชื่อเล่น" ของพนักงาน');
+            return false;
+          }
+          if (!phone) {
+            Swal.showValidationMessage('กรุณากรอก "เบอร์โทรศัพท์" ของพนักงาน');
+            return false;
+          }
+          if (!/^[0-9]{10}$/.test(phone)) {
+            Swal.showValidationMessage('เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น (เช่น 0861111111)');
+            return false;
+          }
+
+          const currentUsername = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+          return { rowId: staff.rowId, nickname, phone, password, firstname, lastname, isActive, updatedBy: currentUsername, personFlag: 2 };
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value) {
+          submitUpdateStaff(result.value);
+        }
+      });
+    }
+
+    function submitUpdateStaff(payload) {
+      Swal.fire({ title: 'กำลังอัปเดตข้อมูลพนักงาน...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            if (response.success) {
+              Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: response.message, timer: 1800, showConfirmButton: false });
+              loadStaffTableData();
+            } else {
+              Swal.fire({ icon: 'error', title: 'ไม่สามารถแก้ไขได้', text: response.message, confirmButtonColor: '#1B3B36' });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'อัปเดตข้อมูลล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
+          })
+          .updateStaff(payload);
+      } else {
+        setTimeout(() => {
+          const s = currentStaffData.find(x => x.rowId === payload.rowId);
+          if (s) {
+            if (payload.password) {
+              s.pwd = payload.password;
+            }
+            s.nickname = payload.nickname;
+            s.phone = payload.phone;
+            s.firstname = payload.firstname;
+            s.lastname = payload.lastname;
+            s.isActive = payload.isActive;
+            s.updateDate = "เมื่อสักครู่";
+            s.updatedBy = payload.updatedBy || "admin";
+          }
+          renderStaffTable(currentStaffData);
+          Swal.fire({ icon: 'success', title: 'สำเร็จ (จำลอง)', timer: 1500, showConfirmButton: false });
+        }, 500);
+      }
+    }
+
+    /**
+     * Modal ยืนยันการลบข้อมูลพนักงาน (SweetAlert2 - Soft Delete)
+     * เงื่อนไข: ปุ่มยกเลิกอยู่ด้านซ้าย และ ปุ่มยืนยันอยู่ด้านขวา
+     */
+    function confirmDeleteStaff(rowId, nickname) {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSuperAdmin = (userFlag === 9 || (currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin'));
+      if (!isSuperAdmin) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์ลบข้อมูล',
+          text: 'เฉพาะผู้ดูแลระบบระดับสูงสุด (person_flag = 9) เท่านั้นที่สามารถลบข้อมูลพนักงานได้',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      Swal.fire({
+        title: 'ยืนยันการลบข้อมูลพนักงาน?',
+        html: `คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลพนักงาน <b>"${escapeHtml(nickname)}"</b>?<br><small class="text-danger">ระบบจะทำเครื่องหมายลบ (Soft Delete) และไม่แสดงในรายการ</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        // ปุ่มยกเลิก (อยู่ด้านซ้าย) และ ปุ่มยืนยัน (อยู่ด้านขวา)
+        cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+        confirmButtonText: '<i class="fa-solid fa-trash-can me-1"></i> ยืนยัน',
+        reverseButtons: true, // กำหนดให้ปุ่มยกเลิกอยู่ซ้าย และปุ่มยืนยันอยู่ขวา
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        focusCancel: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+          executeDeleteStaff(rowId);
+        }
+      });
+    }
+
+    function executeDeleteStaff(rowId) {
+      Swal.fire({ title: 'กำลังลบข้อมูลพนักงาน...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+      const currentUsername = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            if (response.success) {
+              Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: response.message, timer: 1800, showConfirmButton: false });
+              loadStaffTableData();
+            } else {
+              Swal.fire({ icon: 'error', title: 'ไม่สามารถลบข้อมูลได้', text: response.message, confirmButtonColor: '#1B3B36' });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ลบข้อมูลล้มเหลว: ' + (err.message || err), confirmButtonColor: '#1B3B36' });
+          })
+          .deleteStaff(rowId, currentUsername);
+      } else {
+        setTimeout(() => {
+          currentStaffData = currentStaffData.filter(x => x.rowId !== rowId);
+          renderStaffTable(currentStaffData);
+          Swal.fire({ icon: 'success', title: 'สำเร็จ (จำลอง: Soft Delete)', timer: 1500, showConfirmButton: false });
+        }, 500);
+      }
+    }
+
+    // =============================================================
     // โมดูล 3: ข้อมูลการจอง และ ตารางนัดหมาย (Reservation & Calendar Module)
     // =============================================================
     const THAI_MONTH_NAMES = [
@@ -3131,21 +3820,32 @@
     /**
      * โหลดข้อมูลตารางนัดหมายจาก Google Apps Script
      */
-    function loadCalendarData(year, month) {
+    function loadCalendarData(year, month, isManualRefresh) {
       const thaiYear = year + 543;
       const monthTitle = `${THAI_MONTH_NAMES[month - 1]} ${thaiYear} (${year})`;
       $('#calendar-month-title').text(monthTitle);
 
-      $('#calendar-grid').html(`
-        <div class="p-5 text-center text-muted w-100" style="grid-column: 1 / -1;">
-          <i class="fa-solid fa-circle-notch fa-spin fa-2x mb-2 text-warning"></i>
-          <div>กำลังโหลดข้อมูลตารางนัดหมาย...</div>
-        </div>
-      `);
+      const $refreshIcon = $('#btn-refresh-reservation i');
+      if (isManualRefresh) {
+        $refreshIcon.addClass('fa-spin');
+      }
+
+      // หากมีแคชของเดือน/ปีตรงกันอยู่แล้ว และไม่ได้กดรีเฟรชเอง ให้แสดงผลทันทีเพื่อให้การสลับเมนูลื่นไหล
+      if (calendarDataCache && calendarDataCache.year === year && calendarDataCache.month === month && !isManualRefresh) {
+        renderCalendar(calendarDataCache);
+      } else {
+        $('#calendar-grid').html(`
+          <div class="p-5 text-center text-muted w-100" style="grid-column: 1 / -1;">
+            <i class="fa-solid fa-circle-notch fa-spin fa-2x mb-2 text-warning"></i>
+            <div>กำลังโหลดข้อมูลตารางนัดหมาย...</div>
+          </div>
+        `);
+      }
 
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(function(response) {
+            $refreshIcon.removeClass('fa-spin');
             if (response && response.success) {
               calendarDataCache = response;
               renderCalendar(response);
@@ -3159,6 +3859,7 @@
             }
           })
           .withFailureHandler(function(err) {
+            $refreshIcon.removeClass('fa-spin');
             Swal.fire({
               icon: 'error',
               title: 'เกิดข้อผิดพลาดในการโหลดปฏิทิน',
@@ -3170,6 +3871,7 @@
       } else {
         // Mock fallback สำหรับทดสอบในเบราว์เซอร์
         setTimeout(() => {
+          $refreshIcon.removeClass('fa-spin');
           const now = new Date();
           const currY = now.getFullYear();
           const currM = now.getMonth() + 1;
