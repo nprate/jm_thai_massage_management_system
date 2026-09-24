@@ -346,6 +346,33 @@
       border-left: 4px solid var(--spa-accent);
     }
 
+    /* Submenu styles */
+    .sidebar-submenu {
+      list-style: none;
+      padding: 4px 0 4px 18px;
+      margin: 0;
+      display: none;
+    }
+
+    .sidebar-submenu.show {
+      display: block;
+    }
+
+    .sidebar-submenu .sidebar-link {
+      padding: 9px 14px;
+      font-size: 0.88rem;
+    }
+
+    .submenu-arrow {
+      transition: transform 0.25s ease;
+      font-size: 0.8rem !important;
+      margin-left: auto;
+    }
+
+    .sidebar-link.open .submenu-arrow {
+      transform: rotate(180deg);
+    }
+
     /* 2.2.2 CONTENT */
     .app-content {
       flex: 1;
@@ -1237,6 +1264,24 @@
               <span id="sidebar-menu-reservation-text">ข้อมูลการจอง</span>
             </a>
           </li>
+
+          <!-- เมนู 5: ตามตัวแปร Menu_Name_Setting (ตั้งค่าระบบ) มี Submenu -->
+          <li class="sidebar-menu-item" id="nav-item-setting">
+            <a href="javascript:void(0)" class="sidebar-link" id="menu-setting" onclick="toggleSubmenu('setting-submenu', this)">
+              <i class="fa-solid fa-sliders"></i>
+              <span id="sidebar-menu-setting-text">ตั้งค่าระบบ</span>
+              <i class="fa-solid fa-chevron-down submenu-arrow"></i>
+            </a>
+            <ul class="sidebar-submenu" id="setting-submenu">
+              <!-- Submenu 1: ตามตัวแปร Sheet_Name_Setting_Selection_Reservation_Time (ตั้งค่าตัวเลือกเวลาการจอง) -->
+              <li class="sidebar-menu-item" id="nav-item-setting-time">
+                <a href="javascript:void(0)" class="sidebar-link" id="menu-setting-time" onclick="switchSection('setting-time')">
+                  <i class="fa-solid fa-clock"></i>
+                  <span id="sidebar-submenu-setting-time-text">ตั้งค่าตัวเลือกเวลาการจอง</span>
+                </a>
+              </li>
+            </ul>
+          </li>
         </ul>
       </nav>
 
@@ -1448,6 +1493,45 @@
           </div>
         </section>
 
+        <!-- SECTION 4: ตั้งค่าตัวเลือกเวลาการจอง (Sheet_Name_Setting_Selection_Reservation_Time) -->
+        <section id="section-setting-time" class="content-section">
+          <div class="page-title-box">
+            <div class="page-title">
+              <h3 id="setting-time-page-title"><i class="fa-solid fa-clock me-2 text-warning"></i>ตั้งค่าตัวเลือกเวลาการจอง</h3>
+              <p>จัดการรอบเวลาที่เปิดให้บริการนวดแผนไทยสำหรับระบบการจอง สามารถเพิ่ม แก้ไข และลบข้อมูลได้</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              <button class="btn btn-outline-secondary" id="btn-refresh-setting-time" onclick="loadSettingTimeTableData(true)" title="รีเฟรชข้อมูล">
+                <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
+              </button>
+              <button class="btn btn-action-main" id="btn-open-add-setting-time" onclick="openAddSettingTimeModal()">
+                <i class="fa-solid fa-plus"></i>
+                <span>เพิ่มรอบเวลาการจอง</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="table-responsive">
+              <table id="settingTimeDataTable" class="table table-hover align-middle w-100">
+                <thead>
+                  <tr>
+                    <th style="width: 60px;" class="text-center">ลำดับ</th>
+                    <th style="width: 150px;" class="text-center">เวลาที่เปิดให้จอง (Period)</th>
+                    <th style="width: 130px;" class="text-center">สถานะ (Status)</th>
+                    <th style="width: 170px;">วันที่สร้าง / ผู้สร้าง</th>
+                    <th style="width: 170px;">อัปเดตล่าสุด / ผู้อัปเดต</th>
+                    <th style="width: 110px;" class="text-center">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="settingTimeTableBody">
+                  <!-- ข้อมูลรอบเวลาการจอง -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
       </main>
 
     </div>
@@ -1485,15 +1569,20 @@
     let currentAdminData = [];
     let currentCustomerData = [];
     let currentStaffData = [];
+    let currentSettingTimeData = [];
     let adminDataTableInstance = null;
     let customerDataTableInstance = null;
     let staffDataTableInstance = null;
+    let settingTimeDataTableInstance = null;
     let currentUser = null;
     let sheetNameAdmin = "ข้อมูลผู้ดูแลระบบ";
     let sheetNameCustomer = "ข้อมูลลูกค้า";
     let sheetNameStaff = "ข้อมูลพนักงาน";
     let sheetNameReservation = "ข้อมูลการจอง";
     let sheetNameSettingTime = "ตั้งค่าตัวเลือกเวลาการจอง";
+    let menuNameSetting = "ตั้งค่าระบบ";
+    let Menu_Name_Setting = "ตั้งค่าระบบ";
+    let Sheet_Name_Setting_Selection_Reservation_Time = "ตั้งค่าตัวเลือกเวลาการจอง";
     let activeSection = "admin";
 
     // สถานะตารางนัดหมาย (Calendar State)
@@ -1529,6 +1618,16 @@
     });
 
     /**
+     * สลับเปิด/ปิด Submenu ใน Sidebar
+     */
+    function toggleSubmenu(submenuId, el) {
+      const $submenu = $('#' + submenuId);
+      const $parentLink = $(el);
+      $submenu.slideToggle(200);
+      $parentLink.toggleClass('open');
+    }
+
+    /**
      * ดึงการตั้งค่าระบบจากฝั่ง Server
      */
     function fetchSystemSettings() {
@@ -1556,8 +1655,16 @@
                 $('#sidebar-menu-reservation-text').text(sheetNameReservation);
                 $('#reservation-page-title').html('<i class="fa-solid fa-calendar-days me-2 text-warning"></i>ตารางนัดหมาย' + sheetNameReservation);
               }
-              if (config.sheetNameSettingTime) {
-                sheetNameSettingTime = config.sheetNameSettingTime;
+              if (config.sheetNameSettingTime || config.Sheet_Name_Setting_Selection_Reservation_Time) {
+                sheetNameSettingTime = config.sheetNameSettingTime || config.Sheet_Name_Setting_Selection_Reservation_Time;
+                Sheet_Name_Setting_Selection_Reservation_Time = sheetNameSettingTime;
+                $('#sidebar-submenu-setting-time-text').text(Sheet_Name_Setting_Selection_Reservation_Time);
+                $('#setting-time-page-title').html('<i class="fa-solid fa-clock me-2 text-warning"></i>' + Sheet_Name_Setting_Selection_Reservation_Time);
+              }
+              if (config.menuNameSetting || config.Menu_Name_Setting) {
+                menuNameSetting = config.menuNameSetting || config.Menu_Name_Setting;
+                Menu_Name_Setting = menuNameSetting;
+                $('#sidebar-menu-setting-text').text(Menu_Name_Setting);
               }
             }
           })
@@ -1592,29 +1699,33 @@
       const isSystemAdmin = Boolean(user.username && user.username.toLowerCase() === 'admin');
 
       if (flag === 9 || flag === 8 || isSystemAdmin) {
-        // ผู้ดูแลระบบ / ผู้ดูแลระบบระดับสูง -> แสดงทุกเมนู
+        // ผู้ดูแลระบบ / ผู้ดูแลระบบระดับสูง -> แสดงทุกเมนู รวมเมนูตั้งค่าระบบ
         $('#nav-item-admin').show();
         $('#nav-item-customer').show();
         $('#nav-item-staff').show();
         $('#nav-item-reservation').show();
+        $('#nav-item-setting').show();
       } else if (flag === 2) {
-        // พนักงาน -> แสดงเฉพาะข้อมูลพนักงาน และข้อมูลการจอง (ซ่อนผู้ดูแลระบบ และข้อมูลลูกค้า)
+        // พนักงาน -> แสดงเฉพาะข้อมูลพนักงาน และข้อมูลการจอง (ซ่อนผู้ดูแลระบบ, ข้อมูลลูกค้า และตั้งค่าระบบ)
         $('#nav-item-admin').hide();
         $('#nav-item-customer').hide();
         $('#nav-item-staff').show();
         $('#nav-item-reservation').show();
+        $('#nav-item-setting').hide();
       } else if (flag === 1) {
-        // ลูกค้า -> ซ่อนผู้ดูแลระบบ และข้อมูลพนักงาน, แสดงข้อมูลลูกค้า และข้อมูลการจอง
+        // ลูกค้า -> ซ่อนผู้ดูแลระบบ, ข้อมูลพนักงาน และตั้งค่าระบบ, แสดงข้อมูลลูกค้า และข้อมูลการจอง
         $('#nav-item-admin').hide();
         $('#nav-item-customer').show();
         $('#nav-item-staff').hide();
         $('#nav-item-reservation').show();
+        $('#nav-item-setting').hide();
       } else {
         // Fallback: แสดงเฉพาะเมนูข้อมูลการจอง
         $('#nav-item-admin').hide();
         $('#nav-item-customer').hide();
         $('#nav-item-staff').hide();
         $('#nav-item-reservation').show();
+        $('#nav-item-setting').hide();
       }
 
       // เมื่อตรวจสอบสิทธิ์และตั้งค่าการแสดงเมนูเรียบร้อยแล้ว จึงแสดง Sidebar
@@ -1664,13 +1775,13 @@
       let initialSection = activeSection || 'admin';
 
       if (flag === 2) {
-        // พนักงาน: หากหน้าจอเดิมเป็น admin หรือ customer ให้เปลี่ยนเป็น reservation
-        if (initialSection === 'admin' || initialSection === 'customer') {
+        // พนักงาน: หากหน้าจอเดิมเป็น admin, customer หรือ setting-time ให้เปลี่ยนเป็น reservation
+        if (initialSection === 'admin' || initialSection === 'customer' || initialSection === 'setting-time') {
           initialSection = 'reservation';
         }
       } else if (flag === 1) {
-        // ลูกค้า: หากหน้าจอเดิมเป็น admin หรือ staff ให้เปลี่ยนเป็น reservation
-        if (initialSection === 'admin' || initialSection === 'staff') {
+        // ลูกค้า: หากหน้าจอเดิมเป็น admin, staff หรือ setting-time ให้เปลี่ยนเป็น reservation
+        if (initialSection === 'admin' || initialSection === 'staff' || initialSection === 'setting-time') {
           initialSection = 'reservation';
         }
       } else if (flag === 8 || flag === 9 || (currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin')) {
@@ -1688,7 +1799,7 @@
     }
 
     /**
-     * สลับระหว่างเมนูผู้ดูแลระบบ, เมนูข้อมูลลูกค้า, เมนูข้อมูลพนักงาน และ เมนูข้อมูลการจอง
+     * สลับระหว่างเมนูผู้ดูแลระบบ, เมนูข้อมูลลูกค้า, เมนูข้อมูลพนักงาน, เมนูข้อมูลการจอง และ เมนูตั้งค่าตัวเลือกเวลาการจอง
      * มีเงื่อนไขการตรวจสอบสิทธิ์ก่อนเสมอ
      */
     function switchSection(section) {
@@ -1737,6 +1848,18 @@
           switchSection('reservation');
           return;
         }
+      } else if (section === 'setting-time') {
+        // ตั้งค่าตัวเลือกเวลาการจอง: เฉพาะผู้ดูแลระบบ (8, 9) หรือ admin เท่านั้น
+        if (personFlag !== 8 && personFlag !== 9 && !isSystemAdmin) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'ไม่มีสิทธิ์เข้าถึง',
+            text: 'คุณไม่มีสิทธิ์ในการเข้าถึงหน้าจอตั้งค่าตัวเลือกเวลาการจอง',
+            confirmButtonColor: '#1B3B36'
+          });
+          switchSection('reservation');
+          return;
+        }
       }
 
       activeSection = section;
@@ -1744,6 +1867,12 @@
       // จัดการ Active class ที่ Sidebar
       $('.sidebar-link').removeClass('active');
       $('#menu-' + section).addClass('active');
+
+      // หากเป็น Submenu ในเมนูตั้งค่าระบบ ให้เปิด Submenu และเน้นเมนูแม่
+      if (section === 'setting-time') {
+        $('#setting-submenu').slideDown(200);
+        $('#menu-setting').addClass('open');
+      }
 
       // แสดงหน้าจอที่เลือกทันที (ไม่ต้องซ่อนหรือรอตรวจสอบสิทธิ์ซ้ำซ้อน)
       $('.content-section').removeClass('active');
@@ -1757,6 +1886,8 @@
         loadStaffTableData(false);
       } else if (section === 'reservation') {
         loadCalendarData(currentCalendarYear, currentCalendarMonth, false);
+      } else if (section === 'setting-time') {
+        loadSettingTimeTableData(false);
       }
 
       // ปิด sidebar อัตโนมัติบนมือถือเมื่อคลิกเลือกเมนู
@@ -4797,6 +4928,599 @@
           }
         }
       });
+    }
+
+    // =============================================================
+    // MODULE 5: ตั้งค่าตัวเลือกเวลาการจอง (Setting Reservation Time Slots)
+    // โครงสร้างตาราง:
+    // 1. period: เวลาที่เปิดให้จอง (HH:mm)
+    // 2. is_active: สถานะการเปิด/ปิดใช้งาน (true = เปิดใช้งาน, false = ปิดการใช้งาน)
+    // 3. create_date: วันที่สร้าง
+    // 4. created_by: ผู้สร้าง (username)
+    // 5. update_date: วันที่อัปเดต
+    // 6. updated_by: ผู้อัปเดต (username)
+    // 7. deleted_flag: สำหรับ Soft Delete (N: ปกติ, Y: ลบ)
+    // =============================================================
+
+    /**
+     * ดึงข้อมูลรอบเวลาการจองจาก Google Sheet
+     */
+    function loadSettingTimeTableData(isManualRefresh, callback) {
+      if (typeof isManualRefresh === 'function') {
+        callback = isManualRefresh;
+        isManualRefresh = false;
+      }
+      const requester = (currentUser && currentUser.username) ? currentUser.username : '';
+
+      const $refreshIcon = $('#btn-refresh-setting-time i');
+      if (isManualRefresh) {
+        $refreshIcon.addClass('fa-spin');
+      }
+
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSystemAdmin = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin');
+
+      // ตรวจสอบสิทธิ์: เฉพาะ Admin (8, 9) หรือ admin username เท่านั้น
+      if (userFlag !== 8 && userFlag !== 9 && !isSystemAdmin) {
+        $refreshIcon.removeClass('fa-spin');
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์เข้าถึง',
+          text: 'คุณไม่มีสิทธิ์ในการจัดการตั้งค่าตัวเลือกเวลาการจอง',
+          confirmButtonColor: '#1B3B36'
+        }).then(() => {
+          switchSection('reservation');
+        });
+        return;
+      }
+
+      // แสดง Loading ในตารางถ้ายังไม่มีข้อมูล
+      if (!currentSettingTimeData || currentSettingTimeData.length === 0) {
+        if (!settingTimeDataTableInstance) {
+          $('#settingTimeTableBody').html('<tr><td colspan="6" class="text-center py-4 text-muted"><i class="fa-solid fa-circle-notch fa-spin me-2 text-warning"></i>กำลังโหลดข้อมูลรอบเวลาการจอง...</td></tr>');
+        }
+      }
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            $refreshIcon.removeClass('fa-spin');
+            if (response && response.success) {
+              currentSettingTimeData = response.data || [];
+              renderSettingTimeTable(currentSettingTimeData);
+              if (typeof callback === 'function') {
+                callback();
+              }
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถโหลดข้อมูลได้',
+                text: (response && response.message) ? response.message : 'เกิดข้อผิดพลาดในการโหลดข้อมูลรอบเวลา',
+                confirmButtonColor: '#1B3B36'
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            $refreshIcon.removeClass('fa-spin');
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: 'โหลดข้อมูลล้มเหลว: ' + (err.message || err),
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .getSettingTimeSlots(requester);
+      } else {
+        // Mock fallback สำหรับ Browser Preview
+        setTimeout(() => {
+          $refreshIcon.removeClass('fa-spin');
+          if (!window.mockSettingTimeSlots) {
+            const initialSlots = ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
+            window.mockSettingTimeSlots = initialSlots.map((slot, idx) => ({
+              rowId: idx + 2,
+              period: slot,
+              isActive: true,
+              createDate: '2026-09-24 10:00',
+              createdBy: 'admin',
+              updateDate: '2026-09-24 10:00',
+              updatedBy: 'admin',
+              deletedFlag: 'N'
+            }));
+          }
+          currentSettingTimeData = window.mockSettingTimeSlots.filter(x => x.deletedFlag !== 'Y');
+          currentSettingTimeData.sort((a, b) => a.period.localeCompare(b.period));
+          renderSettingTimeTable(currentSettingTimeData);
+          if (typeof callback === 'function') {
+            callback();
+          }
+        }, 200);
+      }
+    }
+
+    /**
+     * เรนเดอร์ตารางรอบเวลาการจอง (6 คอลัมน์ รวมคอลัมน์สถานะ is_active)
+     */
+    function renderSettingTimeTable(dataList) {
+      if (settingTimeDataTableInstance) {
+        settingTimeDataTableInstance.destroy();
+        settingTimeDataTableInstance = null;
+      }
+
+      const $tbody = $('#settingTimeTableBody');
+      $tbody.empty();
+
+      if (!dataList || dataList.length === 0) {
+        $tbody.html('<tr><td colspan="6" class="text-center py-4 text-muted">ไม่พบข้อมูลรอบเวลาการจอง (คลิก "เพิ่มรอบเวลาการจอง" เพื่อเริ่มต้น)</td></tr>');
+        return;
+      }
+
+      dataList.forEach((item, index) => {
+        const statusBadge = item.isActive
+          ? '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="fa-solid fa-circle-check me-1"></i>เปิดใช้งาน</span>'
+          : '<span class="badge bg-secondary-subtle text-secondary border px-2 py-1"><i class="fa-solid fa-circle-xmark me-1"></i>ปิดการใช้งาน</span>';
+
+        const tr = `
+          <tr>
+            <td class="text-center font-monospace">${index + 1}</td>
+            <td class="text-center">
+              <span class="badge bg-primary-subtle text-primary border px-3 py-2" style="font-size: 0.95rem; font-family: monospace;">
+                <i class="fa-regular fa-clock me-1"></i>${escapeHtml(item.period)} น.
+              </span>
+            </td>
+            <td class="text-center">
+              ${statusBadge}
+            </td>
+            <td>
+              <div class="fw-semibold">${escapeHtml(item.createDate || '-')}</div>
+              <small class="text-muted"><i class="fa-solid fa-user-pen me-1"></i>${escapeHtml(item.createdBy || '-')}</small>
+            </td>
+            <td>
+              <div class="fw-semibold">${escapeHtml(item.updateDate || '-')}</div>
+              <small class="text-muted"><i class="fa-solid fa-user-check me-1"></i>${escapeHtml(item.updatedBy || '-')}</small>
+            </td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-warning" title="แก้ไขรอบเวลา" onclick="openEditSettingTimeModal(${item.rowId}, '${escapeHtml(item.period)}', ${item.isActive})">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button class="btn btn-outline-danger" title="ลบรอบเวลา (Soft Delete)" onclick="confirmDeleteSettingTimeSlot(${item.rowId}, '${escapeHtml(item.period)}')">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+        $tbody.append(tr);
+      });
+
+      settingTimeDataTableInstance = $('#settingTimeDataTable').DataTable({
+        language: getDatatableThaiLang(),
+        responsive: true,
+        pageLength: 10,
+        lengthMenu: [5, 10, 25, 50],
+        order: [[1, 'asc']], // เรียงตามเวลา
+        columnDefs: [
+          { orderable: false, targets: [5] }
+        ]
+      });
+    }
+
+    /**
+     * Modal เพิ่มข้อมูลรอบเวลาการจอง (มีสวิตช์เปิด/ปิดใช้งาน is_active เริ่มต้นเป็น TRUE)
+     */
+    function openAddSettingTimeModal() {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSystemAdmin = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin');
+      if (userFlag !== 8 && userFlag !== 9 && !isSystemAdmin) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์เพิ่มข้อมูล',
+          text: 'คุณไม่มีสิทธิ์ในการเพิ่มรอบเวลาการจองใหม่',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      Swal.fire({
+        title: '<i class="fa-solid fa-clock text-warning me-2"></i>เพิ่มรอบเวลาการจอง',
+        html: `
+          <div class="swal-form-group">
+            <label class="swal-form-label">เวลาที่เปิดให้จอง (Period)<span class="req">* (รูปแบบ HH:mm)</span></label>
+            <input id="swal-setting-period" type="time" class="swal-input-custom text-center fw-bold" style="font-size: 1.15rem;" value="09:00" step="900" required>
+            <small class="text-muted" style="font-size:0.75rem;">* ระบุเวลาเปิดรอบ เช่น 10:00, 11:30 (บันทึกผู้สร้างโดย username ของคุณอัตโนมัติ)</small>
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">สถานะการใช้งาน (Status)</label>
+            <div class="form-check form-switch mt-1">
+              <input class="form-check-input" type="checkbox" id="swal-setting-active" checked style="cursor: pointer; width: 2.5em; height: 1.25em;">
+              <label class="form-check-label ms-2" for="swal-setting-active" id="swal-setting-active-label">เปิดใช้งาน (Active)</label>
+            </div>
+            <small class="text-muted" style="font-size:0.75rem;">* กำหนดให้เปิดใช้งานรอบเวลานี้ในระบบการจอง (ค่าเริ่มต้น: TRUE เปิดใช้งาน)</small>
+          </div>
+        `,
+        didOpen: () => {
+          $('#swal-setting-active').on('change', function() {
+            $('#swal-setting-active-label').text(this.checked ? 'เปิดใช้งาน (Active)' : 'ปิดการใช้งาน (Inactive)');
+          });
+        },
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-check me-1"></i> บันทึกข้อมูล',
+        cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+        reverseButtons: true,
+        confirmButtonColor: '#1B3B36',
+        cancelButtonColor: '#718096',
+        focusConfirm: false,
+        preConfirm: () => {
+          let period = $('#swal-setting-period').val().trim();
+          const isActive = $('#swal-setting-active').is(':checked');
+
+          if (!period) {
+            Swal.showValidationMessage('กรุณาระบุเวลาที่เปิดให้จอง');
+            return false;
+          }
+          if (typeof formatTimeSlot === 'function') {
+            period = formatTimeSlot(period);
+          }
+          if (!/^\d{2}:\d{2}$/.test(period)) {
+            Swal.showValidationMessage('รูปแบบเวลาไม่ถูกต้อง กรุณาระบุในรูปแบบ HH:mm (เช่น 10:00, 11:30)');
+            return false;
+          }
+
+          // ตรวจสอบว่ามีรอบเวลานี้อยู่แล้วหรือไม่
+          if (currentSettingTimeData && currentSettingTimeData.some(item => item.period === period)) {
+            Swal.showValidationMessage(`รอบเวลา ${period} มีอยู่ในระบบแล้ว`);
+            return false;
+          }
+
+          return { period: period, isActive: isActive };
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value) {
+          submitAddSettingTime(result.value.period, result.value.isActive);
+        }
+      });
+    }
+
+    /**
+     * ส่งข้อมูลเพิ่มรอบเวลาไปยัง Server
+     */
+    function submitAddSettingTime(period, isActive) {
+      const operator = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+      const payload = {
+        period: period,
+        isActive: isActive !== false,
+        operatorUsername: operator
+      };
+
+      Swal.fire({
+        title: 'กำลังบันทึกข้อมูล...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'เพิ่มรอบเวลาสำเร็จ',
+                text: res.message || `เพิ่มรอบเวลา ${period} เรียบร้อยแล้ว`,
+                timer: 1600,
+                showConfirmButton: false
+              }).then(() => {
+                calendarDataCache = null; // เคลียร์แคชปฏิทินเพื่อให้โหลดรอบเวลาใหม่ทันที
+                loadSettingTimeTableData(true);
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถเพิ่มข้อมูลได้',
+                text: res ? res.message : 'เกิดข้อผิดพลาดในการเพิ่มข้อมูล',
+                confirmButtonColor: '#1B3B36'
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: err.message || err,
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .addSettingTimeSlot(payload);
+      } else {
+        // Mock ใน Browser Preview
+        if (!window.mockSettingTimeSlots) {
+          window.mockSettingTimeSlots = [];
+        }
+        const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16);
+        const existingIdx = window.mockSettingTimeSlots.findIndex(x => x.period === period);
+        if (existingIdx >= 0) {
+          window.mockSettingTimeSlots[existingIdx].deletedFlag = 'N';
+          window.mockSettingTimeSlots[existingIdx].isActive = payload.isActive;
+          window.mockSettingTimeSlots[existingIdx].updateDate = nowStr;
+          window.mockSettingTimeSlots[existingIdx].updatedBy = operator;
+        } else {
+          window.mockSettingTimeSlots.push({
+            rowId: window.mockSettingTimeSlots.length + 2,
+            period: period,
+            isActive: payload.isActive,
+            createDate: nowStr,
+            createdBy: operator,
+            updateDate: nowStr,
+            updatedBy: operator,
+            deletedFlag: 'N'
+          });
+        }
+        Swal.fire({
+          icon: 'success',
+          title: 'เพิ่มรอบเวลาสำเร็จ (โหมดจำลอง)',
+          text: `เพิ่มรอบเวลา ${period} สำเร็จ`,
+          timer: 1500,
+          showConfirmButton: false
+        }).then(() => {
+          calendarDataCache = null;
+          loadSettingTimeTableData(true);
+        });
+      }
+    }
+
+    /**
+     * Modal แก้ไขข้อมูลรอบเวลาการจอง (มีสวิตช์เปิด/ปิดใช้งาน is_active)
+     */
+    function openEditSettingTimeModal(rowId, currentPeriod, currentIsActive) {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSystemAdmin = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin');
+      if (userFlag !== 8 && userFlag !== 9 && !isSystemAdmin) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์แก้ไขข้อมูล',
+          text: 'คุณไม่มีสิทธิ์ในการแก้ไขรอบเวลาการจอง',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      const activeState = (currentIsActive !== false && String(currentIsActive).toLowerCase() !== 'false');
+
+      Swal.fire({
+        title: '<i class="fa-solid fa-pen-to-square text-warning me-2"></i>แก้ไขรอบเวลาการจอง',
+        html: `
+          <div class="swal-form-group">
+            <label class="swal-form-label">เวลาที่เปิดให้จอง (Period)<span class="req">* (รูปแบบ HH:mm)</span></label>
+            <input id="swal-edit-setting-period" type="time" class="swal-input-custom text-center fw-bold" style="font-size: 1.15rem;" value="${escapeHtml(currentPeriod)}" step="900" required>
+            <small class="text-muted" style="font-size:0.75rem;">* ปรับเปลี่ยนรอบเวลาการให้บริการ (บันทึกผู้อัปเดตโดย username ของคุณอัตโนมัติ)</small>
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">สถานะการใช้งาน (Status)</label>
+            <div class="form-check form-switch mt-1">
+              <input class="form-check-input" type="checkbox" id="swal-edit-setting-active" ${activeState ? 'checked' : ''} style="cursor: pointer; width: 2.5em; height: 1.25em;">
+              <label class="form-check-label ms-2" for="swal-edit-setting-active" id="swal-edit-setting-active-label">${activeState ? 'เปิดใช้งาน (Active)' : 'ปิดการใช้งาน (Inactive)'}</label>
+            </div>
+            <small class="text-muted" style="font-size:0.75rem;">* เลือกว่าจะเปิดให้จองรอบเวลานี้ในปฏิทินหรือไม่ (เปิดใช้งาน = TRUE, ปิดการใช้งาน = FALSE)</small>
+          </div>
+        `,
+        didOpen: () => {
+          $('#swal-edit-setting-active').on('change', function() {
+            $('#swal-edit-setting-active-label').text(this.checked ? 'เปิดใช้งาน (Active)' : 'ปิดการใช้งาน (Inactive)');
+          });
+        },
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-check me-1"></i> บันทึกการแก้ไข',
+        cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+        reverseButtons: true,
+        confirmButtonColor: '#1B3B36',
+        cancelButtonColor: '#718096',
+        focusConfirm: false,
+        preConfirm: () => {
+          let newPeriod = $('#swal-edit-setting-period').val().trim();
+          const newIsActive = $('#swal-edit-setting-active').is(':checked');
+
+          if (!newPeriod) {
+            Swal.showValidationMessage('กรุณาระบุเวลาที่เปิดให้จอง');
+            return false;
+          }
+          if (typeof formatTimeSlot === 'function') {
+            newPeriod = formatTimeSlot(newPeriod);
+          }
+          if (!/^\d{2}:\d{2}$/.test(newPeriod)) {
+            Swal.showValidationMessage('รูปแบบเวลาไม่ถูกต้อง กรุณาระบุในรูปแบบ HH:mm (เช่น 10:00, 11:30)');
+            return false;
+          }
+          if (newPeriod === currentPeriod && newIsActive === activeState) {
+            Swal.showValidationMessage('ข้อมูลรอบเวลาไม่มีการเปลี่ยนแปลง');
+            return false;
+          }
+
+          // ตรวจสอบซ้ำกับรอบอื่นที่มีอยู่
+          if (currentSettingTimeData && currentSettingTimeData.some(item => item.rowId !== rowId && item.period === newPeriod)) {
+            Swal.showValidationMessage(`รอบเวลา ${newPeriod} ซ้ำกับรอบเวลาอื่นที่มีอยู่แล้ว`);
+            return false;
+          }
+
+          return { newPeriod: newPeriod, newIsActive: newIsActive };
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value) {
+          submitUpdateSettingTime(rowId, result.value.newPeriod, result.value.newIsActive);
+        }
+      });
+    }
+
+    /**
+     * ส่งข้อมูลแก้ไขรอบเวลาไปยัง Server
+     */
+    function submitUpdateSettingTime(rowId, period, isActive) {
+      const operator = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+      const payload = {
+        rowId: rowId,
+        period: period,
+        isActive: isActive !== false,
+        operatorUsername: operator
+      };
+
+      Swal.fire({
+        title: 'กำลังบันทึกการแก้ไข...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'แก้ไขรอบเวลาสำเร็จ',
+                text: res.message || `แก้ไขรอบเวลาเป็น ${period} เรียบร้อยแล้ว`,
+                timer: 1600,
+                showConfirmButton: false
+              }).then(() => {
+                calendarDataCache = null; // เคลียร์แคชปฏิทิน
+                loadSettingTimeTableData(true);
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถแก้ไขข้อมูลได้',
+                text: res ? res.message : 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล',
+                confirmButtonColor: '#1B3B36'
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: err.message || err,
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .updateSettingTimeSlot(payload);
+      } else {
+        // Mock ใน Browser Preview
+        if (window.mockSettingTimeSlots) {
+          const item = window.mockSettingTimeSlots.find(x => x.rowId === rowId);
+          if (item) {
+            item.period = period;
+            item.isActive = payload.isActive;
+            item.updateDate = new Date().toISOString().replace('T', ' ').slice(0, 16);
+            item.updatedBy = operator;
+          }
+        }
+        Swal.fire({
+          icon: 'success',
+          title: 'แก้ไขรอบเวลาสำเร็จ (โหมดจำลอง)',
+          text: `แก้ไขรอบเวลาเป็น ${period} เรียบร้อยแล้ว`,
+          timer: 1500,
+          showConfirmButton: false
+        }).then(() => {
+          calendarDataCache = null;
+          loadSettingTimeTableData(true);
+        });
+      }
+    }
+
+    /**
+     * ยืนยันการลบข้อมูลรอบเวลา (Soft Delete)
+     */
+    function confirmDeleteSettingTimeSlot(rowId, period) {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSystemAdmin = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin');
+      if (userFlag !== 8 && userFlag !== 9 && !isSystemAdmin) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์ลบข้อมูล',
+          text: 'คุณไม่มีสิทธิ์ในการลบรอบเวลาการจอง',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      Swal.fire({
+        title: 'ยืนยันการลบรอบเวลา?',
+        html: `คุณต้องการลบรอบเวลา <strong>${escapeHtml(period)} น.</strong> ใช่หรือไม่?<br><small class="text-muted">* ข้อมูลจะถูกบันทึกสถานะลบ (Soft Delete: deleted_flag = 'Y') และไม่นำมาเปิดให้จองในปฏิทิน</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-trash-can me-1"></i> ลบข้อมูล',
+        cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+        reverseButtons: true, // ปุ่มยกเลิกอยู่ซ้าย ปุ่มยืนยันอยู่ขวา
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#718096'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          executeDeleteSettingTime(rowId, period);
+        }
+      });
+    }
+
+    /**
+     * ดำเนินการลบรอบเวลา (Soft Delete)
+     */
+    function executeDeleteSettingTime(rowId, period) {
+      const operator = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+
+      Swal.fire({
+        title: 'กำลังลบข้อมูล...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'ลบรอบเวลาสำเร็จ',
+                text: res.message || `ลบรอบเวลา ${period} เรียบร้อยแล้ว (Soft Delete)`,
+                timer: 1600,
+                showConfirmButton: false
+              }).then(() => {
+                calendarDataCache = null; // เคลียร์แคชปฏิทิน
+                loadSettingTimeTableData(true);
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถลบข้อมูลได้',
+                text: res ? res.message : 'เกิดข้อผิดพลาดในการลบข้อมูล',
+                confirmButtonColor: '#1B3B36'
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: err.message || err,
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .deleteSettingTimeSlot(rowId, operator);
+      } else {
+        // Mock ใน Browser Preview
+        if (window.mockSettingTimeSlots) {
+          const item = window.mockSettingTimeSlots.find(x => x.rowId === rowId);
+          if (item) {
+            item.deletedFlag = 'Y';
+            item.updateDate = new Date().toISOString().replace('T', ' ').slice(0, 16);
+            item.updatedBy = operator;
+          }
+        }
+        Swal.fire({
+          icon: 'success',
+          title: 'ลบรอบเวลาสำเร็จ (โหมดจำลอง)',
+          text: `ลบรอบเวลา ${period} เรียบร้อยแล้ว (Soft Delete)`,
+          timer: 1500,
+          showConfirmButton: false
+        }).then(() => {
+          calendarDataCache = null;
+          loadSettingTimeTableData(true);
+        });
+      }
     }
 
     // Helper: การตั้งค่าภาษาไทยสำหรับ DataTables

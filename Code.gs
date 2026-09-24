@@ -20,6 +20,9 @@ const SHEET_NAME_CUSTOMER = "ข้อมูลลูกค้า";
 const SHEET_NAME_STAFF = "ข้อมูลพนักงาน";
 const SHEET_NAME_RESERVATION = "ข้อมูลการจอง";
 const SHEET_NAME_SETTING_TIME = "ตั้งค่าตัวเลือกเวลาการจอง";
+const MENU_NAME_SETTING = "ตั้งค่าระบบ";
+const Menu_Name_Setting = "ตั้งค่าระบบ";
+const Sheet_Name_Setting_Selection_Reservation_Time = SHEET_NAME_SETTING_TIME;
 
 /**
  * ให้บริการหน้าเว็บ Web Application (Entry point)
@@ -36,6 +39,12 @@ function doGet(e) {
     if (e && e.parameter && (e.parameter.action === "setupStaff" || e.parameter.setupStaff === "true")) {
       var resStaff = setupStaffSheetSchema();
       return HtmlService.createHtmlOutput("<div style='font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #c3e6cb;background:#d4edda;border-radius:10px;'><h2 style='color:#155724;margin-top:0;'>✅ อัปเดต Schema ข้อมูลพนักงานสำเร็จ</h2><p style='color:#155724;font-size:16px;'>" + resStaff.message + "</p><hr style='border:0;border-top:1px solid #c3e6cb;margin:20px 0;'><p style='color:#6c757d;font-size:14px;'>Google Sheet ข้อมูลพนักงาน (Sheet_Name_Staff) ได้รับการตั้งค่าหัวตาราง 13 คอลัมน์ภาษาอังกฤษและเติมข้อมูลเรียบร้อยแล้ว ท่านสามารถปิดหน้านี้แล้วเปิดใช้งานระบบได้ตามปกติ</p></div>");
+    }
+
+    // กรณีเรียกด้วย ?action=setupSettingTime เพื่อสั่งรันอัปเดต Schema ตัวเลือกเวลาผ่าน URL ได้ทันที
+    if (e && e.parameter && (e.parameter.action === "setupSettingTime" || e.parameter.setupSettingTime === "true")) {
+      var resTime = setupSettingTimeSheetSchema();
+      return HtmlService.createHtmlOutput("<div style='font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #c3e6cb;background:#d4edda;border-radius:10px;'><h2 style='color:#155724;margin-top:0;'>✅ อัปเดต Schema ตัวเลือกเวลาการจองสำเร็จ</h2><p style='color:#155724;font-size:16px;'>" + resTime.message + "</p><hr style='border:0;border-top:1px solid #c3e6cb;margin:20px 0;'><p style='color:#6c757d;font-size:14px;'>Google Sheet ตั้งค่าตัวเลือกเวลาการจอง (Sheet_Name_Setting_Selection_Reservation_Time) ได้รับการตั้งค่าหัวตาราง 6 คอลัมน์เรียบร้อยแล้ว ท่านสามารถปิดหน้านี้แล้วเปิดใช้งานระบบได้ตามปกติ</p></div>");
     }
 
     // ตรวจสอบและสร้างชีตพร้อมข้อมูลเริ่มต้นหากยังไม่มี
@@ -63,6 +72,9 @@ function getSystemSettings() {
     sheetNameStaff: SHEET_NAME_STAFF,
     sheetNameReservation: SHEET_NAME_RESERVATION,
     sheetNameSettingTime: SHEET_NAME_SETTING_TIME,
+    menuNameSetting: MENU_NAME_SETTING,
+    Menu_Name_Setting: MENU_NAME_SETTING,
+    Sheet_Name_Setting_Selection_Reservation_Time: SHEET_NAME_SETTING_TIME,
     googleSheetId: GOOGLE_SHEET_ID
   };
 }
@@ -148,6 +160,7 @@ function onOpen() {
       .createMenu("⚙️ จัดการระบบ (JM System)")
       .addItem("🔄 ตรวจสอบและอัปเดต Schema ข้อมูลลูกค้า (Customer Schema)", "setupCustomerSheetSchema")
       .addItem("🔄 ตรวจสอบและอัปเดต Schema ข้อมูลพนักงาน (Staff Schema)", "setupStaffSheetSchema")
+      .addItem("🔄 ตรวจสอบและอัปเดต Schema ตัวเลือกเวลาการจอง (Setting Time Schema)", "setupSettingTimeSheetSchema")
       .addItem("🔄 ตรวจสอบและตั้งค่า Schema ทั้งหมด (Init All Sheets)", "initSheetIfNeeded")
       .addToUi();
   } catch (e) {
@@ -583,40 +596,7 @@ function initSheetIfNeeded() {
   setupStaffSheetSchema();
 
   // 3. ตรวจสอบชีต "ตั้งค่าตัวเลือกเวลาการจอง" (Sheet_Name_Setting_Selection_Reservation_Time)
-  // ฟิลด์: 2.1.1.4.1 เวลาที่จอง, 2.1.1.4.2 วันที่สร้าง, 2.1.1.4.3 วันที่อัปเดต
-  var timeSheet = getSettingTimeSheet();
-  var timeLastRow = timeSheet.getLastRow();
-  var timeHeaders = ["เวลาที่จอง", "วันที่สร้าง", "วันที่อัปเดต"];
-
-  if (timeLastRow === 0) {
-    timeSheet.appendRow(timeHeaders);
-    var timeHeaderRange = timeSheet.getRange(1, 1, 1, timeHeaders.length);
-    timeHeaderRange.setBackground("#1B3B36");
-    timeHeaderRange.setFontColor("#FFFFFF");
-    timeHeaderRange.setFontWeight("bold");
-    timeHeaderRange.setHorizontalAlignment("center");
-    timeHeaderRange.setVerticalAlignment("middle");
-    timeSheet.setRowHeight(1, 40);
-    timeSheet.setFrozenRows(1);
-
-    // ตัวเลือกช่วงเวลาบริการมาตรฐานของร้านนวด
-    var defaultTimes = ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
-    for (var t = 0; t < defaultTimes.length; t++) {
-      timeSheet.appendRow([defaultTimes[t], nowStr, nowStr]);
-    }
-
-    try {
-      timeSheet.getRange("A:A").setNumberFormat("@");
-    } catch (e) {}
-
-    for (var tc = 1; tc <= timeHeaders.length; tc++) {
-      timeSheet.autoResizeColumn(tc);
-    }
-  } else {
-    try {
-      timeSheet.getRange("A:A").setNumberFormat("@");
-    } catch (e) {}
-  }
+  setupSettingTimeSheetSchema();
 
   // 4. ตรวจสอบชีต "ข้อมูลการจอง" (Sheet_Name_Reservation)
   // ฟิลด์: 2.1.1.1 รหัสการจอง, 2.1.1.2 รหัสลูกค้า, 2.1.1.3 วันที่ที่จอง, 2.1.1.4 เวลาที่จอง, 2.1.1.5 สถานะการจอง, 2.1.1.6 วันที่สร้าง, 2.1.1.7 อัปเดตล่าสุด
@@ -1982,7 +1962,21 @@ function getReservationTimeSlots() {
     var slots = [];
     if (data.length > 1) {
       for (var i = 1; i < data.length; i++) {
-        var t = formatTimeSlot(data[i][0]);
+        var row = data[i];
+        var delFlag = "N";
+        var isActive = true;
+        if (row.length >= 7) {
+          delFlag = String(row[6] || "N").trim().toUpperCase();
+          isActive = (row[1] === false || String(row[1]).toLowerCase() === "false") ? false : true;
+        } else {
+          delFlag = String(row[5] || "N").trim().toUpperCase();
+        }
+
+        // หากถูก Soft Delete หรือปิดการใช้งาน (is_active = false) ให้ข้าม
+        if (delFlag === "Y") continue;
+        if (!isActive) continue;
+
+        var t = formatTimeSlot(row[0]);
         if (t && slots.indexOf(t) === -1) slots.push(t);
       }
     }
@@ -2315,5 +2309,365 @@ function deleteReservation(reservationId) {
     return { success: true, message: "ลบข้อมูลการจองรหัส " + cleanId + " เรียบร้อยแล้ว" };
   } catch (err) {
     return { success: false, message: "เกิดข้อผิดพลาดในการลบการจอง: " + err.message };
+  }
+}
+
+// ==============================================================================
+// โมดูล 4: ตั้งค่าตัวเลือกเวลาการจอง (Sheet_Name_Setting_Selection_Reservation_Time)
+// Schema:
+// 1. period (เวลาที่เปิดให้จอง เช่น "10:00")
+// 2. create_date (วันที่สร้าง)
+// ==============================================================================
+// SCHEMA ชีต "ตั้งค่าตัวเลือกเวลาการจอง" (Sheet_Name_Setting_Selection_Reservation_Time)
+// 1. period (เวลาที่เปิดให้จอง เช่น "10:00")
+// 2. is_active (สถานะการเปิด/ปิดใช้งาน: true = เปิดใช้งาน, false = ปิดการใช้งาน, default = TRUE)
+// 3. create_date (วันที่สร้าง)
+// 4. created_by (ผู้สร้าง ใช้ username ที่ล็อกอิน)
+// 5. update_date (อัปเดตล่าสุด)
+// 6. updated_by (ผู้อัปเดต ใช้ username ที่ล็อกอิน)
+// 7. deleted_flag (สถานะการลบ: N = ใช้งาน, Y = ลบแบบ Soft Delete)
+// ==============================================================================
+
+/**
+ * ตั้งค่าและอัปเดต Schema ของชีต "ตั้งค่าตัวเลือกเวลาการจอง" (Sheet_Name_Setting_Selection_Reservation_Time)
+ */
+function setupSettingTimeSheetSchema() {
+  try {
+    var sheet = getSettingTimeSheet();
+    var headers = ["period", "is_active", "create_date", "created_by", "update_date", "updated_by", "deleted_flag"];
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow === 0) {
+      sheet.appendRow(headers);
+      var headerRange = sheet.getRange(1, 1, 1, headers.length);
+      headerRange.setBackground("#1B3B36");
+      headerRange.setFontColor("#FFFFFF");
+      headerRange.setFontWeight("bold");
+      headerRange.setHorizontalAlignment("center");
+      headerRange.setVerticalAlignment("middle");
+      sheet.setRowHeight(1, 40);
+      sheet.setFrozenRows(1);
+
+      var defaultTimes = ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
+      for (var t = 0; t < defaultTimes.length; t++) {
+        sheet.appendRow([defaultTimes[t], true, nowStr, "admin", nowStr, "admin", "N"]);
+      }
+      sheet.getRange("A:A").setNumberFormat("@");
+      for (var tc = 1; tc <= headers.length; tc++) {
+        sheet.autoResizeColumn(tc);
+      }
+      return { success: true, message: "สร้างชีตตั้งค่าตัวเลือกเวลาการจอง 7 คอลัมน์สำเร็จ" };
+    }
+
+    // Auto-migrate: ตรวจสอบว่ามีคอลัมน์ is_active หรือไม่ หากไม่มีให้แทรกคอลัมน์ถัดจาก period (column 1)
+    var currentHeaderRange = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1));
+    var currentHeaders = currentHeaderRange.getValues()[0];
+    if (currentHeaders.indexOf("is_active") === -1) {
+      sheet.insertColumnAfter(1); // แทรกคอลัมน์ B ถัดจาก period
+      sheet.getRange(1, 2).setValue("is_active");
+      if (lastRow > 1) {
+        var activeRange = sheet.getRange(2, 2, lastRow - 1, 1);
+        var activeVals = [];
+        for (var i = 0; i < lastRow - 1; i++) {
+          activeVals.push([true]);
+        }
+        activeRange.setValues(activeVals);
+      }
+    }
+
+    if (sheet.getMaxColumns() < headers.length) {
+      sheet.insertColumnsAfter(sheet.getMaxColumns(), headers.length - sheet.getMaxColumns());
+    }
+
+    var hRange = sheet.getRange(1, 1, 1, headers.length);
+    hRange.setValues([headers]);
+    hRange.setBackground("#1B3B36");
+    hRange.setFontColor("#FFFFFF");
+    hRange.setFontWeight("bold");
+    hRange.setHorizontalAlignment("center");
+    hRange.setVerticalAlignment("middle");
+    sheet.setRowHeight(1, 40);
+    sheet.setFrozenRows(1);
+
+    // ตรวจสอบและเติมค่าในแถวที่มีอยู่แล้ว
+    if (lastRow > 1) {
+      var data = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
+      var changed = false;
+      for (var r = 0; r < data.length; r++) {
+        var p = formatTimeSlot(data[r][0]);
+        if (p && p !== data[r][0]) {
+          data[r][0] = p;
+          changed = true;
+        }
+        // is_active (คอลัมน์ 2 index 1): ถ้ายังไม่มีค่า ให้ default เป็น true
+        if (data[r][1] === "" || data[r][1] === null || data[r][1] === undefined) {
+          data[r][1] = true;
+          changed = true;
+        }
+        // create_date (คอลัมน์ 3 index 2)
+        if (!data[r][2]) {
+          data[r][2] = nowStr;
+          changed = true;
+        }
+        // created_by (คอลัมน์ 4 index 3)
+        if (!data[r][3]) {
+          data[r][3] = "admin";
+          changed = true;
+        }
+        // update_date (คอลัมน์ 5 index 4)
+        if (!data[r][4]) {
+          data[r][4] = nowStr;
+          changed = true;
+        }
+        // updated_by (คอลัมน์ 6 index 5)
+        if (!data[r][5]) {
+          data[r][5] = "admin";
+          changed = true;
+        }
+        // deleted_flag (คอลัมน์ 7 index 6)
+        if (!data[r][6]) {
+          data[r][6] = "N";
+          changed = true;
+        }
+      }
+      if (changed) {
+        sheet.getRange(2, 1, data.length, headers.length).setValues(data);
+      }
+    }
+
+    sheet.getRange("A:A").setNumberFormat("@");
+    for (var c = 1; c <= headers.length; c++) {
+      sheet.autoResizeColumn(c);
+    }
+
+    return {
+      success: true,
+      message: "อัปเดต Schema ชีตตั้งค่าตัวเลือกเวลาการจอง 7 คอลัมน์เรียบร้อยแล้ว"
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาดในการอัปเดต Schema ตัวเลือกเวลา: " + err.message
+    };
+  }
+}
+
+/**
+ * ดึงรายการข้อมูลรอบเวลาการจอง (Sheet_Name_Setting_Selection_Reservation_Time)
+ * - ดึงเฉพาะรายการที่ไม่ได้ลบ (deleted_flag !== 'Y')
+ * - เรียงลำดับเวลาจากเช้าไปค่ำ
+ */
+function getSettingTimeSlots(requesterUsername) {
+  try {
+    initSheetIfNeeded();
+    var sheet = getSettingTimeSheet();
+    var data = sheet.getDataRange().getValues();
+    var list = [];
+
+    if (data.length > 1) {
+      for (var r = 1; r < data.length; r++) {
+        var row = data[r];
+        var period = formatTimeSlot(row[0]);
+        if (!period) continue;
+
+        // is_active อยู่คอลัมน์ 2 (index 1)
+        var isActive = (row[1] === false || String(row[1]).toLowerCase() === "false") ? false : true;
+        var createDate = row[2] instanceof Date ? Utilities.formatDate(row[2], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[2] || "-");
+        var createdBy = String(row[3] || "-");
+        var updateDate = row[4] instanceof Date ? Utilities.formatDate(row[4], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[4] || "-");
+        var updatedBy = String(row[5] || "-");
+        var deletedFlag = String(row[6] || "N").trim().toUpperCase();
+
+        // Soft Delete: ถ้าถูกลบแล้ว ไม่แสดงในตารางจัดการ
+        if (deletedFlag === "Y") continue;
+
+        list.push({
+          rowId: r + 1,
+          period: period,
+          isActive: isActive,
+          createDate: createDate,
+          createdBy: createdBy,
+          updateDate: updateDate,
+          updatedBy: updatedBy,
+          deletedFlag: deletedFlag
+        });
+      }
+    }
+
+    list.sort(function(a, b) {
+      return a.period.localeCompare(b.period);
+    });
+
+    return {
+      success: true,
+      data: list,
+      sheetName: SHEET_NAME_SETTING_TIME,
+      message: "ดึงข้อมูลรอบเวลาการจองสำเร็จ"
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาดในการดึงข้อมูลรอบเวลา: " + err.message
+    };
+  }
+}
+
+/**
+ * เพิ่มข้อมูลรอบเวลาการจองใหม่
+ */
+function addSettingTimeSlot(payload) {
+  try {
+    initSheetIfNeeded();
+    if (!payload || !payload.period) {
+      return { success: false, message: "กรุณาระบุเวลาที่เปิดให้จอง (period)" };
+    }
+
+    var rawPeriod = String(payload.period).trim();
+    var period = formatTimeSlot(rawPeriod);
+    if (!/^\d{2}:\d{2}$/.test(period)) {
+      return { success: false, message: "รูปแบบเวลาไม่ถูกต้อง กรุณาระบุในรูปแบบ HH:mm เช่น 10:00, 11:30" };
+    }
+
+    var isActive = (payload.isActive !== false && String(payload.isActive).toLowerCase() !== "false");
+    var operator = String(payload.operatorUsername || "admin").trim();
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    var sheet = getSettingTimeSheet();
+    var data = sheet.getDataRange().getValues();
+
+    var existingRow = -1;
+    var existingDeleted = false;
+
+    if (data.length > 1) {
+      for (var r = 1; r < data.length; r++) {
+        var p = formatTimeSlot(data[r][0]);
+        var delFlag = String(data[r][6] || "N").trim().toUpperCase();
+        if (p === period) {
+          if (delFlag === "Y") {
+            existingRow = r + 1;
+            existingDeleted = true;
+          } else {
+            return { success: false, message: "รอบเวลา " + period + " มีอยู่ในระบบแล้ว" };
+          }
+        }
+      }
+    }
+
+    if (existingDeleted && existingRow > 0) {
+      sheet.getRange(existingRow, 2).setValue(isActive); // is_active
+      sheet.getRange(existingRow, 5).setValue(nowStr);   // update_date
+      sheet.getRange(existingRow, 6).setValue(operator); // updated_by
+      sheet.getRange(existingRow, 7).setValue("N");      // deleted_flag = N
+      return {
+        success: true,
+        message: "เพิ่มรอบเวลา " + period + " สำเร็จ (เปิดใช้งานรอบเวลาเดิม)"
+      };
+    }
+
+    sheet.appendRow([period, isActive, nowStr, operator, nowStr, operator, "N"]);
+    var lastRow = sheet.getLastRow();
+    sheet.getRange(lastRow, 1).setNumberFormat("@");
+
+    return {
+      success: true,
+      message: "เพิ่มรอบเวลา " + period + " สำเร็จ"
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาดในการเพิ่มรอบเวลา: " + err.message
+    };
+  }
+}
+
+/**
+ * แก้ไขข้อมูลรอบเวลาการจอง
+ */
+function updateSettingTimeSlot(payload) {
+  try {
+    initSheetIfNeeded();
+    if (!payload || !payload.rowId) {
+      return { success: false, message: "ไม่พบรหัสแถวข้อมูลที่ต้องการแก้ไข" };
+    }
+
+    var rowId = parseInt(payload.rowId, 10);
+    var rawPeriod = String(payload.period || "").trim();
+    var period = formatTimeSlot(rawPeriod);
+    if (!/^\d{2}:\d{2}$/.test(period)) {
+      return { success: false, message: "รูปแบบเวลาไม่ถูกต้อง กรุณาระบุในรูปแบบ HH:mm เช่น 10:00, 11:30" };
+    }
+
+    var isActive = (payload.isActive !== false && String(payload.isActive).toLowerCase() !== "false");
+    var operator = String(payload.operatorUsername || "admin").trim();
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    var sheet = getSettingTimeSheet();
+    var data = sheet.getDataRange().getValues();
+
+    if (rowId < 2 || rowId > data.length) {
+      return { success: false, message: "ไม่พบข้อมูลแถวที่ต้องการแก้ไขในระบบ" };
+    }
+
+    for (var r = 1; r < data.length; r++) {
+      if (r + 1 !== rowId) {
+        var p = formatTimeSlot(data[r][0]);
+        var del = String(data[r][6] || "N").trim().toUpperCase();
+        if (p === period && del !== "Y") {
+          return { success: false, message: "รอบเวลา " + period + " ซ้ำกับรอบเวลาอื่นที่มีอยู่แล้ว" };
+        }
+      }
+    }
+
+    sheet.getRange(rowId, 1).setValue(period).setNumberFormat("@");
+    sheet.getRange(rowId, 2).setValue(isActive); // is_active
+    sheet.getRange(rowId, 5).setValue(nowStr);   // update_date
+    sheet.getRange(rowId, 6).setValue(operator); // updated_by
+
+    return {
+      success: true,
+      message: "แก้ไขรอบเวลาเป็น " + period + " สำเร็จ"
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาดในการแก้ไขรอบเวลา: " + err.message
+    };
+  }
+}
+
+/**
+ * ลบข้อมูลรอบเวลาการจอง (Soft Delete)
+ */
+function deleteSettingTimeSlot(rowId, operatorUsername) {
+  try {
+    initSheetIfNeeded();
+    rowId = parseInt(rowId, 10);
+    if (isNaN(rowId) || rowId < 2) {
+      return { success: false, message: "ตำแหน่งแถวข้อมูลไม่ถูกต้อง" };
+    }
+
+    var sheet = getSettingTimeSheet();
+    var lastRow = sheet.getLastRow();
+    if (rowId > lastRow) {
+      return { success: false, message: "ไม่พบข้อมูลที่ต้องการลบในระบบ" };
+    }
+
+    var operator = String(operatorUsername || "admin").trim();
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    sheet.getRange(rowId, 5).setValue(nowStr);   // update_date
+    sheet.getRange(rowId, 6).setValue(operator); // updated_by
+    sheet.getRange(rowId, 7).setValue("Y");      // deleted_flag = 'Y'
+
+    return {
+      success: true,
+      message: "ลบรอบเวลาเรียบร้อยแล้ว (Soft Delete)"
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาดในการลบรอบเวลา: " + err.message
+    };
   }
 }
