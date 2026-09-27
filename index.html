@@ -552,6 +552,38 @@
       border-color: #E2E8F0;
     }
 
+    /* Style สำหรับแถวหลัก (Day Group Master Row) ในตารางการจอง */
+    .day-row {
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+    .day-row:hover {
+      background-color: rgba(27, 59, 54, 0.05) !important;
+    }
+    .day-row.shown {
+      background-color: rgba(27, 59, 54, 0.08) !important;
+      border-bottom: none !important;
+    }
+    .chevron-icon {
+      transition: transform 0.2s ease, color 0.2s ease;
+      display: inline-block;
+    }
+    .day-row.shown .chevron-icon {
+      transform: rotate(90deg);
+      color: var(--spa-primary) !important;
+    }
+    .day-child-container {
+      background-color: #F8FAFC !important;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.03);
+    }
+    .btn-xs {
+      padding: 3px 8px;
+      font-size: 0.78rem;
+      border-radius: 6px;
+    }
+
     /* -------------------------------------------------------------
        4. SWEETALERT2 MODAL CUSTOMIZATION
        ------------------------------------------------------------- */
@@ -1265,11 +1297,11 @@
             </a>
           </li>
 
-          <!-- เมนู 5: ตามตัวแปร Menu_Name_Setting (ตั้งค่าระบบ) มี Submenu -->
+          <!-- เมนู 5: ตามตัวแปร Menu_Name_Setting (การตั้งค่า) มี Submenu -->
           <li class="sidebar-menu-item" id="nav-item-setting">
             <a href="javascript:void(0)" class="sidebar-link" id="menu-setting" onclick="toggleSubmenu('setting-submenu', this)">
               <i class="fa-solid fa-sliders"></i>
-              <span id="sidebar-menu-setting-text">ตั้งค่าระบบ</span>
+              <span id="sidebar-menu-setting-text">การตั้งค่า</span>
               <i class="fa-solid fa-chevron-down submenu-arrow"></i>
             </a>
             <ul class="sidebar-submenu" id="setting-submenu">
@@ -1278,6 +1310,13 @@
                 <a href="javascript:void(0)" class="sidebar-link" id="menu-setting-time" onclick="switchSection('setting-time')">
                   <i class="fa-solid fa-clock"></i>
                   <span id="sidebar-submenu-setting-time-text">ตั้งค่าตัวเลือกเวลาการจอง</span>
+                </a>
+              </li>
+              <!-- Submenu 2: ตามตัวแปร Sheet_Name_Setting_Reservation_Timetable (ตั้งค่าตารางการจอง) -->
+              <li class="sidebar-menu-item" id="nav-item-setting-timetable">
+                <a href="javascript:void(0)" class="sidebar-link" id="menu-setting-timetable" onclick="switchSection('setting-timetable')">
+                  <i class="fa-solid fa-calendar-days"></i>
+                  <span id="sidebar-submenu-setting-timetable-text">ตั้งค่าตารางการจอง</span>
                 </a>
               </li>
             </ul>
@@ -1532,6 +1571,106 @@
           </div>
         </section>
 
+        <!-- SECTION 5: ตั้งค่าตารางการจอง (Sheet_Name_Setting_Reservation_Timetable) -->
+        <section id="section-setting-timetable" class="content-section">
+          <div class="page-title-box">
+            <div class="page-title">
+              <h3 id="setting-timetable-page-title"><i class="fa-solid fa-calendar-days me-2 text-warning"></i>ตั้งค่าตารางการจอง</h3>
+              <p>จัดการตารางเวลาและโควต้าการจองประจำเดือน กำหนดจำนวนรอบเวลา โควต้าสูงสุด และเปิด/ปิดใช้งาน</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+              <div class="d-flex align-items-center gap-1">
+                <label for="select-timetable-month" class="form-label mb-0 fw-semibold text-muted" style="font-size: 0.85rem;"><i class="fa-solid fa-filter me-1"></i>เลือกเดือน:</label>
+                <select id="select-timetable-month" class="form-select form-select-sm" style="min-width: 140px; font-weight: 600;" onchange="changeTimetableMonth(this.value)">
+                  <!-- ตัวเลือกเดือนที่โหลดจากระบบ -->
+                </select>
+              </div>
+              <button class="btn btn-outline-primary btn-sm" id="btn-expand-all-days" onclick="toggleAllDayDetails(true)" title="คลี่แสดงรอบเวลาทุกวัน">
+                <i class="fa-solid fa-angles-down me-1"></i>คลี่ทั้งหมด
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" id="btn-collapse-all-days" onclick="toggleAllDayDetails(false)" title="หุบรอบเวลาทุกวัน">
+                <i class="fa-solid fa-angles-up me-1"></i>หุบทั้งหมด
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" id="btn-refresh-timetable" onclick="loadTimetableData(true)" title="รีเฟรชข้อมูล">
+                <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
+              </button>
+              <button class="btn btn-action-main btn-sm" id="btn-open-add-timetable" onclick="openAddTimetableModal()">
+                <i class="fa-solid fa-calendar-plus me-1"></i>
+                <span>เพิ่มตารางการจอง</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Stat Cards -->
+          <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+              <div class="content-card p-3 d-flex align-items-center gap-3">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background-color: #EBF8FF; color: #2B6CB0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                  <i class="fa-solid fa-calendar-days"></i>
+                </div>
+                <div>
+                  <div class="text-muted" style="font-size: 0.78rem;">รอบเวลาทั้งหมด</div>
+                  <div class="fw-bold" style="font-size: 1.25rem;" id="stat-timetable-total">0</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="content-card p-3 d-flex align-items-center gap-3">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background-color: #DEF7EC; color: #0E9F6E; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                  <i class="fa-solid fa-check-circle"></i>
+                </div>
+                <div>
+                  <div class="text-muted" style="font-size: 0.78rem;">เปิดใช้งาน (Active)</div>
+                  <div class="fw-bold text-success" style="font-size: 1.25rem;" id="stat-timetable-active">0</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="content-card p-3 d-flex align-items-center gap-3">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background-color: #FDE8E8; color: #9B1C1C; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                  <i class="fa-solid fa-ban"></i>
+                </div>
+                <div>
+                  <div class="text-muted" style="font-size: 0.78rem;">ปิดการใช้งาน</div>
+                  <div class="fw-bold text-danger" style="font-size: 1.25rem;" id="stat-timetable-inactive">0</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="content-card p-3 d-flex align-items-center gap-3">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background-color: #FEF08A; color: #854D0E; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                  <i class="fa-solid fa-users"></i>
+                </div>
+                <div>
+                  <div class="text-muted" style="font-size: 0.78rem;">ยอดที่ถูกจองแล้ว</div>
+                  <div class="fw-bold text-warning" style="font-size: 1.25rem;" id="stat-timetable-booked">0</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="table-responsive">
+              <table id="settingTimetableDataTable" class="table table-hover align-middle w-100">
+                <thead>
+                  <tr>
+                    <th style="width: 45px;" class="text-center no-sort"></th>
+                    <th style="width: 60px;" class="text-center">ลำดับ</th>
+                    <th style="width: 180px;" class="text-center">วันที่ (Day)</th>
+                    <th style="width: 150px;" class="text-center">จำนวนรอบเวลา</th>
+                    <th style="width: 170px;" class="text-center">จองแล้ว / โควต้ารวม</th>
+                    <th style="width: 150px;" class="text-center">สถานะภาพรวม</th>
+                    <th style="width: 190px;" class="text-center no-sort">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="settingTimetableTableBody">
+                  <!-- ข้อมูลตารางการจอง -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
       </main>
 
     </div>
@@ -1570,19 +1709,24 @@
     let currentCustomerData = [];
     let currentStaffData = [];
     let currentSettingTimeData = [];
+    let currentTimetableData = [];
     let adminDataTableInstance = null;
     let customerDataTableInstance = null;
     let staffDataTableInstance = null;
     let settingTimeDataTableInstance = null;
+    let timetableDataTableInstance = null;
     let currentUser = null;
     let sheetNameAdmin = "ข้อมูลผู้ดูแลระบบ";
     let sheetNameCustomer = "ข้อมูลลูกค้า";
     let sheetNameStaff = "ข้อมูลพนักงาน";
     let sheetNameReservation = "ข้อมูลการจอง";
     let sheetNameSettingTime = "ตั้งค่าตัวเลือกเวลาการจอง";
-    let menuNameSetting = "ตั้งค่าระบบ";
-    let Menu_Name_Setting = "ตั้งค่าระบบ";
+    let sheetNameSettingTimetable = "ตั้งค่าตารางการจอง";
+    let menuNameSetting = "การตั้งค่า";
+    let Menu_Name_Setting = "การตั้งค่า";
     let Sheet_Name_Setting_Selection_Reservation_Time = "ตั้งค่าตัวเลือกเวลาการจอง";
+    let Sheet_Name_Setting_Reservation_Timetable = "ตั้งค่าตารางการจอง";
+    let currentTimetablePeriodMonth = "";
     let activeSection = "admin";
 
     // สถานะตารางนัดหมาย (Calendar State)
@@ -1660,6 +1804,12 @@
                 Sheet_Name_Setting_Selection_Reservation_Time = sheetNameSettingTime;
                 $('#sidebar-submenu-setting-time-text').text(Sheet_Name_Setting_Selection_Reservation_Time);
                 $('#setting-time-page-title').html('<i class="fa-solid fa-clock me-2 text-warning"></i>' + Sheet_Name_Setting_Selection_Reservation_Time);
+              }
+              if (config.sheetNameSettingTimetable || config.Sheet_Name_Setting_Reservation_Timetable) {
+                sheetNameSettingTimetable = config.sheetNameSettingTimetable || config.Sheet_Name_Setting_Reservation_Timetable;
+                Sheet_Name_Setting_Reservation_Timetable = sheetNameSettingTimetable;
+                $('#sidebar-submenu-setting-timetable-text').text(Sheet_Name_Setting_Reservation_Timetable);
+                $('#setting-timetable-page-title').html('<i class="fa-solid fa-calendar-days me-2 text-warning"></i>' + Sheet_Name_Setting_Reservation_Timetable);
               }
               if (config.menuNameSetting || config.Menu_Name_Setting) {
                 menuNameSetting = config.menuNameSetting || config.Menu_Name_Setting;
@@ -1848,13 +1998,13 @@
           switchSection('reservation');
           return;
         }
-      } else if (section === 'setting-time') {
-        // ตั้งค่าตัวเลือกเวลาการจอง: เฉพาะผู้ดูแลระบบ (8, 9) หรือ admin เท่านั้น
+      } else if (section === 'setting-time' || section === 'setting-timetable') {
+        // ตั้งค่าตัวเลือกเวลาการจอง / ตั้งค่าตารางการจอง: เฉพาะผู้ดูแลระบบ (8, 9) หรือ admin เท่านั้น
         if (personFlag !== 8 && personFlag !== 9 && !isSystemAdmin) {
           Swal.fire({
             icon: 'warning',
             title: 'ไม่มีสิทธิ์เข้าถึง',
-            text: 'คุณไม่มีสิทธิ์ในการเข้าถึงหน้าจอตั้งค่าตัวเลือกเวลาการจอง',
+            text: 'คุณไม่มีสิทธิ์ในการเข้าถึงหน้าจอการตั้งค่า',
             confirmButtonColor: '#1B3B36'
           });
           switchSection('reservation');
@@ -1868,8 +2018,8 @@
       $('.sidebar-link').removeClass('active');
       $('#menu-' + section).addClass('active');
 
-      // หากเป็น Submenu ในเมนูตั้งค่าระบบ ให้เปิด Submenu และเน้นเมนูแม่
-      if (section === 'setting-time') {
+      // หากเป็น Submenu ในเมนูการตั้งค่า ให้เปิด Submenu และเน้นเมนูแม่
+      if (section === 'setting-time' || section === 'setting-timetable') {
         $('#setting-submenu').slideDown(200);
         $('#menu-setting').addClass('open');
       }
@@ -1888,6 +2038,8 @@
         loadCalendarData(currentCalendarYear, currentCalendarMonth, false);
       } else if (section === 'setting-time') {
         loadSettingTimeTableData(false);
+      } else if (section === 'setting-timetable') {
+        loadTimetableData(false);
       }
 
       // ปิด sidebar อัตโนมัติบนมือถือเมื่อคลิกเลือกเมนู
@@ -5520,6 +5672,1171 @@
           calendarDataCache = null;
           loadSettingTimeTableData(true);
         });
+      }
+    }
+
+    // =============================================================
+    // 8. การจัดการตารางการจอง (Sheet_Name_Setting_Reservation_Timetable)
+    // =============================================================
+
+    /**
+     * โหลดข้อมูลตารางการจองประจำเดือน
+     */
+    function loadTimetableData(isManualRefresh, targetMonth) {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSystemAdmin = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin');
+      if (userFlag !== 8 && userFlag !== 9 && !isSystemAdmin) {
+        return;
+      }
+
+      const monthToFetch = targetMonth || currentTimetablePeriodMonth || '';
+
+      if (isManualRefresh) {
+        Swal.fire({
+          title: 'กำลังโหลดข้อมูลตารางการจอง...',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+      }
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (isManualRefresh) Swal.close();
+            if (res && res.success) {
+              currentTimetableData = res.data || [];
+              currentTimetablePeriodMonth = res.periodMonth || monthToFetch;
+
+              // เติมข้อมูล Dropdown เลือกเดือน
+              updateTimetableMonthDropdown(res.availableMonths || [], currentTimetablePeriodMonth);
+
+              // อัปเดตการ์ดสถิติ (Stat Cards)
+              updateTimetableStats(currentTimetableData);
+
+              // แสดงข้อมูลใน DataTable
+              renderTimetableTable(currentTimetableData);
+
+              if (isManualRefresh) {
+                const Toast = Swal.mixin({
+                  toast: true,
+                  position: 'top-end',
+                  showConfirmButton: false,
+                  timer: 1500,
+                  timerProgressBar: true
+                });
+                Toast.fire({
+                  icon: 'success',
+                  title: 'รีเฟรชข้อมูลตารางการจองสำเร็จ'
+                });
+              }
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถโหลดข้อมูลได้',
+                text: res ? res.message : 'เกิดข้อผิดพลาดในการโหลดข้อมูลตารางการจอง',
+                confirmButtonColor: '#1B3B36'
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            if (isManualRefresh) Swal.close();
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: err.message || err,
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .getReservationTimetable(monthToFetch, currentUser ? currentUser.username : 'admin');
+      } else {
+        // โหมดจำลองใน Browser Preview
+        if (isManualRefresh) Swal.close();
+        if (!window.mockTimetableSlots) {
+          window.mockTimetableSlots = [];
+          const now = new Date();
+          const yr = now.getFullYear();
+          const mo = String(now.getMonth() + 1).padStart(2, '0');
+          const pMonth = `${yr}-${mo}`;
+          const days = new Date(yr, now.getMonth() + 1, 0).getDate();
+          const times = ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
+          let rId = 2;
+          for (let d = 1; d <= days; d++) {
+            const dStr = String(d).padStart(2, '0');
+            for (let t of times) {
+              window.mockTimetableSlots.push({
+                rowId: rId++,
+                periodMonth: pMonth,
+                dayMonth: dStr,
+                time: t,
+                usageQuota: 0,
+                quotaTotal: 5,
+                isActive: true,
+                createDate: '2026-09-27 12:00',
+                createdBy: 'admin',
+                updateDate: '2026-09-27 12:00',
+                updatedBy: 'admin'
+              });
+            }
+          }
+        }
+
+        const now = new Date();
+        const fallbackMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        currentTimetablePeriodMonth = monthToFetch || fallbackMonth;
+        currentTimetableData = window.mockTimetableSlots.filter(x => x.periodMonth === currentTimetablePeriodMonth);
+
+        const availableMonths = Array.from(new Set(window.mockTimetableSlots.map(x => x.periodMonth)));
+        if (!availableMonths.includes(currentTimetablePeriodMonth)) {
+          availableMonths.push(currentTimetablePeriodMonth);
+        }
+
+        updateTimetableMonthDropdown(availableMonths, currentTimetablePeriodMonth);
+        updateTimetableStats(currentTimetableData);
+        renderTimetableTable(currentTimetableData);
+      }
+    }
+
+    /**
+     * เปลี่ยนเดือนที่ต้องการดูในตารางการจอง
+     */
+    function changeTimetableMonth(newMonth) {
+      if (newMonth && newMonth !== currentTimetablePeriodMonth) {
+        currentTimetablePeriodMonth = newMonth;
+        loadTimetableData(false, newMonth);
+      }
+    }
+
+    /**
+     * อัปเดต Dropdown เลือกเดือนในหน้าตารางการจอง
+     */
+    function updateTimetableMonthDropdown(availableMonths, activeMonth) {
+      const $select = $('#select-timetable-month');
+      $select.empty();
+
+      const allMonths = [...availableMonths];
+      if (activeMonth && !allMonths.includes(activeMonth)) {
+        allMonths.push(activeMonth);
+      }
+
+      if (allMonths.length === 0) {
+        const d = new Date();
+        const cur = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        allMonths.push(cur);
+      }
+
+      allMonths.sort((a, b) => b.localeCompare(a)); // เรียงจากล่าสุดไปอดีต
+
+      allMonths.forEach(m => {
+        const parts = m.split('-');
+        let label = m;
+        if (parts.length === 2) {
+          const y = parseInt(parts[0], 10);
+          const mIdx = parseInt(parts[1], 10) - 1;
+          const mName = (mIdx >= 0 && mIdx < THAI_MONTH_NAMES.length) ? THAI_MONTH_NAMES[mIdx] : parts[1];
+          const thaiYear = y + 543;
+          label = `${m} (${mName} ${thaiYear})`;
+        }
+        const isSelected = (m === activeMonth) ? 'selected' : '';
+        $select.append(`<option value="${m}" ${isSelected}>${label}</option>`);
+      });
+    }
+
+    /**
+     * อัปเดตตัวเลขการ์ดสถิติ (Stat Cards)
+     */
+    function updateTimetableStats(dataList) {
+      const total = dataList ? dataList.length : 0;
+      let active = 0;
+      let inactive = 0;
+      let booked = 0;
+
+      if (dataList && dataList.length > 0) {
+        dataList.forEach(item => {
+          if (item.isActive) {
+            active++;
+          } else {
+            inactive++;
+          }
+          booked += (item.usageQuota || 0);
+        });
+      }
+
+      $('#stat-timetable-total').text(total.toLocaleString());
+      $('#stat-timetable-active').text(active.toLocaleString());
+      $('#stat-timetable-inactive').text(inactive.toLocaleString());
+      $('#stat-timetable-booked').text(booked.toLocaleString());
+    }
+
+    // เก็บรายการวันที่ที่ถูกคลี่แสดงอยู่ (Set of expanded day strings e.g. "01", "02")
+    let expandedDays = new Set();
+    let currentGroupedTimetable = {};
+
+    /**
+     * Helper: รวมกลุ่มข้อมูลตารางการจองตามวันที่ (day_month)
+     */
+    function groupTimetableDataByDay(dataList) {
+      const groups = {};
+      if (!dataList || !dataList.length) return groups;
+
+      dataList.forEach(slot => {
+        const day = String(slot.dayMonth || '').padStart(2, '0');
+        if (!groups[day]) {
+          groups[day] = {
+            periodMonth: slot.periodMonth,
+            dayMonth: day,
+            slots: [],
+            totalSlots: 0,
+            activeSlots: 0,
+            inactiveSlots: 0,
+            totalBooked: 0,
+            totalQuota: 0,
+            createDate: slot.createDate,
+            createdBy: slot.createdBy,
+            updateDate: slot.updateDate,
+            updatedBy: slot.updatedBy
+          };
+        }
+        groups[day].slots.push(slot);
+        groups[day].totalSlots++;
+        if (slot.isActive) {
+          groups[day].activeSlots++;
+        } else {
+          groups[day].inactiveSlots++;
+        }
+        groups[day].totalBooked += (slot.usageQuota || 0);
+        groups[day].totalQuota += (slot.quotaTotal || 5);
+      });
+
+      // จัดเรียงรอบเวลาในแต่ละวันจากเช้าไปค่ำ
+      Object.keys(groups).forEach(day => {
+        groups[day].slots.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+      });
+
+      return groups;
+    }
+
+    /**
+     * วาดตารางข้อมูลรอบเวลาใน DataTable (Group ตามวันที่: 1 แถวต่อ 1 วัน)
+     * เมื่อคลิกแถววัน จะคลี่แสดง Sub-table รอบเวลาของวันนั้นออกมา
+     */
+    function renderTimetableTable(dataList) {
+      if (timetableDataTableInstance) {
+        timetableDataTableInstance.destroy();
+        timetableDataTableInstance = null;
+      }
+
+      const $tbody = $('#settingTimetableTableBody');
+      $tbody.empty();
+
+      if (!dataList || dataList.length === 0) {
+        $tbody.html(`
+          <tr>
+            <td colspan="7" class="text-center py-5 text-muted">
+              <i class="fa-regular fa-calendar-xmark fs-2 d-block mb-2 text-secondary"></i>
+              ยังไม่มีข้อมูลตารางการจองในเดือน ${escapeHtml(currentTimetablePeriodMonth)}<br>
+              <button class="btn btn-action-main btn-sm mt-3" onclick="openAddTimetableModal()">
+                <i class="fa-solid fa-calendar-plus me-1"></i> เพิ่มตารางการจองเดือนนี้
+              </button>
+            </td>
+          </tr>
+        `);
+        return;
+      }
+
+      // Group ข้อมูลตามวัน (เช่น วันที่ 01 ถึง 30)
+      currentGroupedTimetable = groupTimetableDataByDay(dataList);
+      const dayKeys = Object.keys(currentGroupedTimetable).sort((a, b) => a.localeCompare(b));
+
+      // วน Loop สร้างแถวหลักประจำวัน (1 แถว ต่อ 1 วัน)
+      dayKeys.forEach((dayKey, index) => {
+        const dayInfo = currentGroupedTimetable[dayKey];
+
+        // หาชื่อวันในสัปดาห์ เช่น อังคาร, พุธ
+        let dayOfWeekName = '';
+        try {
+          const parts = (dayInfo.periodMonth || currentTimetablePeriodMonth).split('-');
+          if (parts.length === 2) {
+            const yr = parseInt(parts[0], 10);
+            const mo = parseInt(parts[1], 10) - 1;
+            const dy = parseInt(dayKey, 10);
+            const dateObj = new Date(yr, mo, dy);
+            dayOfWeekName = (THAI_DAY_NAMES[dateObj.getDay()] || '').replace('วัน', '');
+          }
+        } catch (e) {}
+
+        const dayDisplay = `<strong>${dayKey}</strong> ${dayOfWeekName ? `<span class="text-muted" style="font-size:0.85rem;">(${dayOfWeekName})</span>` : ''}`;
+
+        // คำนวณความจุโควต้าและเปอร์เซ็นต์
+        const totalBooked = dayInfo.totalBooked;
+        const totalQuota = dayInfo.totalQuota;
+        const pct = totalQuota > 0 ? Math.min(100, Math.round((totalBooked / totalQuota) * 100)) : 0;
+        let barColor = 'bg-info';
+        if (pct >= 100) {
+          barColor = 'bg-danger';
+        } else if (pct >= 60) {
+          barColor = 'bg-warning';
+        }
+
+        // สถานะภาพรวมของวัน
+        let overallStatusBadge = '';
+        if (dayInfo.activeSlots === dayInfo.totalSlots && dayInfo.totalSlots > 0) {
+          overallStatusBadge = `<span class="badge bg-success" style="padding: 6px 10px; font-weight: 500;"><i class="fa-solid fa-circle-check me-1"></i>เปิดให้บริการ (${dayInfo.activeSlots}/${dayInfo.totalSlots})</span>`;
+        } else if (dayInfo.activeSlots > 0) {
+          overallStatusBadge = `<span class="badge bg-warning text-dark" style="padding: 6px 10px; font-weight: 500;"><i class="fa-solid fa-clock-rotate-left me-1"></i>เปิดบางรอบ (${dayInfo.activeSlots}/${dayInfo.totalSlots})</span>`;
+        } else {
+          overallStatusBadge = `<span class="badge bg-secondary" style="padding: 6px 10px; font-weight: 500;"><i class="fa-solid fa-circle-xmark me-1"></i>ปิดให้บริการ</span>`;
+        }
+
+        const isExpanded = expandedDays.has(dayKey);
+
+        const rowHtml = `
+          <tr class="day-row ${isExpanded ? 'shown' : ''}" data-day="${dayKey}">
+            <td class="text-center align-middle" style="width: 45px;">
+              <i class="fa-solid fa-chevron-right text-muted chevron-icon"></i>
+            </td>
+            <td class="text-center fw-bold text-muted">${index + 1}</td>
+            <td class="text-center">
+              <span class="badge bg-light text-spa-primary border fw-bold fs-6 px-3 py-1">
+                <i class="fa-regular fa-calendar-day me-1 text-warning"></i>${dayDisplay}
+              </span>
+            </td>
+            <td class="text-center">
+              <div class="fw-bold">${dayInfo.totalSlots} รอบเวลา</div>
+              <small style="font-size: 0.78rem;">
+                <span class="text-success"><i class="fa-solid fa-check me-0.5"></i>เปิด ${dayInfo.activeSlots}</span> / 
+                <span class="text-secondary"><i class="fa-solid fa-xmark me-0.5"></i>ปิด ${dayInfo.inactiveSlots}</span>
+              </small>
+            </td>
+            <td class="text-center">
+              <div class="d-flex flex-column align-items-center">
+                <span class="fw-bold ${pct >= 100 ? 'text-danger' : (totalBooked > 0 ? 'text-spa-primary' : 'text-muted')}">
+                  ${totalBooked} / ${totalQuota}
+                </span>
+                <div class="progress w-75 mt-1" style="height: 6px;">
+                  <div class="progress-bar ${barColor}" role="progressbar" style="width: ${pct}%;"></div>
+                </div>
+              </div>
+            </td>
+            <td class="text-center">${overallStatusBadge}</td>
+            <td class="text-center" onclick="event.stopPropagation()">
+              <div class="action-btn-group">
+                <button class="btn btn-sm btn-outline-primary btn-toggle-day" data-day="${dayKey}" onclick="toggleDayRow('${dayKey}')" title="คลี่/หุบรายละเอียดรอบเวลา">
+                  <i class="fa-solid ${isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'} me-1 toggle-icon"></i>
+                  <span class="toggle-text">${isExpanded ? 'ซ่อนรอบเวลา' : 'ดูรอบเวลา'}</span>
+                </button>
+                ${dayInfo.activeSlots > 0
+                  ? `<button class="btn btn-sm btn-outline-danger btn-bulk-day" onclick="bulkToggleDay('${dayKey}', false)" title="ปิดให้บริการทุกรอบของวันที่ ${dayKey}"><i class="fa-solid fa-ban me-1"></i>ปิดทั้งวัน</button>`
+                  : `<button class="btn btn-sm btn-outline-success btn-bulk-day" onclick="bulkToggleDay('${dayKey}', true)" title="เปิดให้บริการทุกรอบของวันที่ ${dayKey}"><i class="fa-solid fa-check-double me-1"></i>เปิดทั้งวัน</button>`
+                }
+              </div>
+            </td>
+          </tr>
+        `;
+        $tbody.append(rowHtml);
+      });
+
+      // ผูก DataTable สำหรับแถวหลักประจำวัน (แสดงจำนวนวัน เช่น 30 แถว)
+      timetableDataTableInstance = $('#settingTimetableDataTable').DataTable({
+        language: getDatatableThaiLang(),
+        pageLength: 25,
+        lengthMenu: [10, 25, 50, 100],
+        order: [[2, 'asc']], // เรียงตามวันที่ (Day)
+        columnDefs: [
+          { targets: [0, 6], orderable: false } // ปิด sort คอลัมน์ chevron และ จัดการ
+        ],
+        responsive: false,
+        destroy: true
+      });
+
+      // จัดการคลิกบนแถววันเพื่อคลี่/หุบ Sub-row
+      $('#settingTimetableDataTable tbody').off('click', 'tr.day-row').on('click', 'tr.day-row', function(e) {
+        if ($(e.target).closest('button, a, input, select, .action-btn-group, .btn').length) {
+          return;
+        }
+        const dayKey = $(this).data('day');
+        if (dayKey) {
+          toggleDayRow(dayKey);
+        }
+      });
+
+      // คลี่แถวที่เคยเปิดค้างไว้ก่อนหน้านี้โดยอัตโนมัติ (เช่น หลังกด Edit หรือ Toggle สถานะรอบเวลา)
+      if (expandedDays.size > 0) {
+        expandedDays.forEach(dayKey => {
+          const $tr = $(`#settingTimetableDataTable tbody tr.day-row[data-day="${dayKey}"]`);
+          if ($tr.length && timetableDataTableInstance) {
+            const dtRow = timetableDataTableInstance.row($tr);
+            if (dtRow && dtRow.length && currentGroupedTimetable[dayKey]) {
+              dtRow.child(buildDayDetailHtml(dayKey, currentGroupedTimetable[dayKey])).show();
+              $tr.addClass('shown');
+              $tr.find('.toggle-icon').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+              $tr.find('.toggle-text').text('ซ่อนรอบเวลา');
+            }
+          }
+        });
+      }
+    }
+
+    /**
+     * คลี่/หุบ แถวรอบเวลาย่อยของวันที่ระบุ
+     */
+    function toggleDayRow(dayKey) {
+      if (!timetableDataTableInstance) return;
+      const $tr = $(`#settingTimetableDataTable tbody tr.day-row[data-day="${dayKey}"]`);
+      if (!$tr.length) return;
+
+      const dtRow = timetableDataTableInstance.row($tr);
+      if (!dtRow || !dtRow.length) return;
+
+      if (dtRow.child.isShown()) {
+        dtRow.child.hide();
+        $tr.removeClass('shown');
+        expandedDays.delete(dayKey);
+        $tr.find('.toggle-icon').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+        $tr.find('.toggle-text').text('ดูรอบเวลา');
+      } else {
+        const dayInfo = currentGroupedTimetable[dayKey];
+        if (dayInfo) {
+          dtRow.child(buildDayDetailHtml(dayKey, dayInfo)).show();
+          $tr.addClass('shown');
+          expandedDays.add(dayKey);
+          $tr.find('.toggle-icon').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+          $tr.find('.toggle-text').text('ซ่อนรอบเวลา');
+        }
+      }
+    }
+
+    /**
+     * คลี่ทั้งหมด หรือ หุบทั้งหมด
+     */
+    function toggleAllDayDetails(expand) {
+      if (!timetableDataTableInstance || !currentGroupedTimetable) return;
+
+      $('#settingTimetableDataTable tbody tr.day-row').each(function() {
+        const dayKey = $(this).data('day');
+        if (!dayKey) return;
+
+        const dtRow = timetableDataTableInstance.row($(this));
+        if (!dtRow || !dtRow.length) return;
+
+        if (expand) {
+          const dayInfo = currentGroupedTimetable[dayKey];
+          if (dayInfo) {
+            dtRow.child(buildDayDetailHtml(dayKey, dayInfo)).show();
+            $(this).addClass('shown');
+            expandedDays.add(dayKey);
+            $(this).find('.toggle-icon').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+            $(this).find('.toggle-text').text('ซ่อนรอบเวลา');
+          }
+        } else {
+          dtRow.child.hide();
+          $(this).removeClass('shown');
+          expandedDays.delete(dayKey);
+          $(this).find('.toggle-icon').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+          $(this).find('.toggle-text').text('ดูรอบเวลา');
+        }
+      });
+    }
+
+    /**
+     * สลับสถานะเปิด/ปิดทุกรอบของวันนั้น (Bulk Toggle Day)
+     */
+    function bulkToggleDay(dayKey, setActive) {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSystemAdmin = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin');
+      if (userFlag !== 8 && userFlag !== 9 && !isSystemAdmin) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์',
+          text: 'คุณไม่มีสิทธิ์ในการเปลี่ยนสถานะรอบเวลา',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      const operator = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+      const actionName = setActive ? 'เปิดให้บริการทุกรอบ' : 'ปิดให้บริการทุกรอบ';
+
+      Swal.fire({
+        title: `ยืนยัน${actionName}?`,
+        html: `คุณต้องการ <strong>${actionName}</strong> สำหรับ <strong>วันที่ ${dayKey}</strong> ใช่หรือไม่?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: `<i class="fa-solid fa-check me-1"></i> ยืนยัน`,
+        cancelButtonText: `<i class="fa-solid fa-xmark me-1"></i> ยกเลิก`,
+        reverseButtons: true,
+        confirmButtonColor: setActive ? '#1B3B36' : '#dc2626',
+        cancelButtonColor: '#718096'
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        Swal.fire({
+          title: 'กำลังอัปเดตข้อมูล...',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (res && res.success) {
+                // อัปเดตข้อมูลใน currentTimetableData
+                if (currentTimetableData && currentTimetableData.length) {
+                  currentTimetableData.forEach(item => {
+                    const d = String(item.dayMonth || '').padStart(2, '0');
+                    if (d === dayKey) {
+                      item.isActive = setActive;
+                    }
+                  });
+                }
+                calendarDataCache = null;
+                updateTimetableStats(currentTimetableData);
+                // ให้คงสถานะคลี่วันนั้นไว้
+                expandedDays.add(dayKey);
+                renderTimetableTable(currentTimetableData);
+
+                const Toast = Swal.mixin({
+                  toast: true,
+                  position: 'top-end',
+                  showConfirmButton: false,
+                  timer: 1500,
+                  timerProgressBar: true
+                });
+                Toast.fire({
+                  icon: setActive ? 'success' : 'info',
+                  title: res.message || `${actionName} วันที่ ${dayKey} สำเร็จ`
+                });
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'ไม่สามารถเปลี่ยนสถานะได้',
+                  text: res ? res.message : 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะ',
+                  confirmButtonColor: '#1B3B36'
+                });
+              }
+            })
+            .withFailureHandler(function(err) {
+              Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: err.message || err,
+                confirmButtonColor: '#1B3B36'
+              });
+            })
+            .bulkToggleDayTimetableSlots(currentTimetablePeriodMonth, dayKey, setActive, operator);
+        } else {
+          // โหมดจำลอง Browser Preview
+          if (window.mockTimetableSlots) {
+            window.mockTimetableSlots.forEach(x => {
+              if (x.periodMonth === currentTimetablePeriodMonth && String(x.dayMonth).padStart(2, '0') === dayKey) {
+                x.isActive = setActive;
+              }
+            });
+          }
+          if (currentTimetableData && currentTimetableData.length) {
+            currentTimetableData.forEach(item => {
+              const d = String(item.dayMonth || '').padStart(2, '0');
+              if (d === dayKey) {
+                item.isActive = setActive;
+              }
+            });
+          }
+          updateTimetableStats(currentTimetableData);
+          expandedDays.add(dayKey);
+          renderTimetableTable(currentTimetableData);
+
+          Swal.fire({
+            icon: 'success',
+            title: 'สำเร็จ (โหมดจำลอง)',
+            text: `${actionName} วันที่ ${dayKey} เรียบร้อยแล้ว`,
+            timer: 1400,
+            showConfirmButton: false
+          });
+        }
+      });
+    }
+
+    /**
+     * สร้าง HTML สำหรับแสดง Sub-table รายการรอบเวลาทั้งหมดของวันนั้น (Child Row)
+     */
+    function buildDayDetailHtml(dayKey, dayInfo) {
+      if (!dayInfo || !dayInfo.slots || !dayInfo.slots.length) {
+        return `
+          <div class="p-3 text-center text-muted day-child-container">
+            <i class="fa-regular fa-clock fs-4 d-block mb-1 text-secondary"></i>
+            ไม่มีข้อมูลรอบเวลาสำหรับวันที่ ${dayKey}
+          </div>
+        `;
+      }
+
+      let dayOfWeekName = '';
+      try {
+        const parts = (dayInfo.periodMonth || currentTimetablePeriodMonth).split('-');
+        if (parts.length === 2) {
+          const yr = parseInt(parts[0], 10);
+          const mo = parseInt(parts[1], 10) - 1;
+          const dy = parseInt(dayKey, 10);
+          const dateObj = new Date(yr, mo, dy);
+          dayOfWeekName = THAI_DAY_NAMES[dateObj.getDay()] || '';
+        }
+      } catch (e) {}
+
+      let subRowsHtml = '';
+      dayInfo.slots.forEach((item, sIndex) => {
+        const usage = item.usageQuota || 0;
+        const total = item.quotaTotal || 5;
+        const pct = Math.min(100, Math.round((usage / total) * 100));
+        let barColor = 'bg-info';
+        if (pct >= 100) {
+          barColor = 'bg-danger';
+        } else if (pct >= 60) {
+          barColor = 'bg-warning';
+        }
+
+        const statusBadge = item.isActive
+          ? `<span class="badge bg-success" style="cursor: pointer; padding: 6px 10px; font-weight: 500;" onclick="toggleTimetableSlot(${item.rowId})" title="คลิกเพื่อสลับสถานะ">
+               <i class="fa-solid fa-circle-check me-1"></i>เปิดใช้งาน
+             </span>`
+          : `<span class="badge bg-secondary" style="cursor: pointer; padding: 6px 10px; font-weight: 500;" onclick="toggleTimetableSlot(${item.rowId})" title="คลิกเพื่อสลับสถานะ">
+               <i class="fa-solid fa-circle-xmark me-1"></i>ปิดการใช้งาน
+             </span>`;
+
+        subRowsHtml += `
+          <tr>
+            <td class="text-center text-muted fw-bold">${sIndex + 1}</td>
+            <td class="text-center fw-bold text-spa-primary">
+              <i class="fa-regular fa-clock me-1 text-muted"></i>${escapeHtml(item.time)} น.
+            </td>
+            <td class="text-center">
+              <div class="d-flex flex-column align-items-center">
+                <span class="fw-bold ${usage >= total ? 'text-danger' : (usage > 0 ? 'text-spa-primary' : 'text-muted')}">
+                  ${usage} / ${total}
+                </span>
+                <div class="progress w-75 mt-1" style="height: 5px;">
+                  <div class="progress-bar ${barColor}" role="progressbar" style="width: ${pct}%;"></div>
+                </div>
+              </div>
+            </td>
+            <td class="text-center">${statusBadge}</td>
+            <td>
+              <div><small class="fw-semibold">${escapeHtml(item.createDate)}</small></div>
+              <div class="text-muted" style="font-size: 0.75rem;"><i class="fa-solid fa-user me-1"></i>${escapeHtml(item.createdBy)}</div>
+            </td>
+            <td>
+              <div><small class="fw-semibold">${escapeHtml(item.updateDate)}</small></div>
+              <div class="text-muted" style="font-size: 0.75rem;"><i class="fa-solid fa-user-pen me-1"></i>${escapeHtml(item.updatedBy)}</div>
+            </td>
+            <td class="text-center">
+              <div class="action-btn-group">
+                <button class="btn btn-table-action btn-table-edit" title="แก้ไขรอบเวลานี้" onclick="openEditTimetableSlotModal(${item.rowId})">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button class="btn btn-table-action ${item.isActive ? 'btn-outline-danger' : 'btn-outline-success'}" title="${item.isActive ? 'คลิกเพื่อปิดการใช้งาน' : 'คลิกเพื่อเปิดใช้งาน'}" onclick="toggleTimetableSlot(${item.rowId})">
+                  <i class="fa-solid ${item.isActive ? 'fa-toggle-on text-success fs-5' : 'fa-toggle-off text-muted fs-5'}"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      return `
+        <div class="p-3 day-child-container my-2">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2 border-bottom">
+            <div class="fw-bold text-spa-primary" style="font-size: 0.93rem;">
+              <i class="fa-regular fa-clock me-1 text-warning"></i> รายการรอบเวลาทั้งหมดของ <strong>วันที่ ${dayKey} (${dayOfWeekName})</strong>
+              <span class="badge bg-secondary ms-2">${dayInfo.slots.length} รอบเวลา</span>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-xs btn-outline-success" onclick="bulkToggleDay('${dayKey}', true)" title="เปิดให้บริการทุกรอบในวันนี้">
+                <i class="fa-solid fa-check-double me-1"></i>เปิดทุกรอบ
+              </button>
+              <button class="btn btn-xs btn-outline-danger" onclick="bulkToggleDay('${dayKey}', false)" title="ปิดให้บริการทุกรอบในวันนี้">
+                <i class="fa-solid fa-ban me-1"></i>ปิดทุกรอบ
+              </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0 bg-white rounded shadow-sm border">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 50px;" class="text-center">ลำดับ</th>
+                  <th style="width: 140px;" class="text-center">เวลาที่เปิดให้จอง (Period)</th>
+                  <th style="width: 140px;" class="text-center">จองแล้ว / สูงสุด</th>
+                  <th style="width: 130px;" class="text-center">สถานะ (Status)</th>
+                  <th style="width: 160px;">วันที่สร้าง / ผู้สร้าง</th>
+                  <th style="width: 160px;">อัปเดตล่าสุด / ผู้อัปเดต</th>
+                  <th style="width: 110px;" class="text-center">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${subRowsHtml}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    /**
+     * Modal เพิ่มตารางการจอง (SweetAlert2)
+     * - มี Dropdown เลือก period (ปี-เดือน) โดย active ค่า เดือน-ปี ปัจจุบัน (เช่น 2026-09)
+     * - เมื่อกดปุ่ม "สร้างตารางการจอง" ระบบตรวจสอบจำนวนวันในเดือน ดึงช่วงเวลาจาก Sheet_Name_Setting_Selection_Reservation_Time
+     * - Loop วันที่ และ Loop ช่วงเวลา บันทึกค่าลงใน Sheet_Name_Setting_Reservation_Timetable
+     */
+    function openAddTimetableModal() {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSystemAdmin = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin');
+      if (userFlag !== 8 && userFlag !== 9 && !isSystemAdmin) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์ใช้งาน',
+          text: 'คุณไม่มีสิทธิ์ในการสร้างตารางการจอง',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      // สร้างตัวเลือกเดือน/ปี โดย active เดือนปัจจุบันเป็นค่าเริ่มต้น
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth(); // 0-11
+      const defaultPeriod = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+
+      // สร้างรายการเดือน: ย้อนหลัง 1 เดือน ถึง ล่วงหน้า 11 เดือน (13 เดือน)
+      let optionsHtml = '';
+      for (let offset = -1; offset <= 11; offset++) {
+        const d = new Date(currentYear, currentMonth + offset, 1);
+        const y = d.getFullYear();
+        const m = d.getMonth();
+        const val = `${y}-${String(m + 1).padStart(2, '0')}`;
+        const mName = THAI_MONTH_NAMES[m] || '';
+        const thaiYear = y + 543;
+        const isSelected = (val === defaultPeriod) ? 'selected' : '';
+        optionsHtml += `<option value="${val}" ${isSelected}>${val} (${mName} ${thaiYear})${val === defaultPeriod ? ' - เดือนปัจจุบัน' : ''}</option>`;
+      }
+
+      Swal.fire({
+        title: '<i class="fa-solid fa-calendar-plus text-warning me-2"></i>เพิ่มตารางการจอง',
+        html: `
+          <div class="text-start mb-3 p-3 bg-light rounded" style="font-size: 0.85rem; border: 1px solid #E2E8F0;">
+            <div class="fw-bold text-spa-primary mb-1"><i class="fa-solid fa-circle-info me-1"></i>ระบบจะสร้างตารางการจองอัตโนมัติดังนี้:</div>
+            <ul class="mb-0 ps-3 text-muted">
+              <li>ตรวจสอบจำนวนวันในเดือนที่เลือก (เช่น เดือน 30 วัน จะสร้างวันที่ 01 ถึง 30)</li>
+              <li>ดึงช่วงเวลาที่เปิดใช้งานจากชีต <strong>${escapeHtml(Sheet_Name_Setting_Selection_Reservation_Time)}</strong></li>
+              <li>วน Loop วันที่และช่วงเวลา บันทึกโควต้าเริ่มต้น <strong>5</strong> ท่านต่อรอบ และเปิดใช้งาน (Active)</li>
+            </ul>
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">เลือกช่วงเดือนและปี (Period Month)<span class="req">*</span></label>
+            <select id="swal-timetable-period" class="swal-input-custom text-center fw-bold" style="font-size: 1.05rem; cursor: pointer;">
+              ${optionsHtml}
+            </select>
+            <small class="text-muted" style="font-size:0.75rem;">* ค่าเริ่มต้นจะเลือกเดือนและปีปัจจุบันให้อัตโนมัติ (เช่น 2026-09)</small>
+          </div>
+          <div class="swal-form-group mt-3">
+            <label class="swal-form-label">จำนวนโควต้าสูงสุดเริ่มต้นต่อรอบ (Quota Total)</label>
+            <input id="swal-timetable-quota-total" type="number" min="1" max="50" class="swal-input-custom text-center fw-bold" value="5">
+            <small class="text-muted" style="font-size:0.75rem;">* ค่าเริ่มต้นคือ 5 ท่านต่อรอบเวลา (สามารถปรับเปลี่ยนภายหลังได้)</small>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-calendar-check me-1"></i> สร้างตารางการจอง',
+        cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+        reverseButtons: true,
+        confirmButtonColor: '#1B3B36',
+        cancelButtonColor: '#718096',
+        focusConfirm: false,
+        preConfirm: () => {
+          const period = $('#swal-timetable-period').val();
+          const quota = parseInt($('#swal-timetable-quota-total').val(), 10) || 5;
+
+          if (!period) {
+            Swal.showValidationMessage('กรุณาเลือกช่วงเดือนและปี');
+            return false;
+          }
+          if (quota < 1) {
+            Swal.showValidationMessage('โควต้าสูงสุดต้องมีอย่างน้อย 1 รายการ');
+            return false;
+          }
+
+          return { period: period, quotaTotal: quota };
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value) {
+          submitGenerateTimetable(result.value.period, false, result.value.quotaTotal);
+        }
+      });
+    }
+
+    /**
+     * ส่งคำสั่งสร้างตารางการจองไปยัง Server
+     */
+    function submitGenerateTimetable(periodMonth, overwrite, quotaTotal) {
+      const operator = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+      const payload = {
+        periodMonth: periodMonth,
+        overwrite: overwrite === true,
+        quotaTotal: quotaTotal || 5,
+        operatorUsername: operator
+      };
+
+      Swal.fire({
+        title: 'กำลังสร้างตารางการจอง...',
+        html: `ระบบกำลังคำนวณวันและสร้างรอบเวลาประจำเดือน <strong>${periodMonth}</strong><br><small class="text-muted">กรุณารอสักครู่...</small>`,
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'สร้างตารางการจองสำเร็จ',
+                html: `สร้างตารางการจองเดือน <strong>${periodMonth}</strong> เรียบร้อยแล้ว<br><span class="badge bg-success fs-6 mt-2">${res.totalCreated || res.count || ''} รอบเวลา</span>`,
+                confirmButtonColor: '#1B3B36'
+              }).then(() => {
+                currentTimetablePeriodMonth = periodMonth;
+                loadTimetableData(false, periodMonth);
+              });
+            } else if (res && res.alreadyExists) {
+              // แจ้งเตือนเมื่อเดือนนี้มีข้อมูลอยู่แล้ว พร้อมตัวเลือกสร้างทับ
+              Swal.fire({
+                icon: 'question',
+                title: 'มีข้อมูลเดือนนี้อยู่แล้ว',
+                html: `พบข้อมูลตารางการจองของเดือน <strong>${periodMonth}</strong> อยู่แล้วในระบบ (${res.existingCount || ''} รอบเวลา)<br><br>คุณต้องการ <strong>สร้างใหม่ทับของเดิม</strong> หรือไม่?<br><small class="text-muted">* หากสร้างทับ ยอดที่ลูกค้าจองไว้แล้วจะถูกเก็บรักษาไว้</small>`,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fa-solid fa-arrows-rotate me-1"></i> ยืนยันสร้างทับ',
+                cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+                reverseButtons: true,
+                confirmButtonColor: '#d97706',
+                cancelButtonColor: '#718096'
+              }).then((confirmRes) => {
+                if (confirmRes.isConfirmed) {
+                  submitGenerateTimetable(periodMonth, true, quotaTotal);
+                }
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถสร้างตารางได้',
+                text: res ? res.message : 'เกิดข้อผิดพลาดในการสร้างตารางการจอง',
+                confirmButtonColor: '#1B3B36'
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: err.message || err,
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .generateReservationTimetable(payload);
+      } else {
+        // Mock Browser Preview
+        if (!window.mockTimetableSlots) window.mockTimetableSlots = [];
+        const parts = periodMonth.split('-');
+        const yr = parseInt(parts[0], 10);
+        const mo = parseInt(parts[1], 10);
+        const days = new Date(yr, mo, 0).getDate();
+        const times = ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
+
+        if (overwrite) {
+          window.mockTimetableSlots = window.mockTimetableSlots.filter(x => x.periodMonth !== periodMonth);
+        }
+
+        const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16);
+        let startId = window.mockTimetableSlots.length + 2;
+        let count = 0;
+        for (let d = 1; d <= days; d++) {
+          const dStr = String(d).padStart(2, '0');
+          for (let t of times) {
+            window.mockTimetableSlots.push({
+              rowId: startId++,
+              periodMonth: periodMonth,
+              dayMonth: dStr,
+              time: t,
+              usageQuota: 0,
+              quotaTotal: quotaTotal || 5,
+              isActive: true,
+              createDate: nowStr,
+              createdBy: operator,
+              updateDate: nowStr,
+              updatedBy: operator
+            });
+            count++;
+          }
+        }
+
+        Swal.fire({
+          icon: 'success',
+          title: 'สร้างตารางการจองสำเร็จ (โหมดจำลอง)',
+          text: `สร้างตารางการจองเดือน ${periodMonth} จำนวน ${count} รอบเวลาเรียบร้อยแล้ว`,
+          confirmButtonColor: '#1B3B36'
+        }).then(() => {
+          currentTimetablePeriodMonth = periodMonth;
+          loadTimetableData(false, periodMonth);
+        });
+      }
+    }
+
+    /**
+     * Modal แก้ไขรอบเวลาในตารางการจอง
+     */
+    function openEditTimetableSlotModal(rowId) {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSystemAdmin = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin');
+      if (userFlag !== 8 && userFlag !== 9 && !isSystemAdmin) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์แก้ไข',
+          text: 'คุณไม่มีสิทธิ์ในการแก้ไขรอบเวลาการจอง',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      const item = currentTimetableData.find(x => x.rowId === rowId);
+      if (!item) {
+        Swal.fire({
+          icon: 'error',
+          title: 'ไม่พบข้อมูล',
+          text: 'ไม่พบรายการรอบเวลาที่ต้องการแก้ไข',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      const activeState = (item.isActive !== false && String(item.isActive).toLowerCase() !== 'false');
+
+      Swal.fire({
+        title: '<i class="fa-solid fa-pen-to-square text-warning me-2"></i>แก้ไขรอบเวลา',
+        html: `
+          <div class="mb-3 p-3 bg-light rounded text-start" style="font-size:0.88rem; border:1px solid #E2E8F0;">
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-muted">เดือน/ปี:</span>
+              <span class="fw-bold">${escapeHtml(item.periodMonth)}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-muted">วันที่:</span>
+              <span class="fw-bold">วันที่ ${escapeHtml(item.dayMonth)}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-muted">เวลา:</span>
+              <span class="fw-bold text-spa-primary">${escapeHtml(item.time)} น.</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">ยอดที่จองแล้ว (Usage):</span>
+              <span class="fw-bold text-danger">${item.usageQuota} ท่าน</span>
+            </div>
+          </div>
+          <div class="swal-form-group">
+            <label class="swal-form-label">โควต้าสูงสุด (Quota Total)<span class="req">*</span></label>
+            <input id="swal-edit-timetable-quota" type="number" min="${item.usageQuota || 1}" max="50" class="swal-input-custom text-center fw-bold" value="${item.quotaTotal || 5}" required>
+            <small class="text-muted" style="font-size:0.75rem;">* ต้องไม่ต่ำกว่าจำนวนที่จองแล้ว (${item.usageQuota} ท่าน)</small>
+          </div>
+          <div class="swal-form-group mt-3">
+            <label class="swal-form-label">สถานะการใช้งาน (Status)</label>
+            <div class="form-check form-switch mt-1">
+              <input class="form-check-input" type="checkbox" id="swal-edit-timetable-active" ${activeState ? 'checked' : ''} style="cursor: pointer; width: 2.5em; height: 1.25em;">
+              <label class="form-check-label ms-2" for="swal-edit-timetable-active" id="swal-edit-timetable-active-label">${activeState ? 'เปิดใช้งาน (Active)' : 'ปิดการใช้งาน (Inactive)'}</label>
+            </div>
+            <small class="text-muted" style="font-size:0.75rem;">* สลับเปิด/ปิดการเปิดรับจองในรอบเวลานี้</small>
+          </div>
+        `,
+        didOpen: () => {
+          $('#swal-edit-timetable-active').on('change', function() {
+            $('#swal-edit-timetable-active-label').text(this.checked ? 'เปิดใช้งาน (Active)' : 'ปิดการใช้งาน (Inactive)');
+          });
+        },
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-check me-1"></i> บันทึกการแก้ไข',
+        cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+        reverseButtons: true,
+        confirmButtonColor: '#1B3B36',
+        cancelButtonColor: '#718096',
+        focusConfirm: false,
+        preConfirm: () => {
+          const quota = parseInt($('#swal-edit-timetable-quota').val(), 10);
+          const isActive = $('#swal-edit-timetable-active').is(':checked');
+
+          if (isNaN(quota) || quota < 1) {
+            Swal.showValidationMessage('กรุณาระบุโควต้าสูงสุดอย่างน้อย 1 รายการ');
+            return false;
+          }
+          if (quota < (item.usageQuota || 0)) {
+            Swal.showValidationMessage(`โควต้าสูงสุด (${quota}) ต้องไม่น้อยกว่าจำนวนที่จองแล้ว (${item.usageQuota})`);
+            return false;
+          }
+
+          return { quotaTotal: quota, isActive: isActive };
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value) {
+          submitUpdateTimetableSlot(rowId, result.value.quotaTotal, result.value.isActive);
+        }
+      });
+    }
+
+    /**
+     * ส่งคำสั่งแก้ไขรอบเวลาในตารางไปยัง Server
+     */
+    function submitUpdateTimetableSlot(rowId, quotaTotal, isActive) {
+      const operator = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+      const payload = {
+        rowId: rowId,
+        quotaTotal: quotaTotal,
+        isActive: isActive !== false,
+        operatorUsername: operator
+      };
+
+      Swal.fire({
+        title: 'กำลังบันทึกการแก้ไข...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              const targetItem = currentTimetableData.find(x => x.rowId === rowId);
+              if (targetItem) {
+                const d = String(targetItem.dayMonth || '').padStart(2, '0');
+                expandedDays.add(d);
+              }
+              Swal.fire({
+                icon: 'success',
+                title: 'แก้ไขสำเร็จ',
+                text: res.message || 'บันทึกการแก้ไขเรียบร้อยแล้ว',
+                timer: 1500,
+                showConfirmButton: false
+              }).then(() => {
+                calendarDataCache = null; // เคลียร์แคชปฏิทิน
+                loadTimetableData(false, currentTimetablePeriodMonth);
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถแก้ไขได้',
+                text: res ? res.message : 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล',
+                confirmButtonColor: '#1B3B36'
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: err.message || err,
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .updateTimetableSlot(payload);
+      } else {
+        // Mock Browser Preview
+        if (window.mockTimetableSlots) {
+          const it = window.mockTimetableSlots.find(x => x.rowId === rowId);
+          if (it) {
+            it.quotaTotal = quotaTotal;
+            it.isActive = isActive;
+            it.updateDate = new Date().toISOString().replace('T', ' ').slice(0, 16);
+            it.updatedBy = operator;
+            const d = String(it.dayMonth || '').padStart(2, '0');
+            expandedDays.add(d);
+          }
+        }
+        Swal.fire({
+          icon: 'success',
+          title: 'แก้ไขสำเร็จ (โหมดจำลอง)',
+          text: 'บันทึกการแก้ไขเรียบร้อยแล้ว',
+          timer: 1400,
+          showConfirmButton: false
+        }).then(() => {
+          loadTimetableData(false, currentTimetablePeriodMonth);
+        });
+      }
+    }
+
+    /**
+     * สลับสถานะเปิด/ปิดใช้งานอย่างรวดเร็ว (Quick Toggle is_active)
+     */
+    function toggleTimetableSlot(rowId) {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSystemAdmin = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin');
+      if (userFlag !== 8 && userFlag !== 9 && !isSystemAdmin) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์',
+          text: 'คุณไม่มีสิทธิ์ในการเปลี่ยนสถานะรอบเวลา',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      const operator = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              const item = currentTimetableData.find(x => x.rowId === rowId);
+              if (item) {
+                item.isActive = res.isActive;
+                const d = String(item.dayMonth || '').padStart(2, '0');
+                expandedDays.add(d);
+              }
+              calendarDataCache = null;
+              updateTimetableStats(currentTimetableData);
+              renderTimetableTable(currentTimetableData);
+
+              const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1300
+              });
+              Toast.fire({
+                icon: res.isActive ? 'success' : 'info',
+                title: res.message || 'เปลี่ยนสถานะเรียบร้อยแล้ว'
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถเปลี่ยนสถานะได้',
+                text: res ? res.message : 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะ',
+                confirmButtonColor: '#1B3B36'
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: err.message || err,
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .toggleTimetableSlotActive(rowId, operator);
+      } else {
+        // Mock Browser Preview
+        if (window.mockTimetableSlots) {
+          const it = window.mockTimetableSlots.find(x => x.rowId === rowId);
+          if (it) {
+            it.isActive = !it.isActive;
+          }
+        }
+        const item = currentTimetableData.find(x => x.rowId === rowId);
+        if (item) {
+          item.isActive = !item.isActive;
+          const d = String(item.dayMonth || '').padStart(2, '0');
+          expandedDays.add(d);
+        }
+        updateTimetableStats(currentTimetableData);
+        renderTimetableTable(currentTimetableData);
       }
     }
 
