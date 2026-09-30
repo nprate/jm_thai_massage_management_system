@@ -2020,6 +2020,40 @@ function getReservationTimeSlots() {
 }
 
 /**
+ * แปลงค่า period_month จากเซลล์ใน Google Sheet ให้อยู่ในรูปแบบ "YYYY-MM" เสมอ
+ */
+function normalizePeriodMonth(cellValue) {
+  if (!cellValue) return "";
+  if (cellValue instanceof Date) {
+    return Utilities.formatDate(cellValue, "Asia/Bangkok", "yyyy-MM");
+  }
+  var str = String(cellValue).trim();
+  var match = str.match(/^(\d{4})[-\/](\d{1,2})/);
+  if (match) {
+    var y = match[1];
+    var m = match[2].length === 1 ? ("0" + match[2]) : match[2];
+    return y + "-" + m;
+  }
+  return str;
+}
+
+/**
+ * แปลงค่า day_month จากเซลล์ใน Google Sheet ให้อยู่ในรูปแบบ "DD" (2 หลัก) เสมอ
+ */
+function normalizeDayMonth(cellValue) {
+  if (cellValue === null || cellValue === undefined || cellValue === "") return "";
+  if (cellValue instanceof Date) {
+    return Utilities.formatDate(cellValue, "Asia/Bangkok", "dd");
+  }
+  var str = String(cellValue).trim();
+  var num = parseInt(str, 10);
+  if (!isNaN(num)) {
+    return num < 10 ? ("0" + num) : String(num);
+  }
+  return str.length === 1 ? ("0" + str) : str;
+}
+
+/**
  * ตรวจสอบสิทธิ์การแก้ไขข้อมูลตามเงื่อนไขเดือนและวันที่:
  * - 1. เพิ่ม, แก้ไข, ลบ: เลือกได้เฉพาะ ตั้งแต่ วันที่ปัจจุบัน เป็นต้นไป แต่ไม่เกินเดือนถัดไป 1 เดือน
  * - 1.1 เลือกเดือนย้อนหลังดูข้อมูลได้: ไม่เกิน 1 เดือนนับจากเดือนปัจจุบัน (diffMonths >= -1) แต่ห้ามแก้ไข
@@ -2033,28 +2067,26 @@ function checkMonthPermission(year, month) {
 
   var diffMonths = (year - currYear) * 12 + (month - currMonth);
 
-  // ควบคุมการเปลี่ยนเดือน: ย้อนหลังได้ไม่เกิน 1 เดือน และ ล่วงหน้าได้ไม่เกิน 1 เดือน
-  var canGoPrev = diffMonths > -1;
+  // ควบคุมการเปลี่ยนเดือน: เลือกจองได้เฉพาะเดือนล่าสุด (เดือนปัจจุบัน) และเดือนถัดไป (ไม่สามารถดูข้อมูลย้อนหลังได้)
+  var canGoPrev = diffMonths > 0;
   var canGoNext = diffMonths < 1;
 
   var isPast = diffMonths < 0;
   var isCurrent = diffMonths === 0;
   var isNext = diffMonths === 1;
   var isTooFar = diffMonths > 1;
-  var isTooFarPast = diffMonths < -1;
+  var isTooFarPast = diffMonths < 0;
   var isEditable = (isCurrent || isNext);
 
   var statusText = "";
   if (isPast) {
-    statusText = "โหมดย้อนหลัง (ดูข้อมูลได้อย่างเดียว ห้ามแก้ไข)";
+    statusText = "ไม่อนุญาตให้ดูหรือจองข้อมูลย้อนหลัง (เลือกได้เฉพาะเดือนปัจจุบันและเดือนถัดไป)";
   } else if (isCurrent) {
     statusText = "เดือนปัจจุบัน (สามารถจัดการข้อมูลได้ ตั้งแต่วันที่ปัจจุบัน)";
   } else if (isNext) {
     statusText = "เดือนถัดไป (สามารถจัดการข้อมูลล่วงหน้าได้)";
-  } else if (isTooFar) {
-    statusText = "เดือนล่วงหน้าเกิน 1 เดือน (ดูข้อมูลได้อย่างเดียว)";
   } else {
-    statusText = "เดือนย้อนหลังเกิน 1 เดือน (ดูข้อมูลได้อย่างเดียว)";
+    statusText = "เดือนล่วงหน้าเกิน 1 เดือน (ไม่อนุญาตให้จอง)";
   }
 
   return {
@@ -2075,15 +2107,34 @@ function checkMonthPermission(year, month) {
 }
 
 /**
- * ดึงข้อมูลตารางนัดหมายประจำเดือน (ปี ค.ศ., เดือน 1-12)
- * พร้อมคำนวณโควต้าการจองในแต่ละช่วงเวลา (สูงสุด 5 คน ต่อช่วงเวลา)
+ * ดึงข้อมูลตารางนัดหมายประจำเดือน (ระบุ periodMonth เช่น "2026-09" หรือ ปี ค.ศ., เดือน 1-12)
+ * ดึงข้อมูลจาก Sheet_Name_Setting_Reservation_Timetable column "period_month" เพื่อจับคู่ตาม "day_month"
+ * พร้อมคำนวณโควต้าการจองในแต่ละช่วงเวลา และตรวจสอบสถานะ "ไม่พบข้อมูล"
  */
-function getCalendarData(year, month) {
+function getCalendarData(periodMonthOrYear, maybeMonth) {
   try {
     initSheetIfNeeded();
-    year = parseInt(year, 10);
-    month = parseInt(month, 10);
 
+    var year, month, targetPeriodMonth;
+    if (typeof periodMonthOrYear === "string" && periodMonthOrYear.indexOf("-") !== -1) {
+      targetPeriodMonth = normalizePeriodMonth(periodMonthOrYear);
+      var parts = targetPeriodMonth.split("-");
+      year = parseInt(parts[0], 10);
+      month = parseInt(parts[1], 10);
+    } else {
+      year = parseInt(periodMonthOrYear, 10);
+      month = parseInt(maybeMonth, 10);
+      targetPeriodMonth = year + "-" + (month < 10 ? "0" + month : month);
+    }
+
+    var now = new Date();
+    var currYear = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "yyyy"), 10);
+    var currMonth = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "M"), 10);
+    var todayStr = Utilities.formatDate(now, "Asia/Bangkok", "yyyy-MM-dd");
+    var nowHour = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "HH"), 10);
+    var nowMin = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "mm"), 10);
+    var nowTotalMinutes = nowHour * 60 + nowMin;
+    var nowStr = Utilities.formatDate(now, "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
     var permission = checkMonthPermission(year, month);
     var timeSlots = getReservationTimeSlots();
 
@@ -2116,7 +2167,7 @@ function getCalendarData(year, month) {
     // เก็บรายการจองแยกตาม วันที่ และ เวลา
     // โครงสร้าง: { "YYYY-MM-DD": { "17:30": [ bookingObj, ... ] } }
     var reservationsByDate = {};
-    var targetMonthPrefix = year + "-" + (month < 10 ? "0" + month : month);
+    var targetMonthPrefix = targetPeriodMonth;
 
     if (resData.length > 1) {
       for (var r = 1; r < resData.length; r++) {
@@ -2170,14 +2221,136 @@ function getCalendarData(year, month) {
       }
     }
 
+    // ดึงข้อมูลตารางการจองจาก Sheet_Name_Setting_Reservation_Timetable เพื่อนำมาจับคู่ (Matched) รายวัน
+    // ส่งค่า periodMonth ไปยัง column "period_month" เพื่อดึงข้อมูลตาม column "day_month"
+    var timetableByDate = {};
+    var foundTimetableRows = 0;
+    try {
+      var ttSheet = getSettingTimetableSheet();
+      var ttLastRow = ttSheet.getLastRow();
+      if (ttLastRow > 1) {
+        var ttData = ttSheet.getRange(2, 1, ttLastRow - 1, 6).getValues();
+        for (var t = 0; t < ttData.length; t++) {
+          var rMonth = normalizePeriodMonth(ttData[t][0]);
+          if (rMonth !== targetPeriodMonth) continue;
+
+          foundTimetableRows++;
+
+          var rDay = normalizeDayMonth(ttData[t][1]);
+          if (!rDay) continue;
+          var fullDateStr = targetPeriodMonth + "-" + rDay;
+
+          var rTime = formatTimeSlot(ttData[t][2]);
+          var rUsage = (ttData[t][3] !== "" && ttData[t][3] !== null && !isNaN(ttData[t][3])) ? parseInt(ttData[t][3], 10) : 0;
+          var rQuota = (ttData[t][4] !== "" && ttData[t][4] !== null && !isNaN(ttData[t][4])) ? parseInt(ttData[t][4], 10) : 5;
+          var rActive = (ttData[t][5] === false || String(ttData[t][5]).toLowerCase() === "false") ? false : true;
+
+          // เงื่อนไขข้อ 3 & 3.1: เมื่อถึงวันที่ปัจจุบัน แล้วเปรียบเทียบช่วงเวลานั้นๆ กับช่วงเวลาปัจจุบัน
+          // หากเวลาปัจจุบันน้อยกว่า ช่วงเวลาที่กำหนด 15 นาที (ต้องจองก่อนถึงช่วงเวลาที่กำหนด 15 นาที)
+          // ให้ทำการปิดช่วงเวลานั้นๆ โดยกลับไป update ข้อมูลใน Sheet_Name_Setting_Reservation_Timetable column is_active = false
+          if (fullDateStr === todayStr && rActive) {
+            var sParts = rTime.split(":");
+            var slotTotalMinutes = parseInt(sParts[0], 10) * 60 + parseInt(sParts[1], 10);
+            if (nowTotalMinutes >= slotTotalMinutes - 15) {
+              rActive = false;
+              try {
+                var rowIdx = t + 2;
+                ttSheet.getRange(rowIdx, 6).setValue(false);
+                ttSheet.getRange(rowIdx, 9).setValue(nowStr);
+                ttSheet.getRange(rowIdx, 10).setValue("system");
+              } catch (autoCloseErr) {
+                Logger.log("Error auto-closing timetable slot: " + autoCloseErr.message);
+              }
+            }
+          }
+
+          // เงื่อนไขข้อ 2: ดึงข้อมูล usage_quota และ quota_total มาเพื่อตรวจสอบว่า “จองเต็ม” แล้วหรือยัง
+          var isFull = (rUsage >= rQuota);
+
+          if (!timetableByDate[fullDateStr]) {
+            timetableByDate[fullDateStr] = {
+              dateStr: fullDateStr,
+              dayMonth: rDay,
+              slots: [],
+              slotMap: {},
+              totalSlots: 0,
+              activeCount: 0,
+              inactiveCount: 0,
+              availableCount: 0,
+              fullCount: 0,
+              allInactive: false,
+              isAllFull: false,
+              isAvailable: true
+            };
+          }
+
+          timetableByDate[fullDateStr].slots.push({
+            time: rTime,
+            usageQuota: rUsage,
+            quotaTotal: rQuota,
+            isActive: rActive,
+            isFull: isFull
+          });
+          timetableByDate[fullDateStr].slotMap[rTime] = {
+            usageQuota: rUsage,
+            quotaTotal: rQuota,
+            isActive: rActive,
+            isFull: isFull
+          };
+          timetableByDate[fullDateStr].totalSlots++;
+          if (rActive) {
+            timetableByDate[fullDateStr].activeCount++;
+            if (isFull) {
+              timetableByDate[fullDateStr].fullCount++;
+            } else {
+              timetableByDate[fullDateStr].availableCount++;
+            }
+          } else {
+            timetableByDate[fullDateStr].inactiveCount++;
+          }
+        }
+
+        // ประเมินสถานะในแต่ละวัน
+        // 1.1.1.1: ถ้าค่า is_active เป็น false ทั้งหมดทุกช่วงเวลา -> allInactive = true, isAvailable = false
+        // ถ้า active แต่เต็มทุกรอบ -> isAllFull = true, isAvailable = false
+        // ถ้ามีรอบที่เปิดใช้งานและยังไม่เต็ม -> isAvailable = true
+        for (var dKey in timetableByDate) {
+          var dayObj = timetableByDate[dKey];
+          if (dayObj.totalSlots > 0 && dayObj.activeCount === 0) {
+            dayObj.allInactive = true;
+            dayObj.isAvailable = false;
+            dayObj.isAllFull = false;
+          } else if (dayObj.activeCount > 0 && dayObj.availableCount === 0) {
+            dayObj.allInactive = false;
+            dayObj.isAvailable = false;
+            dayObj.isAllFull = true;
+          } else {
+            dayObj.allInactive = false;
+            dayObj.isAvailable = true;
+            dayObj.isAllFull = false;
+          }
+        }
+      }
+    } catch (ttErr) {
+      Logger.log("Error loading timetable for calendar: " + ttErr.message);
+    }
+
+    var availableMonths = getDistinctTimetableMonths();
+    var hasData = (foundTimetableRows > 0);
+
     return {
       success: true,
       year: year,
       month: month,
+      periodMonth: targetPeriodMonth,
+      hasData: hasData,
+      foundTimetableRows: foundTimetableRows,
       permission: permission,
       todayStr: permission.todayStr,
       timeSlots: timeSlots,
-      reservationsByDate: reservationsByDate
+      reservationsByDate: reservationsByDate,
+      timetableByDate: timetableByDate,
+      availableMonths: availableMonths
     };
   } catch (err) {
     return {
@@ -2231,8 +2404,12 @@ function addReservation(data) {
 
     var now = new Date();
     var todayStr = Utilities.formatDate(now, "Asia/Bangkok", "yyyy-MM-dd");
+    var nowHour = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "HH"), 10);
+    var nowMin = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "mm"), 10);
+    var nowTotalMinutes = nowHour * 60 + nowMin;
+    var nowStr = Utilities.formatDate(now, "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
-    // ตรวจสอบเงื่อนไขข้อ 1: เฉพาะตั้งแต่วันที่ปัจจุบันเป็นต้นไป
+    // เงื่อนไขข้อ 1: เฉพาะตั้งแต่วันที่ปัจจุบันเป็นต้นไป (ห้ามจองย้อนหลังเด็ดขาด)
     if (dateStr < todayStr) {
       return {
         success: false,
@@ -2240,29 +2417,44 @@ function addReservation(data) {
       };
     }
 
-    // ตรวจสอบเงื่อนไขข้อ 3.1 & 3.3: เกณฑ์การตรวจสอบเวลาปิดรับจองของรอบเวลานั้นๆ
-    // สมมติตัวอย่างรอบเวลา 12:00 น.:
-    // - ช่วงเวลา 10:00, 11:00 ที่น้อยกว่า 12:00 ปิดรับจอง
-    // - ตั้งแต่ 12:00 ถึง 12:19 น. เปิดให้จองได้
-    // - 12:20 น. เป็นต้นไป ปิดรับจอง ของรอบเวลา 12:00 น.
-    // (สูตร: nowTotalMinutes >= slotTotalMinutes + 20)
+    // เงื่อนไขข้อ 3 & 3.1: เมื่อถึงวันที่ปัจจุบัน แล้วเปรียบเทียบช่วงเวลานั้นๆ กับช่วงเวลาปัจจุบัน
+    // หากเวลาปัจจุบันน้อยกว่า ช่วงเวลาที่กำหนด 15 นาที (ต้องจองก่อนถึงช่วงเวลาที่กำหนด 15 นาที -> nowTotalMinutes >= slotTotalMinutes - 15)
+    // ให้ทำการปิดช่วงเวลานั้นๆ โดยกลับไป update ข้อมูลใน Sheet_Name_Setting_Reservation_Timetable column is_active = false
+    var slotParts = timeSlot.split(":");
+    var slotTotalMinutes = parseInt(slotParts[0], 10) * 60 + parseInt(slotParts[1], 10);
+
     if (dateStr === todayStr) {
-      var currentHour = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "HH"), 10);
-      var currentMin = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "mm"), 10);
-      var nowTotalMinutes = currentHour * 60 + currentMin;
+      if (nowTotalMinutes >= slotTotalMinutes - 15) {
+        // อัปเดตใน Sheet_Name_Setting_Reservation_Timetable ให้ is_active = false
+        try {
+          var ttSheetAuto = getSettingTimetableSheet();
+          var ttLastRowAuto = ttSheetAuto.getLastRow();
+          if (ttLastRowAuto > 1) {
+            var ttDataAuto = ttSheetAuto.getRange(2, 1, ttLastRowAuto - 1, 6).getValues();
+            var targetPeriodMonthAuto = dateStr.slice(0, 7);
+            var targetDayMonthAuto = dateStr.slice(8, 10);
+            for (var ai = 0; ai < ttDataAuto.length; ai++) {
+              var am = normalizePeriodMonth(ttDataAuto[ai][0]);
+              var ad = normalizeDayMonth(ttDataAuto[ai][1]);
+              var at = formatTimeSlot(ttDataAuto[ai][2]);
+              if (am === targetPeriodMonthAuto && ad === targetDayMonthAuto && at === timeSlot) {
+                ttSheetAuto.getRange(ai + 2, 6).setValue(false);
+                ttSheetAuto.getRange(ai + 2, 9).setValue(nowStr);
+                ttSheetAuto.getRange(ai + 2, 10).setValue("system");
+                break;
+              }
+            }
+          }
+        } catch (eAuto) {}
 
-      var slotParts = timeSlot.split(":");
-      var slotTotalMinutes = parseInt(slotParts[0], 10) * 60 + parseInt(slotParts[1], 10);
-
-      if (nowTotalMinutes >= slotTotalMinutes + 20) {
         return {
           success: false,
-          message: "รอบเวลา " + timeSlot + " น. ปิดรับจองแล้ว (ปิดรับจองเมื่อเวลาเริ่มรอบผ่านไปเกิน 20 นาที)"
+          message: "รอบเวลา " + timeSlot + " น. ปิดรับจองแล้ว (ต้องจองล่วงหน้าก่อนถึงช่วงเวลาอย่างน้อย 15 นาที)"
         };
       }
     }
 
-    // ตรวจสอบสิทธิ์การแก้ไขเดือน (ไม่เกินเดือนถัดไป 1 เดือน)
+    // ตรวจสอบสิทธิ์การแก้ไขเดือน (เลือกจองได้เฉพาะเดือนล่าสุดและเดือนถัดไป)
     var parts = dateStr.split("-");
     var year = parseInt(parts[0], 10);
     var month = parseInt(parts[1], 10);
@@ -2274,40 +2466,71 @@ function addReservation(data) {
       };
     }
 
-    var sheet = getReservationSheet();
-    var allData = sheet.getDataRange().getValues();
+    // ตรวจสอบสถานะการเปิดใช้งานและโควต้าจาก Sheet_Name_Setting_Reservation_Timetable
+    var ttSheet = getSettingTimetableSheet();
+    var ttLastRow = ttSheet.getLastRow();
+    var targetPeriodMonth = parts[0] + "-" + (month < 10 ? "0" + month : month);
+    var targetDayMonth = normalizeDayMonth(parts[2]);
+    var ttRowToUpdate = -1;
+    var currentUsageQuota = 0;
+    var maxQuotaFromTimetable = 5;
 
-    // ตรวจสอบโควต้าสูงสุด 5 คน ต่อช่วงเวลา
-    var currentCount = 0;
-    if (allData.length > 1) {
-      for (var i = 1; i < allData.length; i++) {
-        var rowDate = allData[i][2];
-        var rDateStr = (rowDate instanceof Date) ? Utilities.formatDate(rowDate, "Asia/Bangkok", "yyyy-MM-dd") : String(rowDate).slice(0, 10);
-        var rTime = formatTimeSlot(allData[i][3]);
-        var rStatus = String(allData[i][4] || "").trim();
+    if (ttLastRow > 1) {
+      var ttData = ttSheet.getRange(2, 1, ttLastRow - 1, 6).getValues();
+      for (var ti = 0; ti < ttData.length; ti++) {
+        var tm = normalizePeriodMonth(ttData[ti][0]);
+        var td = normalizeDayMonth(ttData[ti][1]);
+        var ttTime = formatTimeSlot(ttData[ti][2]);
 
-        if (rDateStr === dateStr && rTime === timeSlot && rStatus !== "ยกเลิก") {
-          currentCount++;
+        if (tm === targetPeriodMonth && td === targetDayMonth && ttTime === timeSlot) {
+          var tIsActive = (ttData[ti][5] === false || String(ttData[ti][5]).toLowerCase() === "false") ? false : true;
+          if (!tIsActive) {
+            return {
+              success: false,
+              message: "รอบเวลา " + timeSlot + " น. ในวันที่ " + dateStr + " ถูกปิดการใช้งาน (ไม่สามารถทำการจองได้)"
+            };
+          }
+          if (ttData[ti][3] !== "" && ttData[ti][3] !== null && !isNaN(ttData[ti][3])) {
+            currentUsageQuota = parseInt(ttData[ti][3], 10);
+          }
+          if (ttData[ti][4] !== "" && ttData[ti][4] !== null && !isNaN(ttData[ti][4])) {
+            maxQuotaFromTimetable = parseInt(ttData[ti][4], 10);
+          }
+          ttRowToUpdate = ti + 2;
+          break;
         }
       }
     }
 
-    if (currentCount >= 5) {
+    // เงื่อนไขข้อ 2: ตรวจสอบ usage_quota และ quota_total ว่า “จองเต็ม” แล้วหรือยัง
+    if (currentUsageQuota >= maxQuotaFromTimetable) {
       return {
         success: false,
-        message: "ช่วงเวลา " + timeSlot + " น. เต็มแล้ว (โควต้าครบ 5/5 ท่านแล้ว)"
+        message: "ช่วงเวลา " + timeSlot + " น. เต็มแล้ว (โควต้าครบ " + currentUsageQuota + "/" + maxQuotaFromTimetable + " ท่านแล้ว)"
       };
     }
 
+    var sheet = getReservationSheet();
     var reservationId = generateNextReservationId();
-    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
     sheet.appendRow([reservationId, customerId, dateStr, timeSlot, status, nowStr, nowStr]);
+
+    // เงื่อนไขข้อ 2: เมื่อทำการจองทุกครั้ง ให้กลับไป update ข้อมูลใน Sheet_Name_Setting_Reservation_Timetable column usage_quota (usage_quota += 1)
+    if (ttRowToUpdate > 1) {
+      try {
+        var newUsage = currentUsageQuota + 1;
+        ttSheet.getRange(ttRowToUpdate, 4).setValue(newUsage);
+        ttSheet.getRange(ttRowToUpdate, 9).setValue(nowStr);
+        ttSheet.getRange(ttRowToUpdate, 10).setValue(data.operatorUsername || "system");
+      } catch (e) {
+        Logger.log("Error updating usage_quota in timetable: " + e.message);
+      }
+    }
 
     return {
       success: true,
       reservationId: reservationId,
-      message: "บันทึกการจองรหัส " + reservationId + " ช่วงเวลา " + timeSlot + " น. เรียบร้อยแล้ว (โควต้า: " + (currentCount + 1) + "/5)"
+      message: "บันทึกการจองรหัส " + reservationId + " ช่วงเวลา " + timeSlot + " น. เรียบร้อยแล้ว (โควต้า: " + (currentUsageQuota + 1) + "/" + maxQuotaFromTimetable + ")"
     };
   } catch (err) {
     return { success: false, message: "เกิดข้อผิดพลาดในการบันทึกการจอง: " + err.message };
@@ -2323,10 +2546,15 @@ function deleteReservation(reservationId) {
     var cleanId = String(reservationId || "").trim();
     var data = sheet.getDataRange().getValues();
     var targetRow = -1;
+    var delDate = "";
+    var delTime = "";
 
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][0]).trim() === cleanId) {
         targetRow = i + 1;
+        var rDateVal = data[i][2];
+        delDate = (rDateVal instanceof Date) ? Utilities.formatDate(rDateVal, "Asia/Bangkok", "yyyy-MM-dd") : String(rDateVal || "").slice(0, 10);
+        delTime = formatTimeSlot(data[i][3]);
         break;
       }
     }
@@ -2336,6 +2564,34 @@ function deleteReservation(reservationId) {
     }
 
     sheet.deleteRow(targetRow);
+
+    // ปรับปรุง usage_quota ใน Sheet_Name_Setting_Reservation_Timetable ให้ลดลง 1
+    if (delDate && delTime) {
+      try {
+        var dParts = delDate.split("-");
+        var pMonth = normalizePeriodMonth(delDate.slice(0, 7));
+        var pDay = normalizeDayMonth(dParts[2]);
+        var ttSheet = getSettingTimetableSheet();
+        var ttLastRow = ttSheet.getLastRow();
+        if (ttLastRow > 1) {
+          var ttData = ttSheet.getRange(2, 1, ttLastRow - 1, 6).getValues();
+          for (var t = 0; t < ttData.length; t++) {
+            var rMonth = normalizePeriodMonth(ttData[t][0]);
+            var rDay = normalizeDayMonth(ttData[t][1]);
+            var rTime = formatTimeSlot(ttData[t][2]);
+            if (rMonth === pMonth && rDay === pDay && rTime === delTime) {
+              var currUsage = parseInt(ttData[t][3], 10) || 0;
+              var newUsage = Math.max(0, currUsage - 1);
+              ttSheet.getRange(t + 2, 4).setValue(newUsage);
+              ttSheet.getRange(t + 2, 9).setValue(Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss"));
+              ttSheet.getRange(t + 2, 10).setValue("system");
+              break;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
     return { success: true, message: "ลบข้อมูลการจองรหัส " + cleanId + " เรียบร้อยแล้ว" };
   } catch (err) {
     return { success: false, message: "เกิดข้อผิดพลาดในการลบการจอง: " + err.message };
@@ -2792,7 +3048,7 @@ function getDistinctTimetableMonths() {
       var vals = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
       var seen = {};
       for (var i = 0; i < vals.length; i++) {
-        var m = String(vals[i][0] || "").trim();
+        var m = normalizePeriodMonth(vals[i][0]);
         if (m && !seen[m]) {
           seen[m] = true;
           months.push(m);
@@ -2841,11 +3097,10 @@ function getReservationTimetable(periodMonth, requesterUsername) {
       var data = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
       for (var r = 0; r < data.length; r++) {
         var row = data[r];
-        var rowMonth = String(row[0] || "").trim();
+        var rowMonth = normalizePeriodMonth(row[0]);
         if (rowMonth !== targetMonth) continue;
 
-        var rawDay = String(row[1] || "").trim();
-        var dayMonth = rawDay.length === 1 ? ("0" + rawDay) : rawDay;
+        var dayMonth = normalizeDayMonth(row[1]);
         var time = formatTimeSlot(row[2]);
         var usageQuota = (row[3] !== "" && row[3] !== null && !isNaN(row[3])) ? parseInt(row[3], 10) : 0;
         var quotaTotal = (row[4] !== "" && row[4] !== null && !isNaN(row[4])) ? parseInt(row[4], 10) : 5;

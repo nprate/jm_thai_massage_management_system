@@ -798,6 +798,43 @@
       border: 1px solid rgba(197, 160, 89, 0.4);
     }
 
+    /* สไตล์สำหรับช่องวันที่ที่ปิดใช้งานทุกรอบเวลา (1.1.1.1: Background สีเทา) */
+    .calendar-day-cell.day-all-inactive {
+      background-color: #E2E8F0 !important;
+      border: 1px solid #CBD5E1 !important;
+      cursor: pointer;
+    }
+
+    .calendar-day-cell.day-all-inactive:hover {
+      background-color: #CBD5E1 !important;
+      box-shadow: none !important;
+    }
+
+    .calendar-day-cell.day-all-inactive .day-number {
+      color: #64748B !important;
+      background: transparent !important;
+    }
+
+    /* สไตล์สำหรับช่องวันที่ในอดีต (disabled ไม่ให้จอง ไม่แสดงเครื่องหมาย disabled และใช้พื้นหลัง #4a4b4d ทั้งตอน cursor point และตอน hover) */
+    .calendar-day-cell.day-disabled-past {
+      background-color: #4a4b4d !important;
+      border: 1px solid #3d3e40 !important;
+      cursor: not-allowed !important;
+      user-select: none;
+    }
+
+    .calendar-day-cell.day-disabled-past:hover {
+      background-color: #4a4b4d !important;
+      border-color: #3d3e40 !important;
+      box-shadow: none !important;
+      z-index: 1 !important;
+    }
+
+    .calendar-day-cell.day-disabled-past .day-number {
+      color: #E2E8F0 !important;
+      background: transparent !important;
+    }
+
     .day-header {
       display: flex;
       justify-content: space-between;
@@ -972,17 +1009,78 @@
     }
 
     .calendar-month-selector {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .calendar-month-title {
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       font-weight: 700;
       color: var(--spa-primary);
-      min-width: 170px;
+      min-width: 200px;
       text-align: center;
+      letter-spacing: -0.01em;
+    }
+
+    .calendar-month-title-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .calendar-month-select {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--spa-primary);
+      min-width: 220px;
+      text-align: center;
+      background-color: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 4px 12px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      letter-spacing: -0.01em;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+
+    .calendar-month-select:hover,
+    .calendar-month-select:focus {
+      border-color: #CBD5E1;
+      background-color: #F8FAFC;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(27, 59, 54, 0.08);
+    }
+
+    .calendar-no-data-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 20px;
+      background: #FFFFFF;
+      border-radius: 14px;
+      border: 1px dashed #CBD5E1;
+      margin: 10px 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      transition: all 0.3s ease;
+    }
+
+    .no-data-icon-box {
+      width: 72px;
+      height: 72px;
+      background: #F8FAFC;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      border: 1px solid #E2E8F0;
     }
 
     .calendar-permission-badge {
@@ -1045,6 +1143,55 @@
       align-items: center;
       justify-content: center;
       min-height: 48px;
+      width: 100%;
+    }
+
+    /* สไตล์สำหรับข้อความ “จองได้” ประจำวัน (1.1.1.2) */
+    .badge-booking-available {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #0284C7;
+      background-color: #F0F9FF;
+      border: 1px solid #BAE6FD;
+      border-radius: 7px;
+      text-align: center;
+      width: 100%;
+      box-shadow: 0 1px 2px rgba(2, 132, 199, 0.08);
+      transition: all 0.15s ease;
+    }
+
+    .calendar-day-cell:hover .badge-booking-available {
+      background-color: #0284C7;
+      color: #FFFFFF;
+      border-color: #0284C7;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+    }
+
+    .badge-day-closed {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #64748B;
+      background-color: #EDF2F7;
+      border: 1px solid #CBD5E1;
+      border-radius: 7px;
+      text-align: center;
+      width: 100%;
+    }
+
+    .available-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 100%;
     }
 
@@ -1477,8 +1624,11 @@
                 <button id="btn-calendar-prev" class="btn btn-sm btn-outline-secondary" onclick="changeMonth(-1)" title="เดือนก่อนหน้า">
                   <i class="fa-solid fa-chevron-left me-1"></i> ก่อนหน้า
                 </button>
-                <div class="calendar-month-title" id="calendar-month-title">
-                  -
+                <div class="calendar-month-title-wrapper position-relative" title="คลิกเพื่อเลือกเดือน/ปี">
+                  <select id="calendar-month-select" class="calendar-month-select" onchange="onCalendarMonthSelectChange(this.value)">
+                    <option value="">กำลังโหลด...</option>
+                  </select>
+                  <span id="calendar-month-title" class="d-none">-</span>
                 </div>
                 <button id="btn-calendar-next" class="btn btn-sm btn-outline-secondary" onclick="changeMonth(1)" title="เดือนถัดไป">
                   ถัดไป <i class="fa-solid fa-chevron-right ms-1"></i>
@@ -1499,10 +1649,13 @@
                   <span class="slot-quota-badge q-available" style="font-size:0.68rem; padding: 2px 6px;">จองได้</span> จองได้
                 </span>
                 <span class="legend-item">
-                  <span class="slot-quota-badge q-full" style="font-size:0.68rem; padding: 2px 6px;"><i class="fa-solid fa-users me-1"></i>เต็ม</span> เต็มโควต้า (5/5)
+                  <span class="slot-quota-badge q-full" style="font-size:0.68rem; padding: 2px 6px;"><i class="fa-solid fa-users me-1"></i>เต็ม</span> เต็มโควต้า
                 </span>
                 <span class="legend-item">
-                  <span class="slot-quota-badge q-closed" style="font-size:0.68rem; padding: 2px 6px;"><i class="fa-regular fa-clock me-1 text-danger"></i>ปิดรับจอง</span> ปิดรับจอง (&ge; 20 นาที)
+                  <span class="slot-quota-badge q-closed" style="font-size:0.68rem; padding: 2px 6px;"><i class="fa-regular fa-clock me-1 text-danger"></i>ปิดรับจอง</span> ปิดรับจอง (ก่อนเริ่ม 15 นาที)
+                </span>
+                <span class="legend-item">
+                  <span class="badge" style="background-color: #4a4b4d; color: #FFFFFF; border: 1px solid #3d3e40; font-size:0.68rem; padding: 3px 7px;">ไม่ให้จอง</span> วันในอดีต (สีเทา #4a4b4d)
                 </span>
               </div>
               <div class="text-muted" style="font-size: 0.78rem;">
@@ -4045,8 +4198,74 @@
     }
 
     /**
+     * อัปเดตตัวเลือกเดือน/ปีใน Dropdown และ Title ของปฏิทิน (การเลือกเดือนปีตามภาพ)
+     */
+    function updateCalendarMonthDropdown(year, month, availableMonths) {
+      const $select = $('#calendar-month-select');
+      const now = new Date();
+      const currY = now.getFullYear();
+      const currM = now.getMonth() + 1;
+      const mStr = month < 10 ? '0' + month : String(month);
+      const currentPeriodMonth = `${year}-${mStr}`;
+
+      const currMStr = currM < 10 ? '0' + currM : String(currM);
+      const nextMonthObj = new Date(currY, currM, 1);
+      const nextY = nextMonthObj.getFullYear();
+      const nextM = nextMonthObj.getMonth() + 1;
+      const nextMStr = nextM < 10 ? '0' + nextM : String(nextM);
+
+      const monthSet = new Set();
+      monthSet.add(`${currY}-${currMStr}`);
+      monthSet.add(`${nextY}-${nextMStr}`);
+      monthSet.add(currentPeriodMonth);
+
+      // เพิ่มเดือนทั้ง 12 เดือนของปีที่กำลังดูอยู่ เพื่อให้เลือกเดือน/ปี ได้ครอบคลุมตามภาพ
+      for (let mIdx = 1; mIdx <= 12; mIdx++) {
+        monthSet.add(`${year}-${mIdx < 10 ? '0' + mIdx : mIdx}`);
+      }
+
+      if (availableMonths && Array.isArray(availableMonths)) {
+        availableMonths.forEach(m => {
+          if (m && typeof m === 'string') monthSet.add(m);
+        });
+      }
+
+      const sortedMonths = Array.from(monthSet).sort();
+
+      let optionsHtml = '';
+      sortedMonths.forEach(pm => {
+        const parts = pm.split('-');
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        const thaiY = y + 543;
+        const thaiName = (m >= 1 && m <= 12) ? THAI_MONTH_NAMES[m - 1] : pm;
+        const isSelected = (pm === currentPeriodMonth) ? 'selected' : '';
+        optionsHtml += `<option value="${pm}" ${isSelected}>${thaiName} ${thaiY} (${y})</option>`;
+      });
+
+      $select.html(optionsHtml);
+      $select.val(currentPeriodMonth);
+
+      const thaiYear = year + 543;
+      const monthTitle = `${THAI_MONTH_NAMES[month - 1]} ${thaiYear} (${year})`;
+      $('#calendar-month-title').text(monthTitle);
+    }
+
+    /**
+     * เมื่อผู้ใช้เลือกเดือนจาก Dropdown โดยตรง
+     * ส่งค่า periodMonth (เช่น "2026-09") ไปยัง loadCalendarData
+     */
+    function onCalendarMonthSelectChange(periodMonth) {
+      if (!periodMonth) return;
+      const parts = periodMonth.split('-');
+      currentCalendarYear = parseInt(parts[0], 10);
+      currentCalendarMonth = parseInt(parts[1], 10);
+      loadCalendarData(periodMonth);
+    }
+
+    /**
      * เปลี่ยนเดือนในปฏิทิน (+1 ถัดไป, -1 ก่อนหน้า)
-     * มีการจำกัด: ย้อนหลังได้ไม่เกิน 1 เดือน (-1) และล่วงหน้าได้ไม่เกิน 1 เดือน (+1)
+     * มีการจำกัด: เลือกจองได้เฉพาะเดือนล่าสุด (เดือนปัจจุบัน) และเดือนถัดไป (ไม่สามารถดูข้อมูลย้อนหลังได้)
      */
     function changeMonth(offset) {
       let targetMonth = currentCalendarMonth + offset;
@@ -4065,11 +4284,12 @@
       const currM = now.getMonth() + 1;
       const diffMonths = (targetYear - currY) * 12 + (targetMonth - currM);
 
-      if (diffMonths < -1) {
+      // เงื่อนไขข้อ 1: ไม่สามารถดูข้อมูลย้อนหลังได้
+      if (diffMonths < 0) {
         Swal.fire({
           icon: 'info',
-          title: 'จำกัดการดูข้อมูลย้อนหลัง',
-          text: 'สามารถเลือกดูข้อมูลย้อนหลังได้ไม่เกิน 1 เดือนนับจากเดือนปัจจุบัน',
+          title: 'ไม่สามารถดูข้อมูลย้อนหลังได้',
+          text: 'ระบบอนุญาตให้เลือกจองได้เฉพาะเดือนปัจจุบันและเดือนถัดไปเท่านั้น (ไม่สามารถดูข้อมูลย้อนหลังได้)',
           confirmButtonColor: '#1B3B36'
         });
         return;
@@ -4079,7 +4299,7 @@
         Swal.fire({
           icon: 'info',
           title: 'จำกัดการดูข้อมูลล่วงหน้า',
-          text: 'สามารถดูข้อมูลล่วงหน้าได้ไม่เกิน 1 เดือนนับจากเดือนปัจจุบัน',
+          text: 'สามารถเลือกจองล่วงหน้าได้ไม่เกิน 1 เดือนนับจากเดือนปัจจุบัน',
           confirmButtonColor: '#1B3B36'
         });
         return;
@@ -4087,7 +4307,9 @@
 
       currentCalendarYear = targetYear;
       currentCalendarMonth = targetMonth;
-      loadCalendarData(currentCalendarYear, currentCalendarMonth);
+      const mStr = currentCalendarMonth < 10 ? '0' + currentCalendarMonth : String(currentCalendarMonth);
+      const periodMonth = `${currentCalendarYear}-${mStr}`;
+      loadCalendarData(periodMonth);
     }
 
     /**
@@ -4097,16 +4319,33 @@
       const now = new Date();
       currentCalendarYear = now.getFullYear();
       currentCalendarMonth = now.getMonth() + 1;
-      loadCalendarData(currentCalendarYear, currentCalendarMonth);
+      const mStr = currentCalendarMonth < 10 ? '0' + currentCalendarMonth : String(currentCalendarMonth);
+      const periodMonth = `${currentCalendarYear}-${mStr}`;
+      loadCalendarData(periodMonth);
     }
 
     /**
      * โหลดข้อมูลตารางนัดหมายจาก Google Apps Script
+     * ส่งค่า periodMonth (เช่น "2026-09") ไปยัง Sheet_Name_Setting_Reservation_Timetable column "period_month"
      */
-    function loadCalendarData(year, month, isManualRefresh) {
-      const thaiYear = year + 543;
-      const monthTitle = `${THAI_MONTH_NAMES[month - 1]} ${thaiYear} (${year})`;
-      $('#calendar-month-title').text(monthTitle);
+    function loadCalendarData(yearOrPeriodMonth, month, isManualRefresh) {
+      let year, monthNum, periodMonth;
+      if (typeof yearOrPeriodMonth === 'string' && yearOrPeriodMonth.includes('-')) {
+        periodMonth = yearOrPeriodMonth.trim();
+        const parts = periodMonth.split('-');
+        year = parseInt(parts[0], 10);
+        monthNum = parseInt(parts[1], 10);
+      } else {
+        year = parseInt(yearOrPeriodMonth, 10);
+        monthNum = parseInt(month, 10);
+        const mStr = monthNum < 10 ? '0' + monthNum : String(monthNum);
+        periodMonth = `${year}-${mStr}`;
+      }
+
+      currentCalendarYear = year;
+      currentCalendarMonth = monthNum;
+
+      updateCalendarMonthDropdown(year, monthNum);
 
       const $refreshIcon = $('#btn-refresh-reservation i');
       if (isManualRefresh) {
@@ -4114,13 +4353,13 @@
       }
 
       // หากมีแคชของเดือน/ปีตรงกันอยู่แล้ว และไม่ได้กดรีเฟรชเอง ให้แสดงผลทันทีเพื่อให้การสลับเมนูลื่นไหล
-      if (calendarDataCache && calendarDataCache.year === year && calendarDataCache.month === month && !isManualRefresh) {
+      if (calendarDataCache && calendarDataCache.periodMonth === periodMonth && !isManualRefresh) {
         renderCalendar(calendarDataCache);
       } else {
         $('#calendar-grid').html(`
           <div class="p-5 text-center text-muted w-100" style="grid-column: 1 / -1;">
             <i class="fa-solid fa-circle-notch fa-spin fa-2x mb-2 text-warning"></i>
-            <div>กำลังโหลดข้อมูลตารางนัดหมาย...</div>
+            <div>กำลังโหลดข้อมูลตารางนัดหมาย (${periodMonth})...</div>
           </div>
         `);
       }
@@ -4131,6 +4370,9 @@
             $refreshIcon.removeClass('fa-spin');
             if (response && response.success) {
               calendarDataCache = response;
+              if (response.availableMonths) {
+                updateCalendarMonthDropdown(response.year, response.month, response.availableMonths);
+              }
               renderCalendar(response);
             } else {
               Swal.fire({
@@ -4150,7 +4392,7 @@
               confirmButtonColor: '#1B3B36'
             });
           })
-          .getCalendarData(year, month);
+          .getCalendarData(periodMonth);
       } else {
         // Mock fallback สำหรับทดสอบในเบราว์เซอร์
         setTimeout(() => {
@@ -4159,24 +4401,28 @@
           const currY = now.getFullYear();
           const currM = now.getMonth() + 1;
           const todayD = now.getDate();
-          const diffMonths = (year - currY) * 12 + (month - currM);
+          const diffMonths = (year - currY) * 12 + (monthNum - currM);
           const isPast = diffMonths < 0;
           const isCurrent = diffMonths === 0;
           const isNext = diffMonths === 1;
           const isTooFar = diffMonths > 1;
           const isEditable = (isCurrent || isNext);
+          const nowHour = now.getHours();
+          const nowMin = now.getMinutes();
+          const nowTotalMinutes = nowHour * 60 + nowMin;
+
           let statusText = "";
           if (isPast) {
-            statusText = "โหมดย้อนหลัง (ดูข้อมูลได้อย่างเดียว ห้ามแก้ไข)";
+            statusText = "ไม่อนุญาตให้ดูหรือจองข้อมูลย้อนหลัง (เลือกได้เฉพาะเดือนปัจจุบันและเดือนถัดไป)";
           } else if (isCurrent) {
             statusText = "เดือนปัจจุบัน (สามารถจัดการข้อมูลได้ ตั้งแต่วันที่ปัจจุบัน)";
           } else if (isNext) {
             statusText = "เดือนถัดไป (สามารถจัดการข้อมูลล่วงหน้าได้)";
           } else {
-            statusText = "เดือนล่วงหน้าเกิน 1 เดือน (ดูข้อมูลได้อย่างเดียว)";
+            statusText = "เดือนล่วงหน้าเกิน 1 เดือน (ไม่อนุญาตให้จอง)";
           }
 
-          const mStr = month < 10 ? "0" + month : month;
+          const mStrMock = monthNum < 10 ? "0" + monthNum : monthNum;
           const todayMStr = currM < 10 ? "0" + currM : currM;
           const todayDStr = todayD < 10 ? "0" + todayD : todayD;
           const todayStr = `${currY}-${todayMStr}-${todayDStr}`;
@@ -4208,10 +4454,90 @@
             ]
           };
 
+          // จำลองข้อมูล Sheet_Name_Setting_Reservation_Timetable สำหรับ fallback
+          // ให้เดือน 2026-09, 2026-10 หรือเดือนปัจจุบัน/ถัดไป มีข้อมูล (เดือนอื่นจำลองเป็น "ไม่พบข้อมูล" เพื่อทดสอบ)
+          const hasMockData = (diffMonths === 0 || diffMonths === 1 || periodMonth === '2026-09' || periodMonth === '2026-10');
+          const mockTimetable = {};
+
+          if (hasMockData) {
+            const daysInMonthMock = new Date(year, monthNum, 0).getDate();
+            const slotsListMock = defaultTimeSlots.map(s => formatTimeSlot(s));
+
+            for (let md = 1; md <= daysInMonthMock; md++) {
+            const dStrMock = md < 10 ? "0" + md : String(md);
+            const fullDateMock = `${year}-${mStrMock}-${dStrMock}`;
+            const isDay5 = (md === 5); // จำลองวันที่ 5 ปิดให้บริการทั้งหมด เพื่อทดสอบเงื่อนไข 1.1.1.1
+            const isDay10 = (md === 10); // จำลองวันที่ 10 ปิดบางช่วงเวลา เพื่อทดสอบเงื่อนไข 1.1.1.2
+
+            const tSlots = [];
+            const tSlotMap = {};
+            let activeCnt = 0;
+            let inactiveCnt = 0;
+            let availCnt = 0;
+            let fullCnt = 0;
+
+            slotsListMock.forEach((sl, sIdx) => {
+              let slotActive = true;
+              if (isDay5) {
+                slotActive = false;
+              } else if (isDay10 && sIdx === 0) {
+                slotActive = false;
+              }
+
+              // เงื่อนไขข้อ 3.1: ถ้าเป็นวันนี้ และเวลาน้อยกว่า 15 นาที ให้ปิดช่วงเวลา
+              if (fullDateMock === todayStr) {
+                const sParts = sl.split(':');
+                const slotTotalMin = parseInt(sParts[0], 10) * 60 + parseInt(sParts[1], 10);
+                if (nowTotalMinutes >= slotTotalMin - 15) {
+                  slotActive = false;
+                }
+              }
+
+              let usageQ = 0;
+              if (mockReservations[fullDateMock] && mockReservations[fullDateMock][sl]) {
+                usageQ = mockReservations[fullDateMock][sl].length;
+              }
+              const isFull = (usageQ >= 5);
+
+              if (slotActive) {
+                activeCnt++;
+                if (isFull) fullCnt++;
+                else availCnt++;
+              } else {
+                inactiveCnt++;
+              }
+
+              const slotObj = { time: sl, usageQuota: usageQ, quotaTotal: 5, isActive: slotActive, isFull: isFull };
+              tSlots.push(slotObj);
+              tSlotMap[sl] = slotObj;
+            });
+
+            const allInact = (slotsListMock.length > 0 && activeCnt === 0);
+            const allF = (activeCnt > 0 && availCnt === 0);
+
+            mockTimetable[fullDateMock] = {
+              dateStr: fullDateMock,
+              dayMonth: dStrMock,
+              slots: tSlots,
+              slotMap: tSlotMap,
+              totalSlots: slotsListMock.length,
+              activeCount: activeCnt,
+              inactiveCount: inactiveCnt,
+              availableCount: availCnt,
+              fullCount: fullCnt,
+              allInactive: allInact,
+              isAllFull: allF,
+              isAvailable: !allInact && !allF
+            };
+          }
+        }
+
           const mockData = {
             success: true,
             year: year,
-            month: month,
+            month: monthNum,
+            periodMonth: periodMonth,
+            hasData: hasMockData,
             permission: {
               isPast: isPast,
               isCurrent: isCurrent,
@@ -4219,7 +4545,7 @@
               isEditable: isEditable,
               isTooFar: isTooFar,
               diffMonths: diffMonths,
-              canGoPrev: diffMonths > -1,
+              canGoPrev: diffMonths > 0,
               canGoNext: diffMonths < 1,
               todayStr: todayStr,
               statusText: statusText,
@@ -4228,7 +4554,9 @@
             },
             todayStr: todayStr,
             timeSlots: defaultTimeSlots.map(s => formatTimeSlot(s)),
-            reservationsByDate: mockReservations
+            reservationsByDate: mockReservations,
+            timetableByDate: mockTimetable,
+            availableMonths: [`${currY}-${todayMStr}`, `${currY}-${currM + 1 < 10 ? '0' + (currM + 1) : (currM + 1)}`]
           };
           calendarDataCache = mockData;
           renderCalendar(mockData);
@@ -4253,14 +4581,15 @@
         $badge.addClass('toofar').html(`<i class="fa-solid fa-calendar-xmark me-1"></i> ${escapeHtml(perm.statusText)}`);
       }
 
-      // ควบคุมสถานะปุ่มก่อนหน้า/ถัดไป (จำกัดขอบเขต -1 เดือน ถึง +1 เดือน)
+      // ควบคุมสถานะปุ่มก่อนหน้า/ถัดไป (จำกัดขอบเขต: เดือนปัจจุบัน ถึง เดือนถัดไป 1 เดือน เท่านั้น)
       const now = new Date();
       const currY = now.getFullYear();
       const currM = now.getMonth() + 1;
       const diffMonths = (data.year - currY) * 12 + (data.month - currM);
 
-      if (diffMonths <= -1) {
-        $('#btn-calendar-prev').prop('disabled', true).addClass('disabled').attr('title', 'ย้อนหลังได้ไม่เกิน 1 เดือน');
+      // เงื่อนไขข้อ 1: ไม่สามารถดูข้อมูลย้อนหลังได้ (เมื่ออยู่ที่เดือนปัจจุบัน diffMonths <= 0 ปิดปุ่มก่อนหน้า)
+      if (diffMonths <= 0) {
+        $('#btn-calendar-prev').prop('disabled', true).addClass('disabled').attr('title', 'ไม่สามารถดูข้อมูลย้อนหลังได้');
       } else {
         $('#btn-calendar-prev').prop('disabled', false).removeClass('disabled').attr('title', 'เดือนก่อนหน้า');
       }
@@ -4269,6 +4598,36 @@
         $('#btn-calendar-next').prop('disabled', true).addClass('disabled').attr('title', 'ล่วงหน้าได้ไม่เกิน 1 เดือน');
       } else {
         $('#btn-calendar-next').prop('disabled', false).removeClass('disabled').attr('title', 'เดือนถัดไป');
+      }
+
+      // ตรวจสอบข้อมูลระดับเดือน: หากไม่พบข้อมูล ให้แสดงเป็น Alert ของ SweetAlert2 แทน
+      if (data.hasData === false || !data.timetableByDate || Object.keys(data.timetableByDate).length === 0) {
+        $badge.removeClass('editable readonly toofar').addClass('readonly').html(`<i class="fa-solid fa-circle-exclamation me-1 text-danger"></i> ไม่พบข้อมูล (${escapeHtml(data.periodMonth)})`);
+
+        const thaiY = data.year + 543;
+        const thaiM = (data.month >= 1 && data.month <= 12) ? THAI_MONTH_NAMES[data.month - 1] : '';
+        const monthTitle = `${thaiM} ${thaiY} (${data.periodMonth})`;
+
+        $('#calendar-grid').html(`
+          <div class="p-5 text-center text-muted w-100" style="grid-column: 1 / -1;">
+            <i class="fa-regular fa-calendar-xmark fa-3x mb-3 text-secondary opacity-75"></i>
+            <h5 class="fw-bold text-secondary mb-1">ไม่พบข้อมูล</h5>
+            <div class="text-muted" style="font-size: 0.9rem;">ไม่พบข้อมูลตารางการจองประจำเดือน ${escapeHtml(monthTitle)} ในระบบ</div>
+          </div>
+        `);
+
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่พบข้อมูล',
+          html: `<div class="text-center py-2">
+                   <p class="mb-1" style="font-size: 1.05rem;">ไม่พบข้อมูลตารางการจองประจำเดือน</p>
+                   <strong style="color: #1B3B36; font-size: 1.15rem;">${escapeHtml(monthTitle)}</strong>
+                   <div class="text-muted mt-2" style="font-size: 0.85rem;">กรุณาตรวจสอบการตั้งค่าตารางเวลาในระบบ</div>
+                 </div>`,
+          confirmButtonText: '<i class="fa-solid fa-check me-1"></i> ตกลง',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
       }
 
       // 2. คำนวณวันในเดือน
@@ -4299,7 +4658,7 @@
         `;
       }
 
-      // 2.2 วันในเดือนปัจจุบันที่กำลังดู
+      // 2.2 วันในเดือนปัจจุบันที่กำลังดู (ดึงข้อมูล Matched กับ Sheet_Name_Setting_Reservation_Timetable)
       const rawSlots = data.timeSlots || defaultTimeSlots;
       const slots = rawSlots.map(s => formatTimeSlot(s));
 
@@ -4314,9 +4673,39 @@
         const mStr = month < 10 ? '0' + month : String(month);
         const dStr = d < 10 ? '0' + d : String(d);
         const dateStr = `${year}-${mStr}-${dStr}`;
-
-        // วันนี้หรืออดีต (เปรียบเทียบกับ todayStr)
         const isPastDate = (dateStr < todayStr);
+
+        // เงื่อนไขข้อ 1: เมื่อวันที่ในแต่ละช่อง น้อยกว่า วันที่ปัจจุบัน (dateStr < todayStr)
+        // ให้ทำการ แสดง background สีเทา (#4a4b4d ทั้งตอน cursor point และ ตอน hover) ในช่องวันที่นั้นๆ เพื่อไม่ให้จอง (disabled) (ไม่ต้องแสดง modal)
+        // และ ไม่ต้องแสดงเครื่องหมาย disabled
+        if (isPastDate) {
+          dayClass += ' day-disabled-past';
+          gridHtml += `
+            <div class="${dayClass}" title="วันที่ผ่านมาแล้ว (${dateStr}) - ไม่สามารถทำการจองได้">
+              <div class="day-header">
+                <span class="day-number">${d}</span>
+              </div>
+            </div>
+          `;
+          continue;
+        }
+
+        // ดึงข้อมูลตารางการจองประจำวันจาก Sheet_Name_Setting_Reservation_Timetable
+        const dayTimetable = (data.timetableByDate && data.timetableByDate[dateStr]) ? data.timetableByDate[dateStr] : null;
+        let isAllInactive = false;
+        let isAllFull = false;
+        let isAvailable = true;
+
+        if (dayTimetable && dayTimetable.totalSlots > 0) {
+          isAllInactive = (dayTimetable.allInactive === true);
+          isAllFull = (dayTimetable.isAllFull === true);
+          isAvailable = (dayTimetable.isAvailable === true);
+        }
+
+        // เงื่อนไขข้อ 1.1.1.1: ถ้าค่า is_active มีค่าเป็น false ทั้งหมดทุกช่วงเวลา ก็แสดงสีเทาเช่นกัน
+        if (isAllInactive) {
+          dayClass += ' day-all-inactive';
+        }
 
         const dateReservations = (data.reservationsByDate && data.reservationsByDate[dateStr]) 
           ? data.reservationsByDate[dateStr] 
@@ -4343,104 +4732,82 @@
 
         let badgesHtml = '';
 
-        if (isPastDate) {
-          // เงื่อนไขข้อ 1.1: สำหรับวันย้อนหลัง / เดือนย้อนหลัง
-          // แสดงเฉพาะช่วงเวลาที่มีการจองเท่านั้น ถ้าไม่มีการจองเลยในวันนั้นให้แสดงข้อความว่า “ไม่มีการจอง” เป็น badge สีเทา
-          if (bookedSlots.length === 0) {
-            badgesHtml = `
-              <div class="no-booking-wrapper">
-                <span class="badge-no-booking">ไม่มีการจอง</span>
-              </div>
-            `;
-          } else {
+        if (!dayTimetable || dayTimetable.totalSlots === 0) {
+          // เงื่อนไข: หากไม่พบข้อมูลในตารางประจำวัน (column day_month) ให้แสดงป้าย "ไม่พบข้อมูล"
+          badgesHtml = `
+            <div class="no-booking-wrapper">
+              <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1" style="font-size:0.75rem; border-radius:6px; font-weight:600;" title="ไม่พบข้อมูลตารางการจองในวันที่ ${d}">
+                <i class="fa-solid fa-circle-question me-1 text-secondary"></i> ไม่พบข้อมูล
+              </span>
+            </div>
+          `;
+        } else if (isAllInactive) {
+          // เงื่อนไขข้อ 1.1.1.1: ปิดให้บริการทั้งหมดทุกช่วงเวลา แสดง background สีเทา และป้ายปิดให้บริการ
+          badgesHtml = `
+            <div class="no-booking-wrapper">
+              <span class="badge-day-closed" title="ปิดให้บริการทุกรอบเวลาในวันที่ ${d}">
+                <i class="fa-solid fa-ban me-1 text-secondary"></i> ปิดให้บริการ
+              </span>
+            </div>
+          `;
+        } else if (isAllFull) {
+          // เงื่อนไขข้อ 2: ตรวจสอบโควต้าแล้วจองเต็มทุกรอบ
+          badgesHtml = `
+            <div class="available-wrapper mb-1">
+              <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size:0.72rem; border-radius:6px; font-weight:600;" title="รอบเวลาทั้งหมดในวันนี้จองเต็มแล้ว">
+                <i class="fa-solid fa-users me-1 text-danger"></i> จองเต็มทุกรอบ
+              </span>
+            </div>
+          `;
+          if (bookedSlots.length > 0) {
             bookedSlots.forEach(item => {
+              const slotTt = (dayTimetable && dayTimetable.slotMap) ? dayTimetable.slotMap[item.slot] : null;
+              const slotQuota = slotTt ? slotTt.quotaTotal : 5;
+              const slotUsage = slotTt ? slotTt.usageQuota : item.count;
+              badgesHtml += `
+                <div class="slot-badge-item full" onclick="handleSlotClick(event, '${dateStr}', '${item.slot}', 'full')" title="รอบ ${escapeHtml(item.slot)} น. (เต็มแล้ว ${slotUsage}/${slotQuota} คน)">
+                  <span class="slot-time"><i class="fa-regular fa-clock" style="font-size:0.62rem;"></i> ${escapeHtml(item.slot)}</span>
+                  <span class="slot-quota-badge q-full"><i class="fa-solid fa-users me-1"></i>เต็ม</span>
+                </div>
+              `;
+            });
+          }
+        } else {
+          // เงื่อนไขข้อ 1.1.1.2 & ข้อ 2: ถ้ามีรอบเวลาเปิดใช้งานและยังไม่เต็ม ให้แสดงข้อความว่า “จองได้”
+          badgesHtml = `
+            <div class="available-wrapper mb-1">
+              <span class="badge-booking-available" title="มีรอบเวลาเปิดให้จองได้ (คลิกเพื่อดูรอบเวลาและจองคิว)">
+                <i class="fa-solid fa-circle-check me-1 text-info"></i> จองได้
+              </span>
+            </div>
+          `;
+
+          // หากมีรายการที่จองแล้วในวันนั้น (Booked slots) ให้แสดงรายการจองด้วย
+          if (bookedSlots.length > 0) {
+            bookedSlots.forEach(item => {
+              const slotTt = (dayTimetable && dayTimetable.slotMap) ? dayTimetable.slotMap[item.slot] : null;
+              const slotQuota = slotTt ? slotTt.quotaTotal : 5;
+              const slotUsage = slotTt ? slotTt.usageQuota : item.count;
+              const isFull = (slotTt && slotTt.isFull) || (slotUsage >= slotQuota);
+
               let itemClass = 'slot-badge-item booked';
-              let quotaBadgeHtml = `<span class="slot-quota-badge q-booked">${item.count}/5</span>`;
-              if (item.count >= 5) {
+              let quotaBadgeHtml = `<span class="slot-quota-badge q-booked">${slotUsage}/${slotQuota}</span>`;
+              if (isFull) {
                 itemClass = 'slot-badge-item full';
                 quotaBadgeHtml = `<span class="slot-quota-badge q-full"><i class="fa-solid fa-users me-1"></i>เต็ม</span>`;
               }
               badgesHtml += `
-                <div class="${itemClass}" onclick="handleSlotClick(event, '${dateStr}', '${item.slot}', 'past')" title="รอบ ${escapeHtml(item.slot)} น. (ย้อนหลัง: ${item.count}/5 คน)">
+                <div class="${itemClass}" onclick="handleSlotClick(event, '${dateStr}', '${item.slot}', '${isFull ? 'full' : 'booked'}')" title="รอบ ${escapeHtml(item.slot)} น. (${isFull ? 'เต็มแล้ว' : 'จองแล้ว'} ${slotUsage}/${slotQuota} คน)">
                   <span class="slot-time"><i class="fa-regular fa-clock" style="font-size:0.62rem;"></i> ${escapeHtml(item.slot)}</span>
                   ${quotaBadgeHtml}
                 </div>
               `;
             });
           }
-        } else {
-          // วันที่ปัจจุบันขึ้นไป (วันนี้ และวันข้างหน้าในเดือนปัจจุบัน/เดือนถัดไป):
-          // แสดงทุกช่วงเวลาพร้อมโควตา เพื่อให้เห็นรอบเวลาและเลือกจองได้สะดวก
-          slots.forEach(slot => {
-            let list = [];
-            if (dateReservations[slot]) {
-              list = dateReservations[slot];
-            } else {
-              for (const k in dateReservations) {
-                if (formatTimeSlot(k) === slot) {
-                  list = dateReservations[k];
-                  break;
-                }
-              }
-            }
-            const count = list.length;
-
-            // เงื่อนไขข้อ 3.1 & 3.3: เกณฑ์การตรวจสอบเวลาปิดรับจองของรอบเวลานั้นๆ
-            // สมมติตัวอย่างรอบเวลา 12:00 น.:
-            // - ช่วงเวลา 10:00, 11:00 ที่น้อยกว่า 12:00 ปิดรับจอง
-            // - ตั้งแต่ 12:00 ถึง 12:19 น. เปิดให้จองได้
-            // - 12:20 น. เป็นต้นไป ปิดรับจอง ของรอบเวลา 12:00 น.
-            // (สูตร: nowTotalMinutes >= slotTotalMinutes + 20)
-            let isClosedByTime = false;
-            if (isToday) {
-              const currentHour = now.getHours();
-              const currentMin = now.getMinutes();
-              const nowTotalMinutes = currentHour * 60 + currentMin;
-
-              const slotParts = slot.split(':');
-              const slotTotalMinutes = parseInt(slotParts[0], 10) * 60 + parseInt(slotParts[1], 10);
-              if (nowTotalMinutes >= slotTotalMinutes + 20) {
-                isClosedByTime = true;
-              }
-            }
-
-            // ค่าเริ่มต้นสำหรับรอบเวลาที่เปิดจองได้ (0/5 ท่าน): แสดง "จองได้" ตัวหนังสือสีฟ้า (ตัวหนา bold)
-            let itemClass = 'slot-badge-item available';
-            let quotaBadgeHtml = `<span class="slot-quota-badge q-available">จองได้</span>`;
-            let clickStatus = 'open';
-            let titleAttr = `รอบ ${escapeHtml(slot)} น. จองได้ (ว่าง 0/5) - คลิกเพื่อจอง`;
-
-            if (isClosedByTime) {
-              // เงื่อนไขข้อ 3.3: ปิดรับจอง ตัวหนังสือสีแดง รวมทั้ง badge ให้เป็น icon สีแดง และ คลิกเลือกเวลาในช่วงนั้นไม่ได้
-              itemClass = 'slot-badge-item closed';
-              quotaBadgeHtml = `<span class="slot-quota-badge q-closed"><i class="fa-regular fa-clock me-1 text-danger"></i>ปิดรับจอง</span>`;
-              clickStatus = 'closed';
-              titleAttr = `รอบ ${escapeHtml(slot)} น. ปิดรับจองแล้ว (เวลาเริ่มรอบผ่านไปเกิน 20 นาที)`;
-            } else if (count >= 5) {
-              // เงื่อนไขข้อ 3.2: ครบโควต้า ให้ขึ้นข้อความ "เต็ม" มี badge เป็นรูปไอคอนคนหลายคน สีแดง และ คลิกเลือกเวลาในช่วงนั้นไม่ได้
-              itemClass = 'slot-badge-item full';
-              quotaBadgeHtml = `<span class="slot-quota-badge q-full"><i class="fa-solid fa-users me-1"></i>เต็ม</span>`;
-              clickStatus = 'full';
-              titleAttr = `รอบ ${escapeHtml(slot)} น. เต็มแล้ว (โควต้าครบ 5/5 ท่าน)`;
-            } else if (count > 0) {
-              // รอบเวลาที่มีผู้จอง 1-4 ท่าน (ยังไม่เต็ม): แสดง "จองได้" ตัวหนังสือสีฟ้า (ตัวหนา bold)
-              itemClass = 'slot-badge-item available';
-              quotaBadgeHtml = `<span class="slot-quota-badge q-available">จองได้</span>`;
-              clickStatus = 'open';
-              titleAttr = `รอบ ${escapeHtml(slot)} น. จองได้ (ว่าง ${count}/5) - คลิกเพื่อจอง`;
-            }
-
-            badgesHtml += `
-              <div class="${itemClass}" onclick="handleSlotClick(event, '${dateStr}', '${slot}', '${clickStatus}')" title="${titleAttr}">
-                <span class="slot-time"><i class="fa-regular fa-clock" style="font-size:0.62rem;"></i> ${escapeHtml(slot)}</span>
-                ${quotaBadgeHtml}
-              </div>
-            `;
-          });
         }
 
         gridHtml += `
-          <div class="${dayClass}" onclick="openDateDetailModal('${dateStr}')" title="คลิกเพื่อดูรายละเอียดวันที่ ${d}">
+          <div class="${dayClass}" onclick="openDateDetailModal('${dateStr}')" title="คลิกเพื่อดูรายละเอียดรอบเวลาวันที่ ${d}">
             <div class="day-header">
               <span class="day-number">${d}</span>
               ${isToday ? '<span class="badge bg-warning text-dark" style="font-size:0.65rem; font-weight: 600;">วันนี้</span>' : ''}
@@ -4496,17 +4863,40 @@
       const realTodayStr = `${currY}-${currM < 10 ? '0' + currM : currM}-${currD < 10 ? '0' + currD : currD}`;
       const cmpTodayStr = calendarDataCache.todayStr || realTodayStr;
 
-      const isDatePast = (dateStr < cmpTodayStr);
-      const isDateEditable = (!isDatePast && perm.isEditable);
+      // เงื่อนไขข้อ 1: วันที่น้อยกว่าวันที่ปัจจุบัน ปิดไม่ให้จอง (disabled) ไม่ต้องแสดง modal
+      if (dateStr < cmpTodayStr) {
+        return;
+      }
+
+      const isDatePast = false;
+      const isDateEditable = perm.isEditable;
+
+      // ตรวจสอบข้อมูลจาก Sheet_Name_Setting_Reservation_Timetable
+      const dayTimetable = (calendarDataCache && calendarDataCache.timetableByDate && calendarDataCache.timetableByDate[dateStr]) 
+        ? calendarDataCache.timetableByDate[dateStr] 
+        : null;
+
+      if (!dayTimetable || dayTimetable.totalSlots === 0) {
+        Swal.fire({
+          icon: 'info',
+          title: 'ไม่พบข้อมูลตารางการจอง',
+          text: `ไม่พบข้อมูลตารางเวลาการจองสำหรับวันที่ ${thaiFormattedDate} ในระบบ กรุณาตรวจสอบการตั้งค่าตารางการจอง`,
+          confirmButtonText: 'รับทราบ',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      const isDayAllInactive = (dayTimetable && dayTimetable.allInactive === true);
 
       // แบนเนอร์สถานะสิทธิ์
       let bannerHtml = '';
-      if (isDatePast) {
+      if (isDayAllInactive) {
         bannerHtml = `
           <div class="alert alert-secondary py-2 px-3 mb-3 d-flex align-items-center gap-2 text-start" style="font-size:0.85rem; border-radius:10px;">
-            <i class="fa-solid fa-lock text-secondary fa-lg"></i>
+            <i class="fa-solid fa-ban text-secondary fa-lg"></i>
             <div>
-              <strong>ข้อมูลย้อนหลัง (Read-Only):</strong> วันที่ในอดีต สามารถดูข้อมูลได้อย่างเดียว <u>ห้ามเพิ่ม แก้ไข หรือลบการจอง</u>
+              <strong>ปิดให้บริการทั้งวัน:</strong> ทุกรอบเวลาในวันที่นี้ถูกปิดการใช้งานในตารางการจอง (ไม่อนุญาตให้ทำการจอง)
             </div>
           </div>
         `;
@@ -4524,7 +4914,7 @@
           <div class="alert alert-success py-2 px-3 mb-3 d-flex align-items-center gap-2 text-start" style="font-size:0.85rem; border-radius:10px;">
             <i class="fa-solid fa-circle-check text-success fa-lg"></i>
             <div>
-              <strong>สามารถจัดการการจองได้:</strong> เปิดให้จองและจัดการข้อมูลได้ (สูงสุด 5 คน/ช่วงเวลา)
+              <strong>สามารถจัดการการจองได้:</strong> เปิดให้จองและจัดการข้อมูลได้ (จำกัดตามโควต้าของแต่ละรอบ)
             </div>
           </div>
         `;
@@ -4535,75 +4925,65 @@
       let totalBookedInDay = 0;
 
       // กรองช่วงเวลาสำหรับแสดงผล
-      let slotsToShow = slots;
-      if (isDatePast) {
-        // วันย้อนหลัง: แสดงเฉพาะช่วงเวลาที่มีการจอง
-        slotsToShow = slots.filter(slot => {
-          let list = dateReservations[slot];
-          if (!list) {
-            for (const k in dateReservations) {
-              if (formatTimeSlot(k) === slot) { list = dateReservations[k]; break; }
-            }
+      let slotsToShow = (dayTimetable && dayTimetable.slots && dayTimetable.slots.length > 0)
+        ? dayTimetable.slots.map(s => s.time)
+        : slots;
+
+      slotsToShow.forEach(slot => {
+        let bookedList = dateReservations[slot];
+        if (!bookedList) {
+          for (const k in dateReservations) {
+            if (formatTimeSlot(k) === slot) { bookedList = dateReservations[k]; break; }
           }
-          return (list && list.length > 0);
-        });
-      }
+        }
+        bookedList = bookedList || [];
+        const count = bookedList.length;
+        totalBookedInDay += count;
 
-      if (isDatePast && slotsToShow.length === 0) {
-        slotsDetailHtml = `
-          <div class="p-4 text-center text-muted border rounded mb-2" style="background-color: #FAFAFA;">
-            <i class="fa-regular fa-calendar-xmark fa-2x mb-2 text-secondary d-block"></i>
-            <div>ไม่มีรายการจองในวันที่นี้</div>
-          </div>
-        `;
-      } else {
-        slotsToShow.forEach(slot => {
-          let bookedList = dateReservations[slot];
-          if (!bookedList) {
-            for (const k in dateReservations) {
-              if (formatTimeSlot(k) === slot) { bookedList = dateReservations[k]; break; }
-            }
+        const slotTimetable = (dayTimetable && dayTimetable.slotMap) ? dayTimetable.slotMap[slot] : null;
+        const isSlotInactive = (slotTimetable && slotTimetable.isActive === false) || isDayAllInactive;
+        const maxQuota = slotTimetable ? slotTimetable.quotaTotal : 5;
+        const usageQuota = (slotTimetable && slotTimetable.usageQuota !== undefined) ? slotTimetable.usageQuota : count;
+        const isFull = (slotTimetable && slotTimetable.isFull) || (usageQuota >= maxQuota);
+
+        // เงื่อนไขข้อ 3 & 3.1 สำหรับวันนี้: ตัดรอบเมื่อเหลือน้อยกว่า 15 นาที
+        const isDateToday = (dateStr === cmpTodayStr);
+        let isClosedByTime = false;
+        if (isDateToday) {
+          const currentHour = now.getHours();
+          const currentMin = now.getMinutes();
+          const nowTotalMinutes = currentHour * 60 + currentMin;
+
+          const slotParts = slot.split(':');
+          const slotTotalMinutes = parseInt(slotParts[0], 10) * 60 + parseInt(slotParts[1], 10);
+          if (nowTotalMinutes >= slotTotalMinutes - 15) {
+            isClosedByTime = true;
           }
-          bookedList = bookedList || [];
-          const count = bookedList.length;
-          const available = 5 - count;
-          totalBookedInDay += count;
+        }
 
-          // ตรวจสอบเงื่อนไขข้อ 3.1 สำหรับวันนี้
-          const isDateToday = (dateStr === cmpTodayStr);
-          let isClosedByTime = false;
-          if (isDateToday) {
-            const currentHour = now.getHours();
-            const currentMin = now.getMinutes();
-            const nowTotalMinutes = currentHour * 60 + currentMin;
+        let quotaBadge = '';
+        let actionBtn = '';
 
-            const slotParts = slot.split(':');
-            const slotTotalMinutes = parseInt(slotParts[0], 10) * 60 + parseInt(slotParts[1], 10);
-            if (nowTotalMinutes >= slotTotalMinutes + 20) {
-              isClosedByTime = true;
-            }
+        if (isSlotInactive) {
+          quotaBadge = '<span class="slot-quota-badge q-closed px-2 py-1" style="font-size:0.75rem;"><i class="fa-solid fa-ban me-1 text-danger"></i>ปิดการใช้งาน</span>';
+          actionBtn = `<button class="btn btn-sm btn-outline-secondary" disabled style="font-size:0.75rem; cursor:not-allowed;" title="รอบเวลานี้ถูกปิดการใช้งานในตารางการจอง"><i class="fa-solid fa-ban me-1 text-danger"></i> ปิดการใช้งาน</button>`;
+        } else if (isClosedByTime) {
+          quotaBadge = '<span class="slot-quota-badge q-closed px-2 py-1" style="font-size:0.75rem;"><i class="fa-regular fa-clock me-1 text-danger"></i>ปิดรับจอง (ก่อนเริ่ม 15 นาที)</span>';
+          actionBtn = `<button class="btn btn-sm btn-outline-danger" disabled style="font-size:0.75rem; cursor:not-allowed;" title="ปิดรับจองเมื่อเหลือน้อยกว่า 15 นาทีก่อนเริ่มรอบ"><i class="fa-regular fa-clock me-1 text-danger"></i> ปิดรับจอง</button>`;
+        } else if (isFull) {
+          quotaBadge = `<span class="slot-quota-badge q-full px-2 py-1" style="font-size:0.75rem;"><i class="fa-solid fa-users me-1"></i>เต็ม (${usageQuota}/${maxQuota})</span>`;
+          actionBtn = `<button class="btn btn-sm btn-outline-danger" disabled style="font-size:0.75rem; cursor:not-allowed;" title="ครบโควต้า ${maxQuota} คนแล้ว"><i class="fa-solid fa-users me-1"></i> เต็มแล้ว</button>`;
+        } else if (usageQuota > 0) {
+          quotaBadge = `<span class="badge bg-success text-white px-2 py-1">ว่าง (${usageQuota}/${maxQuota})</span>`;
+          if (isDateEditable && !isDatePast && !isDayAllInactive) {
+            actionBtn = `<button class="btn btn-sm btn-outline-primary" onclick="openBookingModal('${dateStr}', '${slot}')" style="font-size:0.75rem;"><i class="fa-solid fa-plus me-1"></i> จองรอบนี้</button>`;
           }
-
-          let quotaBadge = '';
-          let actionBtn = '';
-
-          if (isClosedByTime) {
-            quotaBadge = '<span class="slot-quota-badge q-closed px-2 py-1" style="font-size:0.75rem;"><i class="fa-regular fa-clock me-1 text-danger"></i>ปิดรับจอง</span>';
-            actionBtn = `<button class="btn btn-sm btn-outline-danger" disabled style="font-size:0.75rem; cursor:not-allowed;" title="ปิดรับจองเมื่อเวลาเริ่มรอบผ่านไปเกิน 20 นาที"><i class="fa-regular fa-clock me-1 text-danger"></i> ปิดรับจอง</button>`;
-          } else if (count >= 5) {
-            quotaBadge = '<span class="slot-quota-badge q-full px-2 py-1" style="font-size:0.75rem;"><i class="fa-solid fa-users me-1"></i>เต็ม (5/5)</span>';
-            actionBtn = `<button class="btn btn-sm btn-outline-danger" disabled style="font-size:0.75rem; cursor:not-allowed;" title="ครบโควต้า 5 คนแล้ว"><i class="fa-solid fa-users me-1"></i> เต็มแล้ว</button>`;
-          } else if (count > 0) {
-            quotaBadge = `<span class="badge bg-success text-white px-2 py-1">ว่าง (${count}/5)</span>`;
-            if (isDateEditable) {
-              actionBtn = `<button class="btn btn-sm btn-outline-primary" onclick="openBookingModal('${dateStr}', '${slot}')" style="font-size:0.75rem;"><i class="fa-solid fa-plus me-1"></i> จองรอบนี้</button>`;
-            }
-          } else {
-            quotaBadge = '<span class="badge bg-secondary text-white px-2 py-1">ว่าง (0/5)</span>';
-            if (isDateEditable) {
-              actionBtn = `<button class="btn btn-sm btn-outline-primary" onclick="openBookingModal('${dateStr}', '${slot}')" style="font-size:0.75rem;"><i class="fa-solid fa-plus me-1"></i> จองรอบนี้</button>`;
-            }
+        } else {
+          quotaBadge = `<span class="badge bg-secondary text-white px-2 py-1">ว่าง (0/${maxQuota})</span>`;
+          if (isDateEditable && !isDatePast && !isDayAllInactive) {
+            actionBtn = `<button class="btn btn-sm btn-outline-primary" onclick="openBookingModal('${dateStr}', '${slot}')" style="font-size:0.75rem;"><i class="fa-solid fa-plus me-1"></i> จองรอบนี้</button>`;
           }
+        }
 
           let bookingsListHtml = '';
           if (bookedList.length > 0) {
@@ -4616,7 +4996,7 @@
                       <th>ลูกค้า</th>
                       <th>เบอร์โทร</th>
                       <th style="width: 85px;" class="text-center">สถานะ</th>
-                      ${isDateEditable ? '<th style="width: 60px;" class="text-center">จัดการ</th>' : ''}
+                      ${isDateEditable && !isDatePast ? '<th style="width: 60px;" class="text-center">จัดการ</th>' : ''}
                     </tr>
                   </thead>
                   <tbody>
@@ -4629,7 +5009,7 @@
                         </td>
                         <td>${escapeHtml(b.customerPhone || '-')}</td>
                         <td class="text-center"><span class="badge bg-success-subtle text-success border border-success-subtle">${escapeHtml(b.status || 'ยืนยัน')}</span></td>
-                        ${isDateEditable ? `
+                        ${isDateEditable && !isDatePast ? `
                           <td class="text-center">
                             <button class="btn btn-sm btn-outline-danger py-0 px-2" title="ยกเลิก/ลบการจอง" onclick="confirmDeleteReservation('${escapeHtml(b.reservationId)}', '${dateStr}')">
                               <i class="fa-regular fa-trash-can" style="font-size:0.75rem;"></i>
@@ -4645,7 +5025,7 @@
           } else {
             bookingsListHtml = `
               <div class="text-muted text-start mt-1 ps-1" style="font-size: 0.8rem;">
-                <i class="fa-regular fa-circle me-1"></i> ยังไม่มีรายการจองในรอบเวลานี้ (สามารถรับลูกค้าได้สูงสุด 5 คน)
+                <i class="fa-regular fa-circle me-1"></i> ยังไม่มีรายการจองในรอบเวลานี้ (โควต้าสูงสุด ${maxQuota} คน)
               </div>
             `;
           }
@@ -4666,9 +5046,8 @@
             </div>
           `;
         });
-      }
 
-      const modalHtml = `
+        const modalHtml = `
         <div class="text-start">
           ${bannerHtml}
           <div class="d-flex justify-content-between align-items-center mb-2 px-1">
@@ -4676,16 +5055,16 @@
               <i class="fa-solid fa-list-check me-1 text-warning"></i> สรุปการจองทั้งหมดวันนี้: <strong>${totalBookedInDay} คน</strong>
             </span>
             <span class="text-muted" style="font-size: 0.8rem;">
-              (จำกัดสูงสุดรอบละ 5 คน)
+              (จำกัดตามโควต้าของแต่ละช่วงเวลา)
             </span>
           </div>
           <div style="max-height: 55vh; overflow-y: auto; padding-right: 4px;">
             ${slotsDetailHtml}
           </div>
-          ${isDateEditable ? `
+          ${isDateEditable && !isDatePast ? `
             <div class="mt-3 p-2 bg-light rounded text-center text-muted border" style="font-size: 0.8rem;">
               <i class="fa-solid fa-circle-info text-primary me-1"></i>
-              คลิกปุ่ม <strong>"จองรอบนี้"</strong> เพื่อเพิ่มการจอง (ระบบจะปิดรับจองเมื่อเวลาเริ่มรอบผ่านไปเกิน 20 นาที และจำกัด 5 คน/รอบ)
+              คลิกปุ่ม <strong>"จองรอบนี้"</strong> เพื่อเพิ่มการจอง (ระบบจะปิดรับจองเมื่อเหลือน้อยกว่า 15 นาทีก่อนเริ่มรอบ และจำกัดตามโควต้าที่ตั้งไว้)
             </div>
           ` : ''}
         </div>
@@ -4712,11 +5091,23 @@
         event.stopPropagation();
       }
 
+      const now = new Date();
+      const currY = now.getFullYear();
+      const currM = now.getMonth() + 1;
+      const currD = now.getDate();
+      const realTodayStr = `${currY}-${currM < 10 ? '0' + currM : currM}-${currD < 10 ? '0' + currD : currD}`;
+      const cmpTodayStr = (calendarDataCache && calendarDataCache.todayStr) ? calendarDataCache.todayStr : realTodayStr;
+
+      // วันในอดีต (dateStr < cmpTodayStr): disabled ไม่ต้องทำอะไรและไม่ต้องแสดง modal
+      if (dateStr < cmpTodayStr || status === 'past') {
+        return;
+      }
+
       if (status === 'closed') {
         Swal.fire({
           icon: 'info',
           title: 'ปิดรับจองแล้ว',
-          html: `<div class="text-center">รอบเวลา <strong>${escapeHtml(slot)} น.</strong> (วันที่ ${escapeHtml(dateStr)})<br><span class="text-danger fw-semibold" style="font-size:0.88rem;"><i class="fa-regular fa-clock me-1 text-danger"></i>ปิดรับจอง</span> <span class="text-muted" style="font-size:0.88rem;">เนื่องจากเวลาเริ่มรอบผ่านไปเกิน 20 นาทีแล้ว</span></div>`,
+          html: `<div class="text-center">รอบเวลา <strong>${escapeHtml(slot)} น.</strong> (วันที่ ${escapeHtml(dateStr)})<br><span class="text-danger fw-semibold" style="font-size:0.88rem;"><i class="fa-regular fa-clock me-1 text-danger"></i>ปิดรับจอง</span> <span class="text-muted" style="font-size:0.88rem;">เนื่องจากเหลือน้อยกว่า 15 นาทีก่อนเริ่มรอบ หรือรอบเวลาได้ผ่านไปแล้ว</span></div>`,
           confirmButtonText: '<i class="fa-solid fa-check me-1"></i> รับทราบ',
           confirmButtonColor: '#1B3B36'
         });
@@ -4727,16 +5118,50 @@
         Swal.fire({
           icon: 'warning',
           title: 'รอบเวลานี้เต็มแล้ว',
-          html: `<div class="text-center">รอบเวลา <strong>${escapeHtml(slot)} น.</strong> (วันที่ ${escapeHtml(dateStr)})<br><span class="text-muted" style="font-size:0.88rem;">มีผู้จองครบตามโควต้าสูงสุด 5 ท่านแล้ว</span></div>`,
+          html: `<div class="text-center">รอบเวลา <strong>${escapeHtml(slot)} น.</strong> (วันที่ ${escapeHtml(dateStr)})<br><span class="text-muted" style="font-size:0.88rem;">มีผู้จองครบตามจำนวนโควต้าสูงสุดแล้ว</span></div>`,
           confirmButtonText: '<i class="fa-solid fa-check me-1"></i> รับทราบ',
           confirmButtonColor: '#1B3B36'
         });
         return;
       }
 
-      if (status === 'past') {
-        openDateDetailModal(dateStr);
+      // ตรวจสอบสถานะรอบเวลาจาก Sheet_Name_Setting_Reservation_Timetable
+      const dayTimetable = (calendarDataCache && calendarDataCache.timetableByDate && calendarDataCache.timetableByDate[dateStr]) 
+        ? calendarDataCache.timetableByDate[dateStr] 
+        : null;
+
+      if (!dayTimetable || dayTimetable.totalSlots === 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่พบข้อมูล',
+          text: 'ไม่พบข้อมูลรอบเวลานี้ในตารางการจอง',
+          confirmButtonColor: '#1B3B36'
+        });
         return;
+      }
+
+      if (dayTimetable) {
+        if (dayTimetable.allInactive) {
+          Swal.fire({
+            icon: 'info',
+            title: 'ปิดให้บริการทั้งวัน',
+            html: `<div class="text-center">วันที่ <strong>${escapeHtml(dateStr)}</strong> ปิดให้บริการทุกรอบเวลาในตารางการจอง</div>`,
+            confirmButtonText: '<i class="fa-solid fa-check me-1"></i> รับทราบ',
+            confirmButtonColor: '#1B3B36'
+          });
+          return;
+        }
+        const slotTimetable = (dayTimetable.slotMap) ? dayTimetable.slotMap[slot] : null;
+        if (slotTimetable && slotTimetable.isActive === false) {
+          Swal.fire({
+            icon: 'info',
+            title: 'รอบเวลานี้ถูกปิดการใช้งาน',
+            html: `<div class="text-center">รอบเวลา <strong>${escapeHtml(slot)} น.</strong> (วันที่ ${escapeHtml(dateStr)})<br><span class="text-danger fw-semibold" style="font-size:0.88rem;"><i class="fa-solid fa-ban me-1 text-danger"></i>ปิดให้บริการ</span> <span class="text-muted" style="font-size:0.88rem;">รอบนี้ถูกปิดการใช้งานในตารางการจอง</span></div>`,
+            confirmButtonText: '<i class="fa-solid fa-check me-1"></i> รับทราบ',
+            confirmButtonColor: '#1B3B36'
+          });
+          return;
+        }
       }
 
       // สถานะ open
@@ -4754,12 +5179,53 @@
     function openBookingModal(dateStr, slot) {
       if (!calendarDataCache) return;
 
+      const now = new Date();
+      const currY = now.getFullYear();
+      const currM = now.getMonth() + 1;
+      const currD = now.getDate();
+      const realTodayStr = `${currY}-${currM < 10 ? '0' + currM : currM}-${currD < 10 ? '0' + currD : currD}`;
+      const cmpTodayStr = calendarDataCache.todayStr || realTodayStr;
+
+      // เงื่อนไขข้อ 1: ห้ามจองวันที่ในอดีตเด็ดขาด
+      if (dateStr < cmpTodayStr) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่สามารถจองได้',
+          text: 'ไม่อนุญาตให้จองย้อนหลัง สามารถเลือกจองได้ตั้งแต่วันที่ปัจจุบันเป็นต้นไป',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
       const perm = calendarDataCache.permission || {};
       if (!perm.isEditable) {
         Swal.fire({
           icon: 'warning',
           title: 'ไม่สามารถจองได้',
           text: 'ช่วงเวลานี้ไม่อนุญาตให้ทำการจอง (อนุญาตเฉพาะตั้งแต่วันปัจจุบันและไม่เกินเดือนถัดไป)',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      // ตรวจสอบกับ Sheet_Name_Setting_Reservation_Timetable ว่าวันที่นี้เปิดใช้งานหรือไม่
+      const dayTimetable = (calendarDataCache.timetableByDate && calendarDataCache.timetableByDate[dateStr]) 
+        ? calendarDataCache.timetableByDate[dateStr] 
+        : null;
+      if (dayTimetable && dayTimetable.allInactive) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ปิดให้บริการทั้งวัน',
+          text: 'วันที่ ' + dateStr + ' ปิดให้บริการทุกรอบเวลาในตารางการจอง',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+      if (dayTimetable && dayTimetable.isAllFull) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'จองเต็มทุกรอบแล้ว',
+          text: 'วันที่ ' + dateStr + ' รอบเวลาทั้งหมดในวันนี้จองเต็มตามโควต้าแล้ว',
           confirmButtonColor: '#1B3B36'
         });
         return;
@@ -4777,18 +5243,13 @@
       }
 
       // ตัวเลือกรอบเวลา
-      const rawSlots = calendarDataCache.timeSlots || defaultTimeSlots;
+      const rawSlots = (dayTimetable && dayTimetable.slots && dayTimetable.slots.length > 0)
+        ? dayTimetable.slots.map(s => s.time)
+        : (calendarDataCache.timeSlots || defaultTimeSlots).map(s => formatTimeSlot(s));
       const slots = rawSlots.map(s => formatTimeSlot(s));
       const targetSlot = formatTimeSlot(slot || slots[0]);
 
-      const now = new Date();
-      const currY = now.getFullYear();
-      const currM = now.getMonth() + 1;
-      const currD = now.getDate();
-      const realTodayStr = `${currY}-${currM < 10 ? '0' + currM : currM}-${currD < 10 ? '0' + currD : currD}`;
-      const cmpTodayStr = calendarDataCache.todayStr || realTodayStr;
       const isToday = (dateStr === cmpTodayStr);
-
       const currentHour = now.getHours();
       const currentMin = now.getMinutes();
       const nowTotalMinutes = currentHour * 60 + currentMin;
@@ -4807,24 +5268,34 @@
         }
         const count = list ? list.length : 0;
 
+        const slotTimetable = (dayTimetable && dayTimetable.slotMap) ? dayTimetable.slotMap[s] : null;
+        const isSlotInactive = (slotTimetable && slotTimetable.isActive === false);
+        const maxQuota = slotTimetable ? slotTimetable.quotaTotal : 5;
+        const usageQuota = (slotTimetable && slotTimetable.usageQuota !== undefined) ? slotTimetable.usageQuota : count;
+        const isFull = (slotTimetable && slotTimetable.isFull) || (usageQuota >= maxQuota);
+
         let isClosed = false;
         if (isToday) {
           const sParts = s.split(':');
           const sMin = parseInt(sParts[0], 10) * 60 + parseInt(sParts[1], 10);
-          if (nowTotalMinutes >= sMin + 20) isClosed = true;
+          // เงื่อนไขข้อ 3 & 3.1: ต้องจองก่อนถึงช่วงเวลาที่กำหนด 15 นาที
+          if (nowTotalMinutes >= sMin - 15) isClosed = true;
         }
 
         let disabledAttr = '';
-        let labelSuffix = `(ว่าง ${count}/5)`;
-        if (isClosed) {
+        let labelSuffix = `(ว่าง ${usageQuota}/${maxQuota})`;
+        if (isSlotInactive) {
           disabledAttr = 'disabled';
-          labelSuffix = '(ปิดรับจอง - เกิน 20 นาที)';
-        } else if (count >= 5) {
+          labelSuffix = '(ปิดการใช้งานในตาราง)';
+        } else if (isClosed) {
           disabledAttr = 'disabled';
-          labelSuffix = '(เต็มแล้ว 5/5)';
+          labelSuffix = '(ปิดรับจอง - ก่อนเริ่ม 15 นาที)';
+        } else if (isFull) {
+          disabledAttr = 'disabled';
+          labelSuffix = `(เต็มแล้ว ${usageQuota}/${maxQuota})`;
         }
 
-        const isSelected = (s === targetSlot && !isClosed && count < 5) ? 'selected' : '';
+        const isSelected = (s === targetSlot && !isClosed && !isFull && !isSlotInactive) ? 'selected' : '';
         timeSlotOptions += `<option value="${escapeHtml(s)}" ${disabledAttr} ${isSelected}>${escapeHtml(s)} น. ${labelSuffix}</option>`;
       });
 
@@ -4851,7 +5322,7 @@
               ${timeSlotOptions}
             </select>
             <div class="text-muted mt-1" style="font-size:0.75rem;">
-              <i class="fa-regular fa-clock me-1 text-danger"></i> ระบบปิดรับจองเมื่อเวลาเริ่มรอบผ่านไปเกิน 20 นาที และจำกัดรอบละ 5 ท่าน
+              <i class="fa-regular fa-clock me-1 text-danger"></i> ระบบปิดรับจองเมื่อเหลือน้อยกว่า 15 นาทีก่อนถึงรอบเวลา และจำกัดตามโควต้าที่ตั้งไว้
             </div>
           </div>
 
@@ -4901,24 +5372,41 @@
             return false;
           }
 
-          // ตรวจสอบเงื่อนไข cutoff 20 นาทีอีกครั้ง
+          // เงื่อนไขข้อ 3.1: ตรวจสอบ cutoff 15 นาทีอีกครั้ง
           if (isToday) {
             const sParts = selectedTime.split(':');
             const sMin = parseInt(sParts[0], 10) * 60 + parseInt(sParts[1], 10);
             const curH = new Date().getHours();
             const curM = new Date().getMinutes();
             const curTotal = curH * 60 + curM;
-            if (curTotal >= sMin + 20) {
-              Swal.showValidationMessage(`รอบเวลา ${selectedTime} น. ปิดรับจองแล้ว (เวลาเริ่มรอบผ่านไปเกิน 20 นาที)`);
+            if (curTotal >= sMin - 15) {
+              Swal.showValidationMessage(`รอบเวลา ${selectedTime} น. ปิดรับจองแล้ว (ต้องจองล่วงหน้าก่อนถึงเวลาอย่างน้อย 15 นาที)`);
               return false;
             }
           }
 
+          // เงื่อนไขข้อ 2: ตรวจสอบโควต้าและสถานะจาก timetable อีกครั้ง
+          const selectedSlotTt = (dayTimetable && dayTimetable.slotMap) ? dayTimetable.slotMap[selectedTime] : null;
+          if (selectedSlotTt) {
+            if (selectedSlotTt.isActive === false) {
+              Swal.showValidationMessage(`รอบเวลา ${selectedTime} น. ถูกปิดการใช้งานในตารางการจอง`);
+              return false;
+            }
+            const sMaxQ = selectedSlotTt.quotaTotal || 5;
+            const sUsageQ = selectedSlotTt.usageQuota !== undefined ? selectedSlotTt.usageQuota : 0;
+            if (sUsageQ >= sMaxQ) {
+              Swal.showValidationMessage(`รอบเวลา ${selectedTime} น. เต็มแล้ว (${sUsageQ}/${sMaxQ} ท่าน)`);
+              return false;
+            }
+          }
+
+          const opUser = (currentUser && currentUser.username) ? currentUser.username : 'admin';
           return {
             date: dateStr,
             timeSlot: selectedTime,
             customerId: selectedCustomer,
-            status: selectedStatus
+            status: selectedStatus,
+            operatorUsername: opUser
           };
         }
       }).then((result) => {
