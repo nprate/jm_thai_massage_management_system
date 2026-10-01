@@ -1696,6 +1696,9 @@
               <button class="btn btn-outline-secondary" id="btn-refresh-setting-time" onclick="loadSettingTimeTableData(true)" title="รีเฟรชข้อมูล">
                 <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
               </button>
+              <button class="btn btn-outline-primary" onclick="openAddTimetableModal()" title="สร้างตารางการจองประจำเดือน">
+                <i class="fa-solid fa-calendar-plus me-1"></i> สร้างตารางการจอง
+              </button>
               <button class="btn btn-action-main" id="btn-open-add-setting-time" onclick="openAddSettingTimeModal()">
                 <i class="fa-solid fa-plus"></i>
                 <span>เพิ่มรอบเวลาการจอง</span>
@@ -6911,7 +6914,9 @@
             <ul class="mb-0 ps-3 text-muted">
               <li>ตรวจสอบจำนวนวันในเดือนที่เลือก (เช่น เดือน 30 วัน จะสร้างวันที่ 01 ถึง 30)</li>
               <li>ดึงช่วงเวลาที่เปิดใช้งานจากชีต <strong>${escapeHtml(Sheet_Name_Setting_Selection_Reservation_Time)}</strong></li>
-              <li>วน Loop วันที่และช่วงเวลา บันทึกโควต้าเริ่มต้น <strong>5</strong> ท่านต่อรอบ และเปิดใช้งาน (Active)</li>
+              <li>วน Loop วันที่และช่วงเวลา บันทึกโควต้าเริ่มต้น <strong>5</strong> ท่านต่อรอบ</li>
+              <li><strong>วันจันทร์ - ศุกร์:</strong> กำหนดสถานะเปิดใช้งาน (is_active = true)</li>
+              <li><strong>วันเสาร์ และ อาทิตย์:</strong> กำหนดสถานะปิดการใช้งาน (is_active = false)</li>
             </ul>
           </div>
           <div class="swal-form-group">
@@ -7041,6 +7046,12 @@
         let count = 0;
         for (let d = 1; d <= days; d++) {
           const dStr = String(d).padStart(2, '0');
+          // ตรวจสอบวันเสาร์ และ อาทิตย์: วันเสาร์ (6) และ วันอาทิตย์ (0) ให้เปลี่ยนค่า isActive จาก true เป็น false
+          const dateObj = new Date(yr, mo - 1, d, 12, 0, 0);
+          const dayOfWeek = dateObj.getDay(); // 0 = Sunday, 6 = Saturday
+          const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+          const isAct = isWeekend ? false : true;
+
           for (let t of times) {
             window.mockTimetableSlots.push({
               rowId: startId++,
@@ -7049,7 +7060,7 @@
               time: t,
               usageQuota: 0,
               quotaTotal: quotaTotal || 5,
-              isActive: true,
+              isActive: isAct,
               createDate: nowStr,
               createdBy: operator,
               updateDate: nowStr,

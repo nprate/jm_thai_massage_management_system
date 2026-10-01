@@ -3234,6 +3234,11 @@ function generateReservationTimetable(payload) {
     for (var d = 1; d <= daysInMonth; d++) {
       var dayMonthStr = ("0" + d).slice(-2); // "01", "02", ..., "30"
 
+      // ตรวจสอบวันเสาร์ และ อาทิตย์: วันเสาร์ (6) และ วันอาทิตย์ (0) ให้เปลี่ยนค่า is_active (is_flag) จาก true เป็น false
+      var dateObj = new Date(year, month - 1, d, 12, 0, 0);
+      var dayOfWeek = dateObj.getDay(); // 0 = Sunday (อาทิตย์), 6 = Saturday (เสาร์)
+      var isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+
       // วน Loop ช่วงเวลาที่ดึงมาจากชีตตั้งค่าตัวเลือกเวลาการจอง
       for (var s = 0; s < activeTimeSlots.length; s++) {
         var t = activeTimeSlots[s];
@@ -3242,7 +3247,8 @@ function generateReservationTimetable(payload) {
         // หากเป็นการสร้างทับ และมีข้อมูลเดิม ให้รักษาจำนวนที่จองแล้ว (usage_quota) เดิมไว้
         var usage = (payload.overwrite && existingMap[slotKey]) ? existingMap[slotKey].usageQuota : 0;
         var qTotal = (payload.overwrite && existingMap[slotKey]) ? existingMap[slotKey].quotaTotal : defaultQuotaTotal;
-        var isAct = (payload.overwrite && existingMap[slotKey]) ? existingMap[slotKey].isActive : true;
+        // logic ตรวจสอบ วันเสาร์ และ อาทิตย์ ให้ทำการเปลี่ยนค่า is_active (is_flag) จาก true เป็น false
+        var isAct = isWeekend ? false : (payload.overwrite && existingMap[slotKey] ? existingMap[slotKey].isActive : true);
         var cDate = (payload.overwrite && existingMap[slotKey] && existingMap[slotKey].createDate) ? existingMap[slotKey].createDate : nowStr;
         var cBy = (payload.overwrite && existingMap[slotKey] && existingMap[slotKey].createdBy) ? existingMap[slotKey].createdBy : operator;
 
