@@ -15,10 +15,15 @@
 // การตั้งค่าระบบ (System Configuration)
 // ------------------------------------------------------------------------------
 const GOOGLE_SHEET_ID = "1seXuWUYbsSL8VoyDlMj1V9vfuGPQtDoYGwjuGBzOlaU";
+const Google_Sheet_ID = GOOGLE_SHEET_ID;
 const SHEET_NAME_ADMIN = "ข้อมูลผู้ดูแลระบบ";
+const Sheet_Name_Admin = SHEET_NAME_ADMIN;
 const SHEET_NAME_CUSTOMER = "ข้อมูลลูกค้า";
+const Sheet_Name_Customer = SHEET_NAME_CUSTOMER;
 const SHEET_NAME_STAFF = "ข้อมูลพนักงาน";
-const SHEET_NAME_RESERVATION = "ข้อมูลการจอง";
+const Sheet_Name_Staff = SHEET_NAME_STAFF;
+const SHEET_NAME_RESERVATION = "จองคิว";
+const Sheet_Name_Reservation = SHEET_NAME_RESERVATION;
 const SHEET_NAME_SETTING_TIME = "ตั้งค่าตัวเลือกเวลาการจอง";
 const MENU_NAME_SETTING = "การตั้งค่า";
 const Menu_Name_Setting = "การตั้งค่า";
@@ -57,6 +62,12 @@ function doGet(e) {
       return HtmlService.createHtmlOutput("<div style='font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #c3e6cb;background:#d4edda;border-radius:10px;'><h2 style='color:#155724;margin-top:0;'>✅ อัปเดต Schema ตารางการจองสำเร็จ</h2><p style='color:#155724;font-size:16px;'>" + resTimetable.message + "</p><hr style='border:0;border-top:1px solid #c3e6cb;margin:20px 0;'><p style='color:#6c757d;font-size:14px;'>Google Sheet ตั้งค่าตารางการจอง (Sheet_Name_Setting_Reservation_Timetable) ได้รับการตั้งค่าหัวตาราง 10 คอลัมน์เรียบร้อยแล้ว ท่านสามารถปิดหน้านี้แล้วเปิดใช้งานระบบได้ตามปกติ</p></div>");
     }
 
+    // กรณีเรียกด้วย ?action=setupReservation หรือ ?action=renameReservation เพื่อสั่งรันเปลี่ยนชื่อชีตจองคิวผ่าน URL ได้ทันที
+    if (e && e.parameter && (e.parameter.action === "setupReservation" || e.parameter.setupReservation === "true" || e.parameter.action === "renameReservation")) {
+      var resReservation = renameReservationSheetIfNeeded();
+      return HtmlService.createHtmlOutput("<div style='font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #c3e6cb;background:#d4edda;border-radius:10px;'><h2 style='color:#155724;margin-top:0;'>✅ อัปเดตชื่อชีตสำเร็จ</h2><p style='color:#155724;font-size:16px;'>" + resReservation.message + "</p><hr style='border:0;border-top:1px solid #c3e6cb;margin:20px 0;'><p style='color:#6c757d;font-size:14px;'>Google Sheet จองคิว (Sheet_Name_Reservation) ได้รับการตั้งชื่อเรียบร้อยแล้ว ท่านสามารถปิดหน้านี้แล้วเปิดใช้งานระบบได้ตามปกติ</p></div>");
+    }
+
     // ตรวจสอบและสร้างชีตพร้อมข้อมูลเริ่มต้นหากยังไม่มี
     initSheetIfNeeded();
 
@@ -78,9 +89,13 @@ function getSystemSettings() {
     systemName: "JM Thai Massage Management System",
     systemSubName: "ระบบบริหารจัดการข้อมูลร้านนวดแผนไทยเจเอ็ม",
     sheetNameAdmin: SHEET_NAME_ADMIN,
+    Sheet_Name_Admin: SHEET_NAME_ADMIN,
     sheetNameCustomer: SHEET_NAME_CUSTOMER,
+    Sheet_Name_Customer: SHEET_NAME_CUSTOMER,
     sheetNameStaff: SHEET_NAME_STAFF,
+    Sheet_Name_Staff: SHEET_NAME_STAFF,
     sheetNameReservation: SHEET_NAME_RESERVATION,
+    Sheet_Name_Reservation: SHEET_NAME_RESERVATION,
     sheetNameSettingTime: SHEET_NAME_SETTING_TIME,
     sheetNameSettingServicePrice: SHEET_NAME_SETTING_SERVICE_PRICE,
     sheetNameSettingTimetable: SHEET_NAME_SETTING_TIMETABLE,
@@ -89,7 +104,8 @@ function getSystemSettings() {
     Sheet_Name_Setting_Selection_Reservation_Time: SHEET_NAME_SETTING_TIME,
     Sheet_Name_Setting_Service_Price: SHEET_NAME_SETTING_SERVICE_PRICE,
     Sheet_Name_Setting_Reservation_Timetable: SHEET_NAME_SETTING_TIMETABLE,
-    googleSheetId: GOOGLE_SHEET_ID
+    googleSheetId: GOOGLE_SHEET_ID,
+    Google_Sheet_ID: GOOGLE_SHEET_ID
   };
 }
 
@@ -141,15 +157,49 @@ function getStaffSheet() {
 }
 
 /**
- * Helper: ดึงหรือสร้างชีต "ข้อมูลการจอง" (Sheet_Name_Reservation)
+ * Helper: ดึงหรือสร้างชีต "จองคิว" (Sheet_Name_Reservation)
+ * พร้อมระบบตรวจสอบและเปลี่ยนชื่อชีตเดิม "ข้อมูลการจอง" เป็น "จองคิว" อัตโนมัติ
  */
 function getReservationSheet() {
   var ss = getSpreadsheet();
   var sheet = ss.getSheetByName(SHEET_NAME_RESERVATION);
   if (!sheet) {
-    sheet = ss.insertSheet(SHEET_NAME_RESERVATION);
+    // หากยังไม่มีชีตชื่อใหม่ (จองคิว) ให้ตรวจสอบว่ามีชีตชื่อเดิม "ข้อมูลการจอง" หรือไม่
+    var oldSheet = ss.getSheetByName("ข้อมูลการจอง");
+    if (oldSheet) {
+      try {
+        oldSheet.setName(SHEET_NAME_RESERVATION);
+        sheet = oldSheet;
+      } catch (e) {
+        sheet = oldSheet;
+      }
+    } else {
+      sheet = ss.insertSheet(SHEET_NAME_RESERVATION);
+    }
   }
   return sheet;
+}
+
+/**
+ * ฟังก์ชันสำหรับตรวจสอบและเปลี่ยนชื่อชีต "ข้อมูลการจอง" เป็น "จองคิว" (Sheet_Name_Reservation)
+ */
+function renameReservationSheetIfNeeded() {
+  try {
+    var ss = getSpreadsheet();
+    var targetSheet = ss.getSheetByName(SHEET_NAME_RESERVATION);
+    var oldSheet = ss.getSheetByName("ข้อมูลการจอง");
+    if (!targetSheet && oldSheet) {
+      oldSheet.setName(SHEET_NAME_RESERVATION);
+      return { success: true, message: "เปลี่ยนชื่อชีตจาก 'ข้อมูลการจอง' เป็น '" + SHEET_NAME_RESERVATION + "' เรียบร้อยแล้ว" };
+    }
+    if (targetSheet) {
+      return { success: true, message: "ชีต '" + SHEET_NAME_RESERVATION + "' พร้อมใช้งานเรียบร้อยแล้ว" };
+    }
+    targetSheet = ss.insertSheet(SHEET_NAME_RESERVATION);
+    return { success: true, message: "สร้างชีตใหม่ '" + SHEET_NAME_RESERVATION + "' เรียบร้อยแล้ว" };
+  } catch (err) {
+    return { success: false, message: "เกิดข้อผิดพลาดในการเปลี่ยนชื่อชีต: " + err.message };
+  }
 }
 
 /**
@@ -628,8 +678,9 @@ function initSheetIfNeeded() {
   // 3.1 ตรวจสอบชีต "ตั้งค่าตารางการจอง" (Sheet_Name_Setting_Reservation_Timetable)
   setupSettingTimetableSheetSchema();
 
-  // 4. ตรวจสอบชีต "ข้อมูลการจอง" (Sheet_Name_Reservation)
+  // 4. ตรวจสอบชีต "จองคิว" (Sheet_Name_Reservation)
   // ฟิลด์: 2.1.1.1 รหัสการจอง, 2.1.1.2 รหัสลูกค้า, 2.1.1.3 วันที่ที่จอง, 2.1.1.4 เวลาที่จอง, 2.1.1.5 สถานะการจอง, 2.1.1.6 วันที่สร้าง, 2.1.1.7 อัปเดตล่าสุด
+  renameReservationSheetIfNeeded();
   var resSheet = getReservationSheet();
   var resLastRow = resSheet.getLastRow();
   var resHeaders = ["รหัสการจอง", "รหัสลูกค้า", "วันที่ที่จอง", "เวลาที่จอง", "สถานะการจอง", "วันที่สร้าง", "อัปเดตล่าสุด"];
@@ -2394,7 +2445,7 @@ function addReservation(data) {
     initSheetIfNeeded();
 
     var dateStr = String(data.date || "").trim(); // YYYY-MM-DD
-    var timeSlot = formatTimeSlot(data.timeSlot || "");
+    var timeSlot = formatTimeSlot(data.timeSlot || data.startTime || "");
     var customerId = String(data.customerId || "").trim();
     var status = String(data.status || "ยืนยันแล้ว").trim();
 
@@ -3147,6 +3198,62 @@ function getReservationTimetable(periodMonth, requesterUsername) {
     return {
       success: false,
       message: "เกิดข้อผิดพลาดในการดึงข้อมูลตารางการจอง: " + err.message
+    };
+  }
+}
+
+/**
+ * ดึงข้อมูลตัวเลือกเวลาจาก Sheet_Name_Setting_Reservation_Timetable ตามวันที่ที่ระบุ (dateStr: YYYY-MM-DD)
+ * โดยดึงเฉพาะเวลาที่มี is_active เท่ากับ true มาแสดงเป็น option ให้เลือก
+ * @param {string} dateStr วันที่ที่ต้องการดึง เช่น "2026-10-08"
+ * @returns {Object} { success: boolean, date: string, slots: string[] }
+ */
+function getActiveTimetableSlotsByDate(dateStr) {
+  try {
+    initSheetIfNeeded();
+    var sheet = getSettingTimetableSheet();
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) {
+      return { success: true, date: dateStr, slots: [], message: "ไม่พบข้อมูลในตารางการจอง" };
+    }
+
+    var cleanDate = String(dateStr || "").trim();
+    var parts = cleanDate.split("-");
+    if (parts.length < 3) {
+      return { success: false, message: "รูปแบบวันที่ไม่ถูกต้อง (ต้องเป็น YYYY-MM-DD)" };
+    }
+
+    var targetPeriodMonth = parts[0] + "-" + (parseInt(parts[1], 10) < 10 ? "0" + parseInt(parts[1], 10) : parts[1]);
+    var targetDayMonth = normalizeDayMonth(parts[2]);
+
+    var data = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+    var activeSlots = [];
+
+    for (var i = 0; i < data.length; i++) {
+      var row = data[i];
+      var rMonth = normalizePeriodMonth(row[0]);
+      var rDay = normalizeDayMonth(row[1]);
+      if (rMonth !== targetPeriodMonth || rDay !== targetDayMonth) continue;
+
+      var rTime = formatTimeSlot(row[2]);
+      var rActive = (row[5] === false || String(row[5]).toLowerCase() === "false") ? false : true;
+
+      if (rActive && rTime) {
+        activeSlots.push(rTime);
+      }
+    }
+
+    activeSlots.sort();
+    return {
+      success: true,
+      date: cleanDate,
+      slots: activeSlots,
+      message: "ดึงข้อมูลรอบเวลาสำเร็จ"
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาดในการดึงรอบเวลา: " + err.message
     };
   }
 }

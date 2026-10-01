@@ -1436,11 +1436,11 @@
             </a>
           </li>
 
-          <!-- เมนู 4: ตามตัวแปร Sheet_Name_Reservation (ข้อมูลการจอง) [ใหม่] -->
+          <!-- เมนู 4: ตามตัวแปร Sheet_Name_Reservation (จองคิว) [ใหม่] -->
           <li class="sidebar-menu-item" id="nav-item-reservation">
             <a href="javascript:void(0)" class="sidebar-link" id="menu-reservation" onclick="switchSection('reservation')">
               <i class="fa-solid fa-calendar-days"></i>
-              <span id="sidebar-menu-reservation-text">ข้อมูลการจอง</span>
+              <span id="sidebar-menu-reservation-text">จองคิว</span>
             </a>
           </li>
 
@@ -1599,12 +1599,12 @@
           </div>
         </section>
 
-        <!-- SECTION 3: จัดการข้อมูลการจอง (Reservation Calendar) [ใหม่] -->
+        <!-- SECTION 3: จัดการการจองคิว (Reservation Calendar) [ใหม่] -->
         <section id="section-reservation" class="content-section">
           <div class="page-title-box">
             <div class="page-title">
-              <h3 id="reservation-page-title"><i class="fa-solid fa-calendar-days me-2 text-warning"></i>ตารางนัดหมายข้อมูลการจอง</h3>
-              <p>แสดงปฏิทินการนัดหมาย จองคิวนวดแผนไทย และโควตาในแต่ละรอบเวลา (สูงสุด 5 คนต่อช่วงเวลา)</p>
+              <h3 id="reservation-page-title"><i class="fa-solid fa-calendar-days me-2 text-warning"></i>จองคิว</h3>
+              <p></p>
             </div>
             <div class="d-flex gap-2 flex-wrap align-items-center">
               <button class="btn btn-outline-secondary" id="btn-refresh-reservation" onclick="loadCalendarData(currentCalendarYear, currentCalendarMonth, true)" title="รีเฟรชข้อมูลปฏิทิน">
@@ -1873,14 +1873,19 @@
     let timetableDataTableInstance = null;
     let currentUser = null;
     let sheetNameAdmin = "ข้อมูลผู้ดูแลระบบ";
+    let Sheet_Name_Admin = "ข้อมูลผู้ดูแลระบบ";
     let sheetNameCustomer = "ข้อมูลลูกค้า";
+    let Sheet_Name_Customer = "ข้อมูลลูกค้า";
     let sheetNameStaff = "ข้อมูลพนักงาน";
-    let sheetNameReservation = "ข้อมูลการจอง";
+    let Sheet_Name_Staff = "ข้อมูลพนักงาน";
+    let sheetNameReservation = "จองคิว";
+    let Sheet_Name_Reservation = "จองคิว";
     let sheetNameSettingTime = "ตั้งค่าตัวเลือกเวลาการจอง";
     let sheetNameSettingTimetable = "ตั้งค่าตารางการจอง";
     let menuNameSetting = "การตั้งค่า";
     let Menu_Name_Setting = "การตั้งค่า";
     let Sheet_Name_Setting_Selection_Reservation_Time = "ตั้งค่าตัวเลือกเวลาการจอง";
+    let Sheet_Name_Setting_Service_Price = "ตั้งค่าตัวเลือกค่าบริการ";
     let Sheet_Name_Setting_Reservation_Timetable = "ตั้งค่าตารางการจอง";
     let currentTimetablePeriodMonth = "";
     let activeSection = "admin";
@@ -1935,25 +1940,29 @@
         google.script.run
           .withSuccessHandler(function(config) {
             if (config) {
-              if (config.sheetNameAdmin) {
-                sheetNameAdmin = config.sheetNameAdmin;
+              if (config.sheetNameAdmin || config.Sheet_Name_Admin) {
+                sheetNameAdmin = config.sheetNameAdmin || config.Sheet_Name_Admin;
+                Sheet_Name_Admin = sheetNameAdmin;
                 $('#sidebar-menu-admin-text').text(sheetNameAdmin);
-                $('#admin-page-title').html('<i class="fa-solid fa-users-gear me-2 text-warning"></i>' + sheetNameAdmin);
+                $('#admin-page-title').html('<i class="fa-solid fa-users-gear me-2 text-warning"></i>' + escapeHtml(sheetNameAdmin));
               }
-              if (config.sheetNameCustomer) {
-                sheetNameCustomer = config.sheetNameCustomer;
+              if (config.sheetNameCustomer || config.Sheet_Name_Customer) {
+                sheetNameCustomer = config.sheetNameCustomer || config.Sheet_Name_Customer;
+                Sheet_Name_Customer = sheetNameCustomer;
                 $('#sidebar-menu-customer-text').text(sheetNameCustomer);
-                $('#customer-page-title').html('<i class="fa-solid fa-address-book me-2 text-warning"></i>' + sheetNameCustomer);
+                $('#customer-page-title').html('<i class="fa-solid fa-address-book me-2 text-warning"></i>' + escapeHtml(sheetNameCustomer));
               }
-              if (config.sheetNameStaff) {
-                sheetNameStaff = config.sheetNameStaff;
+              if (config.sheetNameStaff || config.Sheet_Name_Staff) {
+                sheetNameStaff = config.sheetNameStaff || config.Sheet_Name_Staff;
+                Sheet_Name_Staff = sheetNameStaff;
                 $('#sidebar-menu-staff-text').text(sheetNameStaff);
-                $('#staff-page-title').html('<i class="fa-solid fa-user-nurse me-2 text-warning"></i>' + sheetNameStaff);
+                $('#staff-page-title').html('<i class="fa-solid fa-user-nurse me-2 text-warning"></i>' + escapeHtml(sheetNameStaff));
               }
-              if (config.sheetNameReservation) {
-                sheetNameReservation = config.sheetNameReservation;
+              if (config.sheetNameReservation || config.Sheet_Name_Reservation) {
+                sheetNameReservation = config.sheetNameReservation || config.Sheet_Name_Reservation;
+                Sheet_Name_Reservation = sheetNameReservation;
                 $('#sidebar-menu-reservation-text').text(sheetNameReservation);
-                $('#reservation-page-title').html('<i class="fa-solid fa-calendar-days me-2 text-warning"></i>ตารางนัดหมาย' + sheetNameReservation);
+                $('#reservation-page-title').html('<i class="fa-solid fa-calendar-days me-2 text-warning"></i>' + escapeHtml(sheetNameReservation));
               }
               if (config.sheetNameSettingTime || config.Sheet_Name_Setting_Selection_Reservation_Time) {
                 sheetNameSettingTime = config.sheetNameSettingTime || config.Sheet_Name_Setting_Selection_Reservation_Time;
@@ -2074,6 +2083,14 @@
 
       // ซ่อน/แสดง เมนู Sidebar ตามสิทธิ์ person_flag
       applySidebarPermissions(currentUser);
+
+      // โหลดข้อมูลลูกค้าและรอบเวลาเตรียมไว้ในหน่วยความจำสำหรับฟอร์มจองคิว
+      if (!currentCustomerData || currentCustomerData.length === 0) {
+        loadCustomerTableData(false);
+      }
+      if (!currentSettingTimeData || currentSettingTimeData.length === 0) {
+        loadSettingTimeTableData(false);
+      }
 
       // กำหนดหน้าจอเริ่มต้นตามสิทธิ์ผู้ใช้งาน
       $('.content-section').removeClass('active');
@@ -4734,9 +4751,12 @@
         });
 
         let badgesHtml = '';
+        let cellClickHandler = `openDateDetailModal('${dateStr}')`;
+        let cellTitle = `คลิกเพื่อดูรายละเอียดรอบเวลาวันที่ ${d}`;
 
         if (!dayTimetable || dayTimetable.totalSlots === 0) {
           // เงื่อนไข: หากไม่พบข้อมูลในตารางประจำวัน (column day_month) ให้แสดงป้าย "ไม่พบข้อมูล"
+          cellClickHandler = `openDateDetailModal('${dateStr}')`;
           badgesHtml = `
             <div class="no-booking-wrapper">
               <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1" style="font-size:0.75rem; border-radius:6px; font-weight:600;" title="ไม่พบข้อมูลตารางการจองในวันที่ ${d}">
@@ -4746,6 +4766,7 @@
           `;
         } else if (isAllInactive) {
           // เงื่อนไขข้อ 1.1.1.1: ปิดให้บริการทั้งหมดทุกช่วงเวลา แสดง background สีเทา และป้ายปิดให้บริการ
+          cellClickHandler = `openDateDetailModal('${dateStr}')`;
           badgesHtml = `
             <div class="no-booking-wrapper">
               <span class="badge-day-closed" title="ปิดให้บริการทุกรอบเวลาในวันที่ ${d}">
@@ -4755,6 +4776,7 @@
           `;
         } else if (isAllFull) {
           // เงื่อนไขข้อ 2: ตรวจสอบโควต้าแล้วจองเต็มทุกรอบ
+          cellClickHandler = `openDateDetailModal('${dateStr}')`;
           badgesHtml = `
             <div class="available-wrapper mb-1">
               <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size:0.72rem; border-radius:6px; font-weight:600;" title="รอบเวลาทั้งหมดในวันนี้จองเต็มแล้ว">
@@ -4776,10 +4798,12 @@
             });
           }
         } else {
-          // เงื่อนไขข้อ 1.1.1.2 & ข้อ 2: ถ้ามีรอบเวลาเปิดใช้งานและยังไม่เต็ม ให้แสดงข้อความว่า “จองได้”
+          // เงื่อนไข: ถ้ามีรอบเวลาเปิดใช้งานและยังไม่เต็ม ให้แสดงข้อความว่า “จองได้” และเมื่อคลิกให้เปิด Modal จองคิว
+          cellClickHandler = `openBookingModal('${dateStr}')`;
+          cellTitle = `คลิกเพื่อเลือกจองคิววันที่ ${d}`;
           badgesHtml = `
             <div class="available-wrapper mb-1">
-              <span class="badge-booking-available" title="มีรอบเวลาเปิดให้จองได้ (คลิกเพื่อดูรอบเวลาและจองคิว)">
+              <span class="badge-booking-available" onclick="event.stopPropagation(); openBookingModal('${dateStr}')" style="cursor: pointer;" title="มีรอบเวลาเปิดให้จองได้ (คลิกเพื่อจองคิว)">
                 <i class="fa-solid fa-circle-check me-1 text-info"></i> จองได้
               </span>
             </div>
@@ -4810,7 +4834,7 @@
         }
 
         gridHtml += `
-          <div class="${dayClass}" onclick="openDateDetailModal('${dateStr}')" title="คลิกเพื่อดูรายละเอียดรอบเวลาวันที่ ${d}">
+          <div class="${dayClass}" onclick="${cellClickHandler}" title="${cellTitle}">
             <div class="day-header">
               <span class="day-number">${d}</span>
               ${isToday ? '<span class="badge bg-warning text-dark" style="font-size:0.65rem; font-weight: 600;">วันนี้</span>' : ''}
@@ -4967,12 +4991,16 @@
         let quotaBadge = '';
         let actionBtn = '';
 
+        const isLastSlotOfDay = (timeSlots.length > 1 && slotIdx === timeSlots.length - 1);
         if (isSlotInactive) {
           quotaBadge = '<span class="slot-quota-badge q-closed px-2 py-1" style="font-size:0.75rem;"><i class="fa-solid fa-ban me-1 text-danger"></i>ปิดการใช้งาน</span>';
           actionBtn = `<button class="btn btn-sm btn-outline-secondary" disabled style="font-size:0.75rem; cursor:not-allowed;" title="รอบเวลานี้ถูกปิดการใช้งานในตารางการจอง"><i class="fa-solid fa-ban me-1 text-danger"></i> ปิดการใช้งาน</button>`;
         } else if (isClosedByTime) {
           quotaBadge = '<span class="slot-quota-badge q-closed px-2 py-1" style="font-size:0.75rem;"><i class="fa-regular fa-clock me-1 text-danger"></i>ปิดรับจอง (ก่อนเริ่ม 15 นาที)</span>';
           actionBtn = `<button class="btn btn-sm btn-outline-danger" disabled style="font-size:0.75rem; cursor:not-allowed;" title="ปิดรับจองเมื่อเหลือน้อยกว่า 15 นาทีก่อนเริ่มรอบ"><i class="fa-regular fa-clock me-1 text-danger"></i> ปิดรับจอง</button>`;
+        } else if (isLastSlotOfDay) {
+          quotaBadge = `<span class="badge bg-secondary text-white px-2 py-1">รอบสิ้นสุดวัน</span>`;
+          actionBtn = `<button class="btn btn-sm btn-outline-secondary" disabled style="font-size:0.75rem; cursor:not-allowed;" title="รอบเวลานี้เป็นเวลารอบสุดท้ายของวัน ใช้สำหรับเป็นเวลาสิ้นสุดการบริการ (ไม่สามารถเลือกเป็นเวลาเริ่มต้นได้)"><i class="fa-solid fa-flag-checkered me-1"></i> รอบสิ้นสุดวัน</button>`;
         } else if (isFull) {
           quotaBadge = `<span class="slot-quota-badge q-full px-2 py-1" style="font-size:0.75rem;"><i class="fa-solid fa-users me-1"></i>เต็ม (${usageQuota}/${maxQuota})</span>`;
           actionBtn = `<button class="btn btn-sm btn-outline-danger" disabled style="font-size:0.75rem; cursor:not-allowed;" title="ครบโควต้า ${maxQuota} คนแล้ว"><i class="fa-solid fa-users me-1"></i> เต็มแล้ว</button>`;
@@ -5177,7 +5205,114 @@
     }
 
     /**
-     * เปิดหน้าต่าง Modal สำหรับเพิ่มการจองในรอบเวลาที่เลือก
+     * ดึงช่วงเวลาที่เปิดใช้งาน (is_active = true) จาก Sheet_Name_Setting_Selection_Reservation_Time
+     */
+    function getActiveSettingTimeSlots() {
+      if (currentSettingTimeData && currentSettingTimeData.length > 0) {
+        const active = currentSettingTimeData
+          .filter(item => (item.isActive === true || String(item.isActive).toLowerCase() === 'true') && item.deletedFlag !== 'Y')
+          .map(item => formatTimeSlot(item.period))
+          .filter(Boolean);
+        if (active.length > 0) {
+          active.sort((a, b) => a.localeCompare(b));
+          return Array.from(new Set(active));
+        }
+      }
+      if (calendarDataCache && calendarDataCache.timeSlots && calendarDataCache.timeSlots.length > 0) {
+        const list = calendarDataCache.timeSlots.map(s => formatTimeSlot(s)).filter(Boolean);
+        list.sort((a, b) => a.localeCompare(b));
+        return Array.from(new Set(list));
+      }
+      return ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
+    }
+
+    /**
+     * ดึงข้อมูล option เวลาจาก sheet ตัวแปร Sheet_Name_Setting_Reservation_Timetable
+     * ตามวันที่ที่กดจอง (dateStr) โดยดูว่าในวันที่นั้นๆ มีการตั้งค่า option เวลาไว้แบบไหนบ้าง
+     * และดึงเฉพาะเวลาที่มี is_active เท่ากับ true มาแสดงเป็น option ให้เลือกเท่านั้น
+     * @param {string} dateStr วันที่ที่กดจอง เช่น "2026-10-08"
+     * @returns {string[]} อาร์เรย์เวลาที่มี is_active = true เรียงลำดับจากเช้าไปค่ำ
+     */
+    function getActiveTimetableSlotsForDate(dateStr) {
+      if (!dateStr) return [];
+
+      // 1. ดึงจาก calendarDataCache.timetableByDate ตามวันที่ที่กดจอง (ข้อมูลจาก Sheet_Name_Setting_Reservation_Timetable)
+      if (calendarDataCache && calendarDataCache.timetableByDate && calendarDataCache.timetableByDate[dateStr]) {
+        const dayTt = calendarDataCache.timetableByDate[dateStr];
+        if (dayTt.slots && dayTt.slots.length > 0) {
+          const activeList = dayTt.slots
+            .filter(item => (item.isActive === true || String(item.isActive).toLowerCase() === 'true'))
+            .map(item => formatTimeSlot(item.time))
+            .filter(Boolean);
+          if (activeList.length > 0) {
+            activeList.sort((a, b) => a.localeCompare(b));
+            return Array.from(new Set(activeList));
+          }
+        }
+      }
+
+      // 2. ตรวจสอบจาก currentTimetableData (หากมีข้อมูลในหน่วยความจำของหน้าตั้งค่าตารางการจอง)
+      if (currentTimetableData && currentTimetableData.length > 0) {
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+          const targetPeriodMonth = parts[0] + '-' + parts[1];
+          const targetDayMonth = normalizeDayMonth(parts[2]);
+          const activeList = currentTimetableData
+            .filter(item => {
+              const pMonth = normalizePeriodMonth(item.periodMonth);
+              const dMonth = normalizeDayMonth(item.dayMonth);
+              const act = (item.isActive === true || String(item.isActive).toLowerCase() === 'true');
+              return (pMonth === targetPeriodMonth && dMonth === targetDayMonth && act);
+            })
+            .map(item => formatTimeSlot(item.periodTime || item.time || item.period))
+            .filter(Boolean);
+          if (activeList.length > 0) {
+            activeList.sort((a, b) => a.localeCompare(b));
+            return Array.from(new Set(activeList));
+          }
+        }
+      }
+
+      return [];
+    }
+
+    /**
+     * คำนวณจำนวนชั่วโมงระหว่างเวลาเริ่มต้นและเวลาสิ้นสุด
+     */
+    function calculateHoursVal(sTime, eTime) {
+      if (!sTime || !eTime) return '0';
+      const sParts = sTime.split(':').map(Number);
+      const eParts = eTime.split(':').map(Number);
+      const diff = (eParts[0] * 60 + eParts[1]) - (sParts[0] * 60 + sParts[1]);
+      if (diff <= 0) return '0';
+      const hrs = diff / 60;
+      return (hrs % 1 === 0) ? String(hrs) : hrs.toFixed(1).replace(/\.0$/, '');
+    }
+
+    /**
+     * ดึงตัวเลือกเวลาสิ้นสุดสัมพันธ์กับเวลาเริ่มต้น (เฉพาะเวลาที่มากกว่าเวลาเริ่มต้น)
+     */
+    function getValidEndTimes(selectedStartTime, allTimes) {
+      if (!selectedStartTime) return [];
+      const sParts = selectedStartTime.split(':').map(Number);
+      const sMins = sParts[0] * 60 + sParts[1];
+
+      let ends = (allTimes || []).filter(t => {
+        const parts = t.split(':').map(Number);
+        return (parts[0] * 60 + parts[1]) > sMins;
+      });
+
+      // กรณีสำรองเพื่อความปลอดภัย หากไม่พบช่วงเวลาถัดไป
+      if (ends.length === 0) {
+        const nextH = Math.floor((sMins + 60) / 60) % 24;
+        const nextM = (sMins + 60) % 60;
+        ends = [`${String(nextH).padStart(2, '0')}:${String(nextM).padStart(2, '0')}`];
+      }
+      return ends;
+    }
+
+    /**
+     * เปิดหน้าต่าง Modal สำหรับเพิ่มการจองคิวในช่อง calendar ที่สามารถ "จองได้"
      */
     function openBookingModal(dateStr, slot) {
       if (!calendarDataCache) return;
@@ -5234,6 +5369,81 @@
         return;
       }
 
+      // 1. ดึงข้อมูล option เวลาจาก sheet ตัวแปร Sheet_Name_Setting_Reservation_Timetable แทนของเดิม
+      // 1.1. ให้ดึงข้อมูลตาม วันที่ ที่กดจอง โดยดูว่า ในวันที่นั้นๆ มีการตั้งค่า option เวลาไว้แบบไหนบ้าง
+      // โดยดึงเฉพาะ เวลาที่มี is_active เท่ากับ true มาแสดงเป็น option ให้เลือกเท่านั้น
+      const allActiveTimes = getActiveTimetableSlotsForDate(dateStr);
+
+      if (allActiveTimes.length === 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีรอบเวลาที่เปิดให้บริการ',
+          text: `วันที่ ${dateStr} ไม่พบรอบเวลาที่เปิดใช้งาน (is_active = true) ในตารางการจอง (${Sheet_Name_Setting_Reservation_Timetable})`,
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      // คัดกรองเอาเวลารอบสุดท้ายของวันออก จาก option กรณีถ้าเป็น การเลือก "เวลาเริ่มต้น"
+      const eligibleStartSlots = (allActiveTimes.length > 1) 
+        ? allActiveTimes.slice(0, -1) 
+        : allActiveTimes;
+
+      const isToday = (dateStr === cmpTodayStr);
+      let startTimeOptions = [];
+
+      if (isToday) {
+        // 1.1.1. ถ้าวันที่จอง เป็นวันที่ปัจจุบัน เวลาใน dropdown จะแสดงเฉพาะ ตัวเลือกเวลาที่ มากกว่า เวลาปัจจุบัน 15 นาที
+        // เช่น ถ้า เวลาปัจจุบัน คือ 08:30 ดังนั้น ใน dropdown รอบเวลา 09:00 แสดงในตัวเลือกได้ แต่ถ้า เวลาปัจจุบัน 08:45 เวลาในตัวเลือกจะ แสดง รอบเวลา 10:00 (รอบถัดไปแทน ไม่มี 09:00 ให้เลือก)
+        const currentHour = now.getHours();
+        const currentMin = now.getMinutes();
+        const nowTotalMinutes = currentHour * 60 + currentMin;
+
+        startTimeOptions = eligibleStartSlots.filter(t => {
+          const parts = t.split(':').map(Number);
+          const slotTotalMinutes = parts[0] * 60 + parts[1];
+          return (slotTotalMinutes - nowTotalMinutes) > 15;
+        });
+      } else {
+        // 1.1.2. ถ้าวันที่จอง ไม่ใช้วันที่ปัจจุบัน ให้แสดง dropdown ตามปกติ (คัดกรองรอบสุดท้ายของวันออกแล้ว)
+        startTimeOptions = [...eligibleStartSlots];
+      }
+
+      if (startTimeOptions.length === 0) {
+        Swal.fire({
+          icon: 'info',
+          title: 'ไม่มีรอบเวลาที่สามารถจองได้',
+          html: `<div class="text-center">รอบเวลาเริ่มต้นของวันนี้ (<strong>${escapeHtml(dateStr)}</strong>) ได้ปิดรับจองแล้ว<br><small class="text-muted">(ต้องเลือกเวลาที่มากกว่าเวลาปัจจุบัน 15 นาทีขึ้นไป และไม่รวมรอบสุดท้ายของวัน)</small></div>`,
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      // กำหนดค่าเริ่มต้นของเวลาเริ่มต้น
+      let initialStartTime = startTimeOptions[0];
+      if (slot && startTimeOptions.includes(formatTimeSlot(slot))) {
+        initialStartTime = formatTimeSlot(slot);
+      }
+
+      // 1.2. Field เลือก "เวลาสิ้นสุด" เป็น dropdown ดึงข้อมูลสัมพันธ์กับ "เวลาเริ่มต้น" (เฉพาะเวลาที่มากกว่า)
+      const initialEndTimes = getValidEndTimes(initialStartTime, allActiveTimes);
+      const initialEndTime = initialEndTimes.length > 0 ? initialEndTimes[0] : '';
+
+      // 1.3. Field จำนวนชั่วโมง คำนวณจากเวลาเริ่มต้นและเวลาสิ้นสุด
+      const initialHours = calculateHoursVal(initialStartTime, initialEndTime);
+
+      let startTimeOptionsHtml = '';
+      startTimeOptions.forEach(t => {
+        const isSel = (t === initialStartTime) ? 'selected' : '';
+        startTimeOptionsHtml += `<option value="${escapeHtml(t)}" ${isSel}>${escapeHtml(t)} น.</option>`;
+      });
+
+      let endTimeOptionsHtml = '';
+      initialEndTimes.forEach((t, idx) => {
+        const isSel = (idx === 0) ? 'selected' : '';
+        endTimeOptionsHtml += `<option value="${escapeHtml(t)}" ${isSel}>${escapeHtml(t)} น.</option>`;
+      });
+
       // ดึงรายชื่อลูกค้าที่มีอยู่ในระบบ
       let customerOptions = '<option value="">-- เลือกข้อมูลลูกค้า --</option>';
       if (currentCustomerData && currentCustomerData.length > 0) {
@@ -5244,63 +5454,6 @@
           customerOptions += `<option value="${escapeHtml(cid)}">${escapeHtml(cid)} - ${escapeHtml(name)}${escapeHtml(phone)}</option>`;
         });
       }
-
-      // ตัวเลือกรอบเวลา
-      const rawSlots = (dayTimetable && dayTimetable.slots && dayTimetable.slots.length > 0)
-        ? dayTimetable.slots.map(s => s.time)
-        : (calendarDataCache.timeSlots || defaultTimeSlots).map(s => formatTimeSlot(s));
-      const slots = rawSlots.map(s => formatTimeSlot(s));
-      const targetSlot = formatTimeSlot(slot || slots[0]);
-
-      const isToday = (dateStr === cmpTodayStr);
-      const currentHour = now.getHours();
-      const currentMin = now.getMinutes();
-      const nowTotalMinutes = currentHour * 60 + currentMin;
-
-      const dateReservations = (calendarDataCache.reservationsByDate && calendarDataCache.reservationsByDate[dateStr]) 
-        ? calendarDataCache.reservationsByDate[dateStr] 
-        : {};
-
-      let timeSlotOptions = '';
-      slots.forEach(s => {
-        let list = dateReservations[s];
-        if (!list) {
-          for (const k in dateReservations) {
-            if (formatTimeSlot(k) === s) { list = dateReservations[k]; break; }
-          }
-        }
-        const count = list ? list.length : 0;
-
-        const slotTimetable = (dayTimetable && dayTimetable.slotMap) ? dayTimetable.slotMap[s] : null;
-        const isSlotInactive = (slotTimetable && slotTimetable.isActive === false);
-        const maxQuota = slotTimetable ? slotTimetable.quotaTotal : 5;
-        const usageQuota = (slotTimetable && slotTimetable.usageQuota !== undefined) ? slotTimetable.usageQuota : count;
-        const isFull = (slotTimetable && slotTimetable.isFull) || (usageQuota >= maxQuota);
-
-        let isClosed = false;
-        if (isToday) {
-          const sParts = s.split(':');
-          const sMin = parseInt(sParts[0], 10) * 60 + parseInt(sParts[1], 10);
-          // เงื่อนไขข้อ 3 & 3.1: ต้องจองก่อนถึงช่วงเวลาที่กำหนด 15 นาที
-          if (nowTotalMinutes >= sMin - 15) isClosed = true;
-        }
-
-        let disabledAttr = '';
-        let labelSuffix = `(ว่าง ${usageQuota}/${maxQuota})`;
-        if (isSlotInactive) {
-          disabledAttr = 'disabled';
-          labelSuffix = '(ปิดการใช้งานในตาราง)';
-        } else if (isClosed) {
-          disabledAttr = 'disabled';
-          labelSuffix = '(ปิดรับจอง - ก่อนเริ่ม 15 นาที)';
-        } else if (isFull) {
-          disabledAttr = 'disabled';
-          labelSuffix = `(เต็มแล้ว ${usageQuota}/${maxQuota})`;
-        }
-
-        const isSelected = (s === targetSlot && !isClosed && !isFull && !isSlotInactive) ? 'selected' : '';
-        timeSlotOptions += `<option value="${escapeHtml(s)}" ${disabledAttr} ${isSelected}>${escapeHtml(s)} น. ${labelSuffix}</option>`;
-      });
 
       const parts = dateStr.split('-');
       const y = parseInt(parts[0], 10);
@@ -5319,18 +5472,35 @@
             </div>
           </div>
 
-          <div class="swal-form-group">
-            <label class="swal-form-label">รอบเวลาที่ต้องการจอง <span class="req">*</span></label>
-            <select id="swal-book-time" class="swal-input-custom">
-              ${timeSlotOptions}
-            </select>
-            <div class="text-muted mt-1" style="font-size:0.75rem;">
-              <i class="fa-regular fa-clock me-1 text-danger"></i> ระบบปิดรับจองเมื่อเหลือน้อยกว่า 15 นาทีก่อนถึงรอบเวลา และจำกัดตามโควต้าที่ตั้งไว้
+          <!-- 1.1 Field เวลาเริ่มต้น และ 1.2 Field เวลาสิ้นสุด -->
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="swal-form-label"><i class="fa-solid fa-clock text-warning me-1"></i>เวลาเริ่มต้น <span class="req">*</span></label>
+              <select id="swal-book-start-time" class="swal-input-custom" style="font-weight: 600;">
+                ${startTimeOptionsHtml}
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="swal-form-label"><i class="fa-solid fa-clock text-info me-1"></i>เวลาสิ้นสุด <span class="req">*</span></label>
+              <select id="swal-book-end-time" class="swal-input-custom" style="font-weight: 600;">
+                ${endTimeOptionsHtml}
+              </select>
             </div>
           </div>
 
-          <div class="swal-form-group">
-            <label class="swal-form-label">เลือกลูกค้า <span class="req">*</span></label>
+          <!-- 1.3 Field จำนวนชั่วโมง เป็นแบบ disabled -->
+          <div class="swal-form-group mb-3">
+            <label class="swal-form-label"><i class="fa-solid fa-hourglass-half text-secondary me-1"></i>จำนวนชั่วโมง</label>
+            <div class="input-group">
+              <input type="text" id="swal-book-hours" class="form-control text-center fw-bold fs-5 bg-light" value="${initialHours}" disabled readonly style="color: #1B3B36; border: 1.5px solid #CBD5E1; border-radius: 8px;">
+              <span class="input-group-text bg-light text-muted fw-semibold">ชั่วโมง</span>
+            </div>
+            <small class="text-muted" style="font-size:0.75rem;">* ระบบคำนวณจำนวนชั่วโมงอัตโนมัติจากเวลาเริ่มต้นและเวลาสิ้นสุด</small>
+          </div>
+
+          <!-- เลือกลูกค้า -->
+          <div class="swal-form-group mb-3">
+            <label class="swal-form-label"><i class="fa-solid fa-user text-primary me-1"></i>เลือกลูกค้า <span class="req">*</span></label>
             <select id="swal-book-customer" class="swal-input-custom">
               ${customerOptions}
             </select>
@@ -5341,8 +5511,9 @@
             ` : ''}
           </div>
 
-          <div class="swal-form-group">
-            <label class="swal-form-label">สถานะการจอง</label>
+          <!-- สถานะการจอง -->
+          <div class="swal-form-group mb-2">
+            <label class="swal-form-label"><i class="fa-solid fa-circle-check text-success me-1"></i>สถานะการจอง</label>
             <select id="swal-book-status" class="swal-input-custom">
               <option value="ยืนยันแล้ว" selected>ยืนยันแล้ว</option>
               <option value="รอยืนยัน">รอยืนยัน</option>
@@ -5352,7 +5523,7 @@
       `;
 
       Swal.fire({
-        title: '<i class="fa-solid fa-bookmark text-warning me-2"></i>เพิ่มการจองคิว',
+        title: '<i class="fa-solid fa-calendar-plus text-warning me-2"></i>จองคิว',
         html: formHtml,
         showCancelButton: true,
         confirmButtonText: '<i class="fa-solid fa-check me-1"></i> ยืนยันการจอง',
@@ -5361,13 +5532,49 @@
         cancelButtonColor: '#718096',
         reverseButtons: true,
         focusConfirm: false,
+        didOpen: () => {
+          const $startSelect = $('#swal-book-start-time');
+          const $endSelect = $('#swal-book-end-time');
+          const $hoursInput = $('#swal-book-hours');
+
+          function updateHoursDisplay() {
+            const sVal = $startSelect.val();
+            const eVal = $endSelect.val();
+            $hoursInput.val(calculateHoursVal(sVal, eVal));
+          }
+
+          // 1.2.1. เมื่อทำการเลือก option ใน dropdown “เวลาเริ่มต้น” เรียบร้อยแล้ว
+          // field เลือกเวลา “เวลาสิ้นสุด” ดึงข้อมูล ตัวเลือก โดยมี option เฉพาะเวลาที่มากกว่าในช่วงเวลาเริ่มต้น มาแสดงเท่านั้น
+          function onStartTimeChange() {
+            const curStart = $startSelect.val();
+            const validEnds = getValidEndTimes(curStart, allActiveTimes);
+            let endHtml = '';
+            validEnds.forEach((t) => {
+              endHtml += `<option value="${escapeHtml(t)}">${escapeHtml(t)} น.</option>`;
+            });
+            $endSelect.html(endHtml);
+            if (validEnds.length > 0) {
+              $endSelect.val(validEnds[0]);
+            }
+            updateHoursDisplay();
+          }
+
+          $startSelect.on('change', onStartTimeChange);
+          $endSelect.on('change', updateHoursDisplay);
+        },
         preConfirm: () => {
-          const selectedTime = $('#swal-book-time').val();
+          const selectedStartTime = $('#swal-book-start-time').val();
+          const selectedEndTime = $('#swal-book-end-time').val();
+          const calculatedHours = $('#swal-book-hours').val();
           const selectedCustomer = $('#swal-book-customer').val();
           const selectedStatus = $('#swal-book-status').val();
 
-          if (!selectedTime) {
-            Swal.showValidationMessage('กรุณาเลือกรอบเวลาที่เปิดให้จอง');
+          if (!selectedStartTime) {
+            Swal.showValidationMessage('กรุณาเลือกเวลาเริ่มต้น');
+            return false;
+          }
+          if (!selectedEndTime) {
+            Swal.showValidationMessage('กรุณาเลือกเวลาสิ้นสุด');
             return false;
           }
           if (!selectedCustomer) {
@@ -5375,30 +5582,21 @@
             return false;
           }
 
-          // เงื่อนไขข้อ 3.1: ตรวจสอบ cutoff 15 นาทีอีกครั้ง
+          // ตรวจสอบว่าไม่เลือกเวลารอบสุดท้ายของวันเป็นเวลาเริ่มต้น
+          if (allActiveTimes.length > 1 && selectedStartTime === allActiveTimes[allActiveTimes.length - 1]) {
+            Swal.showValidationMessage('ไม่สามารถเลือกเวลารอบสุดท้ายของวันเป็นเวลาเริ่มต้นได้');
+            return false;
+          }
+
+          // 1.1.1. ตรวจสอบเงื่อนไข cutoff 15 นาทีอีกครั้ง หากเป็นวันที่ปัจจุบัน
           if (isToday) {
-            const sParts = selectedTime.split(':');
-            const sMin = parseInt(sParts[0], 10) * 60 + parseInt(sParts[1], 10);
+            const parts = selectedStartTime.split(':').map(Number);
+            const slotMins = parts[0] * 60 + parts[1];
             const curH = new Date().getHours();
             const curM = new Date().getMinutes();
             const curTotal = curH * 60 + curM;
-            if (curTotal >= sMin - 15) {
-              Swal.showValidationMessage(`รอบเวลา ${selectedTime} น. ปิดรับจองแล้ว (ต้องจองล่วงหน้าก่อนถึงเวลาอย่างน้อย 15 นาที)`);
-              return false;
-            }
-          }
-
-          // เงื่อนไขข้อ 2: ตรวจสอบโควต้าและสถานะจาก timetable อีกครั้ง
-          const selectedSlotTt = (dayTimetable && dayTimetable.slotMap) ? dayTimetable.slotMap[selectedTime] : null;
-          if (selectedSlotTt) {
-            if (selectedSlotTt.isActive === false) {
-              Swal.showValidationMessage(`รอบเวลา ${selectedTime} น. ถูกปิดการใช้งานในตารางการจอง`);
-              return false;
-            }
-            const sMaxQ = selectedSlotTt.quotaTotal || 5;
-            const sUsageQ = selectedSlotTt.usageQuota !== undefined ? selectedSlotTt.usageQuota : 0;
-            if (sUsageQ >= sMaxQ) {
-              Swal.showValidationMessage(`รอบเวลา ${selectedTime} น. เต็มแล้ว (${sUsageQ}/${sMaxQ} ท่าน)`);
+            if ((slotMins - curTotal) <= 15) {
+              Swal.showValidationMessage(`รอบเวลาเริ่มต้น ${selectedStartTime} น. ปิดรับจองแล้ว (ต้องเลือกเวลาที่มากกว่าเวลาปัจจุบัน 15 นาทีขึ้นไป)`);
               return false;
             }
           }
@@ -5406,7 +5604,10 @@
           const opUser = (currentUser && currentUser.username) ? currentUser.username : 'admin';
           return {
             date: dateStr,
-            timeSlot: selectedTime,
+            timeSlot: selectedStartTime,
+            startTime: selectedStartTime,
+            endTime: selectedEndTime,
+            hours: calculatedHours,
             customerId: selectedCustomer,
             status: selectedStatus,
             operatorUsername: opUser
@@ -5489,7 +5690,7 @@
         Swal.fire({
           icon: 'success',
           title: 'จองคิวสำเร็จ (โหมดจำลอง)',
-          text: `บันทึกการจองรอบ ${payload.timeSlot} น. สำหรับคุณ ${cust.nickname || payload.customerId} เรียบร้อยแล้ว`,
+          text: `บันทึกการจองรอบ ${payload.startTime || payload.timeSlot} - ${payload.endTime || ''} น. (${payload.hours || 1} ชม.) สำหรับคุณ ${cust.nickname || payload.customerId} เรียบร้อยแล้ว`,
           confirmButtonColor: '#1B3B36'
         });
       }
