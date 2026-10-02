@@ -53,7 +53,7 @@ function doGet(e) {
     // กรณีเรียกด้วย ?action=setupSettingTime เพื่อสั่งรันอัปเดต Schema ตัวเลือกเวลาผ่าน URL ได้ทันที
     if (e && e.parameter && (e.parameter.action === "setupSettingTime" || e.parameter.setupSettingTime === "true")) {
       var resTime = setupSettingTimeSheetSchema();
-      return HtmlService.createHtmlOutput("<div style='font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #c3e6cb;background:#d4edda;border-radius:10px;'><h2 style='color:#155724;margin-top:0;'>✅ อัปเดต Schema ตัวเลือกเวลาการจองสำเร็จ</h2><p style='color:#155724;font-size:16px;'>" + resTime.message + "</p><hr style='border:0;border-top:1px solid #c3e6cb;margin:20px 0;'><p style='color:#6c757d;font-size:14px;'>Google Sheet ตั้งค่าตัวเลือกเวลาการจอง (Sheet_Name_Setting_Selection_Reservation_Time) ได้รับการตั้งค่าหัวตาราง 7 คอลัมน์เรียบร้อยแล้ว ท่านสามารถปิดหน้านี้แล้วเปิดใช้งานระบบได้ตามปกติ</p></div>");
+      return HtmlService.createHtmlOutput("<div style='font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #c3e6cb;background:#d4edda;border-radius:10px;'><h2 style='color:#155724;margin-top:0;'>✅ อัปเดต Schema ตัวเลือกเวลาการจองสำเร็จ</h2><p style='color:#155724;font-size:16px;'>" + resTime.message + "</p><hr style='border:0;border-top:1px solid #c3e6cb;margin:20px 0;'><p style='color:#6c757d;font-size:14px;'>Google Sheet ตั้งค่าตัวเลือกเวลาการจอง (Sheet_Name_Setting_Selection_Reservation_Time) ได้รับการตั้งค่าหัวตาราง 8 คอลัมน์ (period_from, period_to) เรียบร้อยแล้ว ท่านสามารถปิดหน้านี้แล้วเปิดใช้งานระบบได้ตามปกติ</p></div>");
     }
 
     // กรณีเรียกด้วย ?action=setupSettingTimetable เพื่อสั่งรันอัปเดต Schema ตารางการจองผ่าน URL ได้ทันที
@@ -68,10 +68,24 @@ function doGet(e) {
       return HtmlService.createHtmlOutput("<div style='font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #c3e6cb;background:#d4edda;border-radius:10px;'><h2 style='color:#155724;margin-top:0;'>✅ อัปเดตชื่อชีตสำเร็จ</h2><p style='color:#155724;font-size:16px;'>" + resReservation.message + "</p><hr style='border:0;border-top:1px solid #c3e6cb;margin:20px 0;'><p style='color:#6c757d;font-size:14px;'>Google Sheet จองคิว (Sheet_Name_Reservation) ได้รับการตั้งชื่อเรียบร้อยแล้ว ท่านสามารถปิดหน้านี้แล้วเปิดใช้งานระบบได้ตามปกติ</p></div>");
     }
 
-    // ตรวจสอบและสร้างชีตพร้อมข้อมูลเริ่มต้นหากยังไม่มี
-    initSheetIfNeeded();
+    // กรณีเรียกด้วย ?action=initAll เพื่อสั่งตรวจสอบและตั้งค่า Schema ทั้งหมดผ่าน URL
+    if (e && e.parameter && (e.parameter.action === "initAll" || e.parameter.initAll === "true")) {
+      initSheetIfNeeded();
+      return HtmlService.createHtmlOutput("<div style='font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #c3e6cb;background:#d4edda;border-radius:10px;'><h2 style='color:#155724;margin-top:0;'>✅ ตั้งค่า Schema ทั้งหมดสำเร็จ</h2><p style='color:#155724;font-size:16px;'>ระบบได้ตรวจสอบและตั้งค่าโครงสร้างชีตทั้งหมดเรียบร้อยแล้ว ท่านสามารถเปิดใช้งานระบบได้ตามปกติ</p></div>");
+    }
 
-    var htmlOutput = HtmlService.createTemplateFromFile('index').evaluate();
+    // ให้บริการหน้าเว็บ HTML ทันที (รองรับทั้งการตั้งชื่อไฟล์ 'index' หรือ 'index.html' ใน Apps Script Editor)
+    var htmlOutput;
+    try {
+      htmlOutput = HtmlService.createHtmlOutputFromFile('index');
+    } catch (err1) {
+      try {
+        htmlOutput = HtmlService.createHtmlOutputFromFile('index.html');
+      } catch (err2) {
+        htmlOutput = HtmlService.createTemplateFromFile('index').evaluate();
+      }
+    }
+
     htmlOutput.setTitle("JM Thai Massage Management System");
     htmlOutput.addMetaTag('viewport', 'width=device-width, initial-scale=1, shrink-to-fit=no');
     htmlOutput.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
@@ -397,7 +411,10 @@ function setupCustomerSheetSchema() {
     }
 
     try {
-      SpreadsheetApp.getActiveSpreadsheet().toast("อัปเดต Schema ข้อมูลลูกค้าเป็น 13 คอลัมน์ (พร้อม pwd) เรียบร้อยแล้ว", "สำเร็จ", 5);
+      var activeSs = SpreadsheetApp.getActiveSpreadsheet();
+      if (activeSs && typeof activeSs.toast === "function") {
+        activeSs.toast("อัปเดต Schema ข้อมูลลูกค้าเป็น 13 คอลัมน์ (พร้อม pwd) เรียบร้อยแล้ว", "สำเร็จ", 5);
+      }
     } catch (e) {}
 
     return { success: true, message: "อัปเดต Schema ข้อมูลลูกค้า 13 คอลัมน์ (พร้อม pwd) และเติมรหัสผ่านเริ่มต้นเรียบร้อยแล้ว" };
@@ -570,7 +587,10 @@ function setupStaffSheetSchema() {
     }
 
     try {
-      SpreadsheetApp.getActiveSpreadsheet().toast("อัปเดต Schema ข้อมูลพนักงานเป็น 13 คอลัมน์ (พร้อม pwd) เรียบร้อยแล้ว", "สำเร็จ", 5);
+      var activeSs = SpreadsheetApp.getActiveSpreadsheet();
+      if (activeSs && typeof activeSs.toast === "function") {
+        activeSs.toast("อัปเดต Schema ข้อมูลพนักงานเป็น 13 คอลัมน์ (พร้อม pwd) เรียบร้อยแล้ว", "สำเร็จ", 5);
+      }
     } catch (e) {}
 
     return { success: true, message: "อัปเดต Schema ข้อมูลพนักงาน 13 คอลัมน์ (พร้อม pwd) และเติมรหัสผ่านเริ่มต้นเรียบร้อยแล้ว" };
@@ -582,14 +602,18 @@ function setupStaffSheetSchema() {
 /**
  * เริ่มต้นโครงสร้างตารางและสร้างบัญชี Admin / ชีตลูกค้า / ชีตเวลา / ชีตการจอง เริ่มต้น (หากยังไม่มี)
  */
+var _isInitializingSheets = false;
 function initSheetIfNeeded() {
-  var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+  if (_isInitializingSheets) return;
+  _isInitializingSheets = true;
+  try {
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
-  // 1. ตรวจสอบชีตผู้ดูแลระบบ (Schema 12 คอลัมน์)
-  var adminSheet = getAdminSheet();
-  var adminLastRow = adminSheet.getLastRow();
-  var adminHeaders = [
-    "username",     // 1. ชื่อผู้ใช้
+    // 1. ตรวจสอบชีตผู้ดูแลระบบ (Schema 12 คอลัมน์)
+    var adminSheet = getAdminSheet();
+    var adminLastRow = adminSheet.getLastRow();
+    var adminHeaders = [
+      "username",     // 1. ชื่อผู้ใช้
     "pwd",          // 2. รหัสผ่าน
     "nick_name",    // 3. ชื่อเล่น
     "first_name",   // 4. ชื่อจริง
@@ -707,10 +731,15 @@ function initSheetIfNeeded() {
     for (var rc = 1; rc <= resHeaders.length; rc++) {
       resSheet.autoResizeColumn(rc);
     }
-  } else {
-    try {
-      resSheet.getRange("D:D").setNumberFormat("@");
-    } catch (e) {}
+    } else {
+      try {
+        resSheet.getRange("D:D").setNumberFormat("@");
+      } catch (e) {}
+    }
+  } catch (err) {
+    Logger.log("Error in initSheetIfNeeded: " + err.message);
+  } finally {
+    _isInitializingSheets = false;
   }
 }
 
@@ -2042,16 +2071,15 @@ function getReservationTimeSlots() {
     var data = sheet.getDataRange().getValues();
     var slots = [];
     if (data.length > 1) {
+      var headers = data[0].map(function(h) { return String(h || "").trim(); });
+      var hasPeriodTo = (headers.indexOf("period_to") !== -1 || headers[1] === "period_to");
+      var activeCol = hasPeriodTo ? 2 : 1;
+      var delCol = hasPeriodTo ? 7 : 6;
+
       for (var i = 1; i < data.length; i++) {
         var row = data[i];
-        var delFlag = "N";
-        var isActive = true;
-        if (row.length >= 7) {
-          delFlag = String(row[6] || "N").trim().toUpperCase();
-          isActive = (row[1] === false || String(row[1]).toLowerCase() === "false") ? false : true;
-        } else {
-          delFlag = String(row[5] || "N").trim().toUpperCase();
-        }
+        var delFlag = String(row[delCol] || "N").trim().toUpperCase();
+        var isActive = (row[activeCol] === false || String(row[activeCol]).toLowerCase() === "false") ? false : true;
 
         // หากถูก Soft Delete หรือปิดการใช้งาน (is_active = false) ให้ข้าม
         if (delFlag === "Y") continue;
@@ -2064,9 +2092,94 @@ function getReservationTimeSlots() {
     slots.sort(function(a, b) {
       return a.localeCompare(b);
     });
-    return slots.length > 0 ? slots : ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
+    return slots.length > 0 ? slots : ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
   } catch (err) {
-    return ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
+    return ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
+  }
+}
+
+/**
+ * ดึงรายการพนักงานที่เปิดใช้งาน (is_active = true และ deleted_flag !== 'Y') จาก Sheet_Name_Staff
+ * @returns {Array<{staffId: string, nickname: string, name: string}>}
+ */
+function getActiveStaffList() {
+  try {
+    var sheet = getStaffSheet();
+    var data = sheet.getDataRange().getValues();
+    var list = [];
+    if (data.length > 1) {
+      for (var i = 1; i < data.length; i++) {
+        var row = data[i];
+        var staffId = String(row[0] || "").trim();
+        if (!staffId) continue;
+        var isActive = (row[10] === true || String(row[10]).toLowerCase() === "true");
+        var deletedFlag = String(row[12] || "N").trim().toUpperCase();
+        if (deletedFlag === "Y" || !isActive) continue;
+
+        var nick = String(row[2] || "").trim();
+        var fname = String(row[3] || "").trim();
+        var lname = String(row[4] || "").trim();
+        list.push({
+          staffId: staffId,
+          nickname: nick,
+          name: (fname + " " + lname).trim()
+        });
+      }
+    }
+    list.sort(function(a, b) {
+      return a.staffId.localeCompare(b.staffId);
+    });
+    return list;
+  } catch (err) {
+    Logger.log("Error in getActiveStaffList: " + err.message);
+    return [];
+  }
+}
+
+/**
+ * ดึงรายการช่วงเวลาเปิดให้บริการ (period_from, period_to) จาก Sheet_Name_Setting_Selection_Reservation_Time
+ * เฉพาะช่วงเวลาที่เปิดใช้งาน (is_active = true และ deleted_flag !== 'Y')
+ * @returns {Array<{periodFrom: string, periodTo: string}>}
+ */
+function getActiveSettingTimeSlotsWithRange() {
+  try {
+    var sheet = getSettingTimeSheet();
+    var data = sheet.getDataRange().getValues();
+    var slots = [];
+    if (data.length > 1) {
+      var headers = data[0].map(function(h) { return String(h || "").trim(); });
+      var hasPeriodTo = (headers.indexOf("period_to") !== -1 || headers[1] === "period_to");
+      var activeCol = hasPeriodTo ? 2 : 1;
+      var delCol = hasPeriodTo ? 7 : 6;
+
+      for (var i = 1; i < data.length; i++) {
+        var row = data[i];
+        var delFlag = String(row[delCol] || "N").trim().toUpperCase();
+        var isActive = (row[activeCol] === true || String(row[activeCol]).toLowerCase() === "true");
+        if (delFlag === "Y" || !isActive) continue;
+
+        var pFrom = formatTimeSlot(row[0]);
+        var pTo = hasPeriodTo ? formatTimeSlot(row[1]) : "";
+        if (!pTo && pFrom) {
+          var parts = pFrom.split(":");
+          var h = (parseInt(parts[0], 10) + 1) % 24;
+          pTo = (h < 10 ? "0" + h : h) + ":" + parts[1];
+        }
+        if (pFrom && pTo) {
+          slots.push({
+            periodFrom: pFrom,
+            periodTo: pTo
+          });
+        }
+      }
+    }
+    slots.sort(function(a, b) {
+      return a.periodFrom.localeCompare(b.periodFrom);
+    });
+    return slots;
+  } catch (err) {
+    Logger.log("Error in getActiveSettingTimeSlotsWithRange: " + err.message);
+    return [];
   }
 }
 
@@ -2280,7 +2393,10 @@ function getCalendarData(periodMonthOrYear, maybeMonth) {
       var ttSheet = getSettingTimetableSheet();
       var ttLastRow = ttSheet.getLastRow();
       if (ttLastRow > 1) {
-        var ttData = ttSheet.getRange(2, 1, ttLastRow - 1, 6).getValues();
+        var ttHeaders = ttSheet.getRange(1, 1, 1, Math.max(ttSheet.getLastColumn(), 10)).getValues()[0].map(function(h) { return String(h || "").trim(); });
+        var isNewTtSchema = (ttHeaders.indexOf("staff_id") !== -1 || ttHeaders[2] === "staff_id");
+        var ttData = ttSheet.getRange(2, 1, ttLastRow - 1, 10).getValues();
+
         for (var t = 0; t < ttData.length; t++) {
           var rMonth = normalizePeriodMonth(ttData[t][0]);
           if (rMonth !== targetPeriodMonth) continue;
@@ -2291,15 +2407,17 @@ function getCalendarData(periodMonthOrYear, maybeMonth) {
           if (!rDay) continue;
           var fullDateStr = targetPeriodMonth + "-" + rDay;
 
-          var rTime = formatTimeSlot(ttData[t][2]);
-          var rUsage = (ttData[t][3] !== "" && ttData[t][3] !== null && !isNaN(ttData[t][3])) ? parseInt(ttData[t][3], 10) : 0;
-          var rQuota = (ttData[t][4] !== "" && ttData[t][4] !== null && !isNaN(ttData[t][4])) ? parseInt(ttData[t][4], 10) : 5;
+          var rStaffId = isNewTtSchema ? String(ttData[t][2] || "").trim() : "";
+          var rTime = isNewTtSchema ? formatTimeSlot(ttData[t][3]) : formatTimeSlot(ttData[t][2]);
+          var rTimeTo = isNewTtSchema ? formatTimeSlot(ttData[t][4]) : "";
+          var rUsage = isNewTtSchema ? 0 : ((ttData[t][3] !== "" && ttData[t][3] !== null && !isNaN(ttData[t][3])) ? parseInt(ttData[t][3], 10) : 0);
+          var rQuota = isNewTtSchema ? 1 : ((ttData[t][4] !== "" && ttData[t][4] !== null && !isNaN(ttData[t][4])) ? parseInt(ttData[t][4], 10) : 5);
           var rActive = (ttData[t][5] === false || String(ttData[t][5]).toLowerCase() === "false") ? false : true;
 
           // เงื่อนไขข้อ 3 & 3.1: เมื่อถึงวันที่ปัจจุบัน แล้วเปรียบเทียบช่วงเวลานั้นๆ กับช่วงเวลาปัจจุบัน
           // หากเวลาปัจจุบันน้อยกว่า ช่วงเวลาที่กำหนด 15 นาที (ต้องจองก่อนถึงช่วงเวลาที่กำหนด 15 นาที)
           // ให้ทำการปิดช่วงเวลานั้นๆ โดยกลับไป update ข้อมูลใน Sheet_Name_Setting_Reservation_Timetable column is_active = false
-          if (fullDateStr === todayStr && rActive) {
+          if (fullDateStr === todayStr && rActive && rTime) {
             var sParts = rTime.split(":");
             var slotTotalMinutes = parseInt(sParts[0], 10) * 60 + parseInt(sParts[1], 10);
             if (nowTotalMinutes >= slotTotalMinutes - 15) {
@@ -2316,7 +2434,7 @@ function getCalendarData(periodMonthOrYear, maybeMonth) {
           }
 
           // เงื่อนไขข้อ 2: ดึงข้อมูล usage_quota และ quota_total มาเพื่อตรวจสอบว่า “จองเต็ม” แล้วหรือยัง
-          var isFull = (rUsage >= rQuota);
+          var isFull = isNewTtSchema ? false : (rUsage >= rQuota);
 
           if (!timetableByDate[fullDateStr]) {
             timetableByDate[fullDateStr] = {
@@ -2336,13 +2454,19 @@ function getCalendarData(periodMonthOrYear, maybeMonth) {
           }
 
           timetableByDate[fullDateStr].slots.push({
+            staffId: rStaffId,
             time: rTime,
+            periodFrom: rTime,
+            periodTo: rTimeTo,
             usageQuota: rUsage,
             quotaTotal: rQuota,
             isActive: rActive,
             isFull: isFull
           });
           timetableByDate[fullDateStr].slotMap[rTime] = {
+            staffId: rStaffId,
+            periodFrom: rTime,
+            periodTo: rTimeTo,
             usageQuota: rUsage,
             quotaTotal: rQuota,
             isActive: rActive,
@@ -2671,59 +2795,91 @@ function deleteReservation(reservationId) {
 function setupSettingTimeSheetSchema() {
   try {
     var sheet = getSettingTimeSheet();
-    var headers = ["period", "is_active", "create_date", "created_by", "update_date", "updated_by", "deleted_flag"];
+    var headers = ["period_from", "period_to", "is_active", "create_date", "created_by", "update_date", "updated_by", "deleted_flag"];
     var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
     var lastRow = sheet.getLastRow();
     if (lastRow === 0) {
       sheet.appendRow(headers);
       var headerRange = sheet.getRange(1, 1, 1, headers.length);
-      headerRange.setBackground("#1B3B36");
-      headerRange.setFontColor("#FFFFFF");
-      headerRange.setFontWeight("bold");
-      headerRange.setHorizontalAlignment("center");
-      headerRange.setVerticalAlignment("middle");
+      headerRange.setBackground("#1B3B36")
+        .setFontColor("#FFFFFF")
+        .setFontWeight("bold")
+        .setHorizontalAlignment("center")
+        .setVerticalAlignment("middle");
       sheet.setRowHeight(1, 40);
       sheet.setFrozenRows(1);
 
-      var defaultTimes = ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
+      var defaultTimes = [
+        ["09:00", "10:00"],
+        ["10:00", "11:00"],
+        ["11:00", "12:00"],
+        ["12:00", "13:00"],
+        ["13:00", "14:00"],
+        ["14:00", "15:00"],
+        ["15:00", "16:00"],
+        ["16:00", "17:00"],
+        ["17:00", "18:00"],
+        ["18:00", "19:00"]
+      ];
       for (var t = 0; t < defaultTimes.length; t++) {
-        sheet.appendRow([defaultTimes[t], true, nowStr, "admin", nowStr, "admin", "N"]);
+        sheet.appendRow([defaultTimes[t][0], defaultTimes[t][1], true, nowStr, "admin", nowStr, "admin", "N"]);
       }
-      sheet.getRange("A:A").setNumberFormat("@");
+      sheet.getRange("A:B").setNumberFormat("@");
       for (var tc = 1; tc <= headers.length; tc++) {
         sheet.autoResizeColumn(tc);
       }
-      return { success: true, message: "สร้างชีตตั้งค่าตัวเลือกเวลาการจอง 7 คอลัมน์สำเร็จ" };
+      return { success: true, message: "สร้างชีตตั้งค่าตัวเลือกเวลาการจอง 8 คอลัมน์ (period_from, period_to) สำเร็จ" };
     }
 
-    // Auto-migrate: ตรวจสอบว่ามีคอลัมน์ is_active หรือไม่ หากไม่มีให้แทรกคอลัมน์ถัดจาก period (column 1)
-    var currentHeaderRange = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1));
-    var currentHeaders = currentHeaderRange.getValues()[0];
-    if (currentHeaders.indexOf("is_active") === -1) {
-      sheet.insertColumnAfter(1); // แทรกคอลัมน์ B ถัดจาก period
-      sheet.getRange(1, 2).setValue("is_active");
+    // Auto-migrate:
+    var maxCols = Math.max(sheet.getLastColumn(), 1);
+    var currentHeaderRange = sheet.getRange(1, 1, 1, maxCols);
+    var currentHeaders = currentHeaderRange.getValues()[0].map(function(h) { return String(h || "").trim(); });
+
+    // 1. เปลี่ยนชื่อ header คอลัมน์ 1 จาก "period" เป็น "period_from"
+    if (currentHeaders[0] === "period") {
+      sheet.getRange(1, 1).setValue("period_from");
+      currentHeaders[0] = "period_from";
+    }
+
+    // 2. ถ้ายังไม่มีคอลัมน์ period_to ให้แทรกคอลัมน์ถัดจาก period_from (คอลัมน์ B)
+    if (currentHeaders.indexOf("period_to") === -1) {
+      sheet.insertColumnAfter(1); // แทรกคอลัมน์ B ถัดจาก period_from
+      sheet.getRange(1, 2).setValue("period_to");
       if (lastRow > 1) {
-        var activeRange = sheet.getRange(2, 2, lastRow - 1, 1);
-        var activeVals = [];
-        for (var i = 0; i < lastRow - 1; i++) {
-          activeVals.push([true]);
+        var fromRange = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+        var toVals = [];
+        for (var i = 0; i < fromRange.length; i++) {
+          var pFrom = formatTimeSlot(fromRange[i][0]);
+          var pTo = "";
+          if (pFrom) {
+            if (i + 1 < fromRange.length && fromRange[i + 1][0]) {
+              pTo = formatTimeSlot(fromRange[i + 1][0]);
+            } else {
+              var parts = pFrom.split(":");
+              var h = (parseInt(parts[0], 10) + 1) % 24;
+              pTo = (h < 10 ? "0" + h : h) + ":" + parts[1];
+            }
+          }
+          toVals.push([pTo]);
         }
-        activeRange.setValues(activeVals);
+        sheet.getRange(2, 2, lastRow - 1, 1).setValues(toVals);
       }
     }
 
+    // 3. ตรวจสอบจำนวนคอลัมน์รวม และอัปเดต Header
     if (sheet.getMaxColumns() < headers.length) {
       sheet.insertColumnsAfter(sheet.getMaxColumns(), headers.length - sheet.getMaxColumns());
     }
 
     var hRange = sheet.getRange(1, 1, 1, headers.length);
     hRange.setValues([headers]);
-    hRange.setBackground("#1B3B36");
-    hRange.setFontColor("#FFFFFF");
-    hRange.setFontWeight("bold");
-    hRange.setHorizontalAlignment("center");
-    hRange.setVerticalAlignment("middle");
+    hRange.setBackground("#1B3B36")
+      .setFontColor("#FFFFFF")
+      .setFontWeight("bold")
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle");
     sheet.setRowHeight(1, 40);
     sheet.setFrozenRows(1);
 
@@ -2732,39 +2888,44 @@ function setupSettingTimeSheetSchema() {
       var data = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
       var changed = false;
       for (var r = 0; r < data.length; r++) {
-        var p = formatTimeSlot(data[r][0]);
-        if (p && p !== data[r][0]) {
-          data[r][0] = p;
+        var pFrom = formatTimeSlot(data[r][0]);
+        if (pFrom && pFrom !== data[r][0]) {
+          data[r][0] = pFrom;
           changed = true;
         }
-        // is_active (คอลัมน์ 2 index 1): ถ้ายังไม่มีค่า ให้ default เป็น true
-        if (data[r][1] === "" || data[r][1] === null || data[r][1] === undefined) {
-          data[r][1] = true;
+        var pTo = formatTimeSlot(data[r][1]);
+        if (pTo && pTo !== data[r][1]) {
+          data[r][1] = pTo;
           changed = true;
         }
-        // create_date (คอลัมน์ 3 index 2)
-        if (!data[r][2]) {
-          data[r][2] = nowStr;
+        // is_active (คอลัมน์ 3 index 2): ถ้ายังไม่มีค่า ให้ default เป็น true
+        if (data[r][2] === "" || data[r][2] === null || data[r][2] === undefined) {
+          data[r][2] = true;
           changed = true;
         }
-        // created_by (คอลัมน์ 4 index 3)
+        // create_date (คอลัมน์ 4 index 3)
         if (!data[r][3]) {
-          data[r][3] = "admin";
+          data[r][3] = nowStr;
           changed = true;
         }
-        // update_date (คอลัมน์ 5 index 4)
+        // created_by (คอลัมน์ 5 index 4)
         if (!data[r][4]) {
-          data[r][4] = nowStr;
+          data[r][4] = "admin";
           changed = true;
         }
-        // updated_by (คอลัมน์ 6 index 5)
+        // update_date (คอลัมน์ 6 index 5)
         if (!data[r][5]) {
-          data[r][5] = "admin";
+          data[r][5] = nowStr;
           changed = true;
         }
-        // deleted_flag (คอลัมน์ 7 index 6)
+        // updated_by (คอลัมน์ 7 index 6)
         if (!data[r][6]) {
-          data[r][6] = "N";
+          data[r][6] = "admin";
+          changed = true;
+        }
+        // deleted_flag (คอลัมน์ 8 index 7)
+        if (!data[r][7]) {
+          data[r][7] = "N";
           changed = true;
         }
       }
@@ -2773,14 +2934,14 @@ function setupSettingTimeSheetSchema() {
       }
     }
 
-    sheet.getRange("A:A").setNumberFormat("@");
+    sheet.getRange("A:B").setNumberFormat("@");
     for (var c = 1; c <= headers.length; c++) {
       sheet.autoResizeColumn(c);
     }
 
     return {
       success: true,
-      message: "อัปเดต Schema ชีตตั้งค่าตัวเลือกเวลาการจอง 7 คอลัมน์เรียบร้อยแล้ว"
+      message: "อัปเดต Schema ชีตตั้งค่าตัวเลือกเวลาการจอง 8 คอลัมน์ (period_from, period_to) เรียบร้อยแล้ว"
     };
   } catch (err) {
     return {
@@ -2803,25 +2964,47 @@ function getSettingTimeSlots(requesterUsername) {
     var list = [];
 
     if (data.length > 1) {
+      var headers = data[0].map(function(h) { return String(h || "").trim(); });
+      var hasPeriodTo = (headers.indexOf("period_to") !== -1 || headers[1] === "period_to");
+
       for (var r = 1; r < data.length; r++) {
         var row = data[r];
-        var period = formatTimeSlot(row[0]);
-        if (!period) continue;
+        var periodFrom = formatTimeSlot(row[0]);
+        if (!periodFrom) continue;
 
-        // is_active อยู่คอลัมน์ 2 (index 1)
-        var isActive = (row[1] === false || String(row[1]).toLowerCase() === "false") ? false : true;
-        var createDate = row[2] instanceof Date ? Utilities.formatDate(row[2], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[2] || "-");
-        var createdBy = String(row[3] || "-");
-        var updateDate = row[4] instanceof Date ? Utilities.formatDate(row[4], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[4] || "-");
-        var updatedBy = String(row[5] || "-");
-        var deletedFlag = String(row[6] || "N").trim().toUpperCase();
+        var periodTo = "";
+        var isActive = true;
+        var createDate = "-";
+        var createdBy = "-";
+        var updateDate = "-";
+        var updatedBy = "-";
+        var deletedFlag = "N";
 
-        // Soft Delete: ถ้าถูกลบแล้ว ไม่แสดงในตารางจัดการ
+        if (hasPeriodTo || row.length >= 8) {
+          periodTo = formatTimeSlot(row[1]);
+          isActive = (row[2] === false || String(row[2]).toLowerCase() === "false") ? false : true;
+          createDate = row[3] instanceof Date ? Utilities.formatDate(row[3], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[3] || "-");
+          createdBy = String(row[4] || "-");
+          updateDate = row[5] instanceof Date ? Utilities.formatDate(row[5], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[5] || "-");
+          updatedBy = String(row[6] || "-");
+          deletedFlag = String(row[7] || "N").trim().toUpperCase();
+        } else {
+          // Backward compatibility with 7-column schema
+          isActive = (row[1] === false || String(row[1]).toLowerCase() === "false") ? false : true;
+          createDate = row[2] instanceof Date ? Utilities.formatDate(row[2], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[2] || "-");
+          createdBy = String(row[3] || "-");
+          updateDate = row[4] instanceof Date ? Utilities.formatDate(row[4], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[4] || "-");
+          updatedBy = String(row[5] || "-");
+          deletedFlag = String(row[6] || "N").trim().toUpperCase();
+        }
+
         if (deletedFlag === "Y") continue;
 
         list.push({
           rowId: r + 1,
-          period: period,
+          period: periodFrom, // maintain backwards compatibility
+          periodFrom: periodFrom,
+          periodTo: periodTo,
           isActive: isActive,
           createDate: createDate,
           createdBy: createdBy,
@@ -2833,7 +3016,7 @@ function getSettingTimeSlots(requesterUsername) {
     }
 
     list.sort(function(a, b) {
-      return a.period.localeCompare(b.period);
+      return a.periodFrom.localeCompare(b.periodFrom);
     });
 
     return {
@@ -2851,19 +3034,29 @@ function getSettingTimeSlots(requesterUsername) {
 }
 
 /**
- * เพิ่มข้อมูลรอบเวลาการจองใหม่
+ * เพิ่มข้อมูลรอบเวลาการจองใหม่ (period_from, period_to)
  */
 function addSettingTimeSlot(payload) {
   try {
     initSheetIfNeeded();
-    if (!payload || !payload.period) {
-      return { success: false, message: "กรุณาระบุเวลาที่เปิดให้จอง (period)" };
+    if (!payload) {
+      return { success: false, message: "ไม่พบข้อมูลที่ต้องการบันทึก" };
     }
 
-    var rawPeriod = String(payload.period).trim();
-    var period = formatTimeSlot(rawPeriod);
-    if (!/^\d{2}:\d{2}$/.test(period)) {
-      return { success: false, message: "รูปแบบเวลาไม่ถูกต้อง กรุณาระบุในรูปแบบ HH:mm เช่น 10:00, 11:30" };
+    var rawPeriodFrom = String(payload.periodFrom || payload.period_from || payload.period || "").trim();
+    var periodFrom = formatTimeSlot(rawPeriodFrom);
+    if (!/^\d{2}:\d{2}$/.test(periodFrom)) {
+      return { success: false, message: "กรุณาระบุเวลาเริ่มต้นที่เปิดให้จอง (period_from) ในรูปแบบ HH:mm เช่น 09:00" };
+    }
+
+    var rawPeriodTo = String(payload.periodTo || payload.period_to || "").trim();
+    var periodTo = formatTimeSlot(rawPeriodTo);
+    if (!/^\d{2}:\d{2}$/.test(periodTo)) {
+      return { success: false, message: "กรุณาระบุเวลาสิ้นสุดที่เปิดให้จอง (period_to) ในรูปแบบ HH:mm เช่น 10:00" };
+    }
+
+    if (periodTo <= periodFrom) {
+      return { success: false, message: "เวลาสิ้นสุด (period_to) ต้องมากกว่าเวลาเริ่มต้น (period_from)" };
     }
 
     var isActive = (payload.isActive !== false && String(payload.isActive).toLowerCase() !== "false");
@@ -2877,38 +3070,46 @@ function addSettingTimeSlot(payload) {
     var existingDeleted = false;
 
     if (data.length > 1) {
+      var headers = data[0].map(function(h) { return String(h || "").trim(); });
+      var hasPeriodTo = (headers.indexOf("period_to") !== -1 || headers[1] === "period_to");
+
       for (var r = 1; r < data.length; r++) {
-        var p = formatTimeSlot(data[r][0]);
-        var delFlag = String(data[r][6] || "N").trim().toUpperCase();
-        if (p === period) {
+        var pFrom = formatTimeSlot(data[r][0]);
+        var pTo = hasPeriodTo ? formatTimeSlot(data[r][1]) : "";
+        var delFlag = hasPeriodTo ? String(data[r][7] || "N").trim().toUpperCase() : String(data[r][6] || "N").trim().toUpperCase();
+
+        if (pFrom === periodFrom && pTo === periodTo) {
           if (delFlag === "Y") {
             existingRow = r + 1;
             existingDeleted = true;
           } else {
-            return { success: false, message: "รอบเวลา " + period + " มีอยู่ในระบบแล้ว" };
+            return { success: false, message: "รอบเวลา " + periodFrom + " - " + periodTo + " มีอยู่ในระบบแล้ว" };
           }
         }
       }
     }
 
     if (existingDeleted && existingRow > 0) {
-      sheet.getRange(existingRow, 2).setValue(isActive); // is_active
-      sheet.getRange(existingRow, 5).setValue(nowStr);   // update_date
-      sheet.getRange(existingRow, 6).setValue(operator); // updated_by
-      sheet.getRange(existingRow, 7).setValue("N");      // deleted_flag = N
+      sheet.getRange(existingRow, 1).setValue(periodFrom).setNumberFormat("@");
+      sheet.getRange(existingRow, 2).setValue(periodTo).setNumberFormat("@");
+      sheet.getRange(existingRow, 3).setValue(isActive); // is_active
+      sheet.getRange(existingRow, 6).setValue(nowStr);   // update_date
+      sheet.getRange(existingRow, 7).setValue(operator); // updated_by
+      sheet.getRange(existingRow, 8).setValue("N");      // deleted_flag = N
       return {
         success: true,
-        message: "เพิ่มรอบเวลา " + period + " สำเร็จ (เปิดใช้งานรอบเวลาเดิม)"
+        message: "เพิ่มรอบเวลา " + periodFrom + " - " + periodTo + " สำเร็จ (เปิดใช้งานรอบเวลาเดิม)"
       };
     }
 
-    sheet.appendRow([period, isActive, nowStr, operator, nowStr, operator, "N"]);
+    sheet.appendRow([periodFrom, periodTo, isActive, nowStr, operator, nowStr, operator, "N"]);
     var lastRow = sheet.getLastRow();
     sheet.getRange(lastRow, 1).setNumberFormat("@");
+    sheet.getRange(lastRow, 2).setNumberFormat("@");
 
     return {
       success: true,
-      message: "เพิ่มรอบเวลา " + period + " สำเร็จ"
+      message: "เพิ่มรอบเวลา " + periodFrom + " - " + periodTo + " สำเร็จ"
     };
   } catch (err) {
     return {
@@ -2919,7 +3120,7 @@ function addSettingTimeSlot(payload) {
 }
 
 /**
- * แก้ไขข้อมูลรอบเวลาการจอง
+ * แก้ไขข้อมูลรอบเวลาการจอง (period_from, period_to)
  */
 function updateSettingTimeSlot(payload) {
   try {
@@ -2929,10 +3130,20 @@ function updateSettingTimeSlot(payload) {
     }
 
     var rowId = parseInt(payload.rowId, 10);
-    var rawPeriod = String(payload.period || "").trim();
-    var period = formatTimeSlot(rawPeriod);
-    if (!/^\d{2}:\d{2}$/.test(period)) {
-      return { success: false, message: "รูปแบบเวลาไม่ถูกต้อง กรุณาระบุในรูปแบบ HH:mm เช่น 10:00, 11:30" };
+    var rawPeriodFrom = String(payload.periodFrom || payload.period_from || payload.period || "").trim();
+    var periodFrom = formatTimeSlot(rawPeriodFrom);
+    if (!/^\d{2}:\d{2}$/.test(periodFrom)) {
+      return { success: false, message: "กรุณาระบุเวลาเริ่มต้นที่เปิดให้จอง (period_from) ในรูปแบบ HH:mm" };
+    }
+
+    var rawPeriodTo = String(payload.periodTo || payload.period_to || "").trim();
+    var periodTo = formatTimeSlot(rawPeriodTo);
+    if (!/^\d{2}:\d{2}$/.test(periodTo)) {
+      return { success: false, message: "กรุณาระบุเวลาสิ้นสุดที่เปิดให้จอง (period_to) ในรูปแบบ HH:mm" };
+    }
+
+    if (periodTo <= periodFrom) {
+      return { success: false, message: "เวลาสิ้นสุด (period_to) ต้องมากกว่าเวลาเริ่มต้น (period_from)" };
     }
 
     var isActive = (payload.isActive !== false && String(payload.isActive).toLowerCase() !== "false");
@@ -2946,24 +3157,36 @@ function updateSettingTimeSlot(payload) {
       return { success: false, message: "ไม่พบข้อมูลแถวที่ต้องการแก้ไขในระบบ" };
     }
 
+    var headers = data[0].map(function(h) { return String(h || "").trim(); });
+    var hasPeriodTo = (headers.indexOf("period_to") !== -1 || headers[1] === "period_to");
+
     for (var r = 1; r < data.length; r++) {
       if (r + 1 !== rowId) {
-        var p = formatTimeSlot(data[r][0]);
-        var del = String(data[r][6] || "N").trim().toUpperCase();
-        if (p === period && del !== "Y") {
-          return { success: false, message: "รอบเวลา " + period + " ซ้ำกับรอบเวลาอื่นที่มีอยู่แล้ว" };
+        var pFrom = formatTimeSlot(data[r][0]);
+        var pTo = hasPeriodTo ? formatTimeSlot(data[r][1]) : "";
+        var del = hasPeriodTo ? String(data[r][7] || "N").trim().toUpperCase() : String(data[r][6] || "N").trim().toUpperCase();
+        if (pFrom === periodFrom && pTo === periodTo && del !== "Y") {
+          return { success: false, message: "รอบเวลา " + periodFrom + " - " + periodTo + " ซ้ำกับรอบเวลาอื่นที่มีอยู่แล้ว" };
         }
       }
     }
 
-    sheet.getRange(rowId, 1).setValue(period).setNumberFormat("@");
-    sheet.getRange(rowId, 2).setValue(isActive); // is_active
-    sheet.getRange(rowId, 5).setValue(nowStr);   // update_date
-    sheet.getRange(rowId, 6).setValue(operator); // updated_by
+    if (hasPeriodTo) {
+      sheet.getRange(rowId, 1).setValue(periodFrom).setNumberFormat("@");
+      sheet.getRange(rowId, 2).setValue(periodTo).setNumberFormat("@");
+      sheet.getRange(rowId, 3).setValue(isActive); // is_active
+      sheet.getRange(rowId, 6).setValue(nowStr);   // update_date
+      sheet.getRange(rowId, 7).setValue(operator); // updated_by
+    } else {
+      sheet.getRange(rowId, 1).setValue(periodFrom).setNumberFormat("@");
+      sheet.getRange(rowId, 2).setValue(isActive);
+      sheet.getRange(rowId, 5).setValue(nowStr);
+      sheet.getRange(rowId, 6).setValue(operator);
+    }
 
     return {
       success: true,
-      message: "แก้ไขรอบเวลาเป็น " + period + " สำเร็จ"
+      message: "แก้ไขรอบเวลาเป็น " + periodFrom + " - " + periodTo + " สำเร็จ"
     };
   } catch (err) {
     return {
@@ -2993,9 +3216,18 @@ function deleteSettingTimeSlot(rowId, operatorUsername) {
     var operator = String(operatorUsername || "admin").trim();
     var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
-    sheet.getRange(rowId, 5).setValue(nowStr);   // update_date
-    sheet.getRange(rowId, 6).setValue(operator); // updated_by
-    sheet.getRange(rowId, 7).setValue("Y");      // deleted_flag = 'Y'
+    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(function(h) { return String(h || "").trim(); });
+    var delCol = headers.indexOf("deleted_flag") + 1;
+    var updateDateCol = headers.indexOf("update_date") + 1;
+    var updatedByCol = headers.indexOf("updated_by") + 1;
+
+    if (delCol <= 0) delCol = (headers.indexOf("period_to") !== -1) ? 8 : 7;
+    if (updateDateCol <= 0) updateDateCol = delCol - 2;
+    if (updatedByCol <= 0) updatedByCol = delCol - 1;
+
+    sheet.getRange(rowId, updateDateCol).setValue(nowStr);
+    sheet.getRange(rowId, updatedByCol).setValue(operator);
+    sheet.getRange(rowId, delCol).setValue("Y"); // deleted_flag = 'Y'
 
     return {
       success: true,
@@ -3012,13 +3244,13 @@ function deleteSettingTimeSlot(rowId, operatorUsername) {
 /**
  * ==============================================================================
  * การจัดการชีต "ตั้งค่าตารางการจอง" (Sheet_Name_Setting_Reservation_Timetable)
- * คอลัมน์:
+ * คอลัมน์ (Schema 10 คอลัมน์):
  * 1. period_month: ปี-เดือน เช่น "2026-09"
  * 2. day_month: วันที่ เช่น "01", "02", ..., "30"
- * 3. time: ช่วงเวลา ดึงจากชีตตั้งค่าตัวเลือกเวลาการจอง (เฉพาะที่ is_active=true และ deleted_flag!='Y')
- * 4. usage_quota: จำนวนที่จองแล้วในแต่ละรอบ (default = 0)
- * 5. quota_total: จำนวนที่เปิดให้จองสูงสุดในแต่ละรอบ (default = 5)
- * 6. is_active: เปิดใช้งาน (true = "เปิดใช้งาน", false = "ปิดการใช้งาน", default = true)
+ * 3. staff_id: รหัสพนักงาน เช่น "JMC001" (ดึงจาก Sheet_Name_Staff เฉพาะ is_active = true)
+ * 4. period_from: เวลาเริ่มต้น เช่น "09:00", "10:00" (ดึงจาก Sheet_Name_Setting_Selection_Reservation_Time)
+ * 5. period_to: เวลาสิ้นสุด เช่น "10:00", "11:00" (ดึงจาก Sheet_Name_Setting_Selection_Reservation_Time)
+ * 6. is_active: เปิดใช้งาน (true = "เปิดใช้งาน", false = "ปิดการใช้งาน", วันเสาร์-อาทิตย์ = false, จันทร์-ศุกร์ default = true)
  * 7. create_date: วันที่สร้าง
  * 8. created_by: ผู้สร้าง (username)
  * 9. update_date: อัปเดตล่าสุด
@@ -3035,9 +3267,9 @@ function setupSettingTimetableSheetSchema() {
     var headers = [
       "period_month", // 1. ปี-เดือน เช่น "2026-09"
       "day_month",    // 2. วันที่ เช่น "01", "02", ..., "30"
-      "time",         // 3. ช่วงเวลา เช่น "10:00", "11:30"
-      "usage_quota",  // 4. จำนวนที่จองแล้ว (default: 0)
-      "quota_total",  // 5. จำนวนที่เปิดให้จองสูงสุด (default: 5)
+      "staff_id",     // 3. รหัสพนักงาน เช่น "JMC001"
+      "period_from",  // 4. เวลาเริ่มต้น เช่น "09:00"
+      "period_to",    // 5. เวลาสิ้นสุด เช่น "10:00"
       "is_active",    // 6. สถานะเปิด/ปิดใช้งาน (true: เปิดใช้งาน, false: ปิดการใช้งาน)
       "create_date",  // 7. วันที่สร้าง
       "created_by",   // 8. ผู้สร้าง (username)
@@ -3046,13 +3278,55 @@ function setupSettingTimetableSheetSchema() {
     ];
 
     var lastRow = sheet.getLastRow();
-    if (sheet.getMaxColumns() < headers.length) {
-      sheet.insertColumnsAfter(sheet.getMaxColumns(), headers.length - sheet.getMaxColumns());
+    var maxCols = Math.max(sheet.getLastColumn(), 1);
+    var currentHeaders = sheet.getRange(1, 1, 1, maxCols).getValues()[0].map(function(h) { return String(h || "").trim(); });
+
+    // ตรวจสอบว่าต้อง Auto-Migrate หรือไม่ (หากเป็นตารางเดิมที่มีคอลัมน์ time, usage_quota, quota_total หรือยังไม่มี staff_id)
+    var needMigration = (lastRow > 1 && (currentHeaders.indexOf("time") !== -1 || currentHeaders.indexOf("usage_quota") !== -1 || currentHeaders.indexOf("staff_id") === -1));
+
+    if (needMigration) {
+      var oldData = sheet.getRange(2, 1, lastRow - 1, currentHeaders.length).getValues();
+      var defaultStaffList = getActiveStaffList();
+      var defaultStaffId = (defaultStaffList && defaultStaffList.length > 0) ? defaultStaffList[0].staffId : "JMC001";
+      var migratedRows = [];
+
+      for (var r = 0; r < oldData.length; r++) {
+        var oldRow = oldData[r];
+        var pMonth = normalizePeriodMonth(oldRow[0]);
+        var dMonth = normalizeDayMonth(oldRow[1]);
+        if (!pMonth || !dMonth) continue;
+
+        var pFrom = formatTimeSlot(oldRow[2]);
+        var pTo = "";
+        if (pFrom) {
+          var parts = pFrom.split(":");
+          var h = (parseInt(parts[0], 10) + 1) % 24;
+          pTo = (h < 10 ? "0" + h : h) + ":" + parts[1];
+        }
+        var isAct = (oldRow[5] === false || String(oldRow[5]).toLowerCase() === "false") ? false : true;
+        var cDate = oldRow[6] ? Utilities.formatDate(oldRow[6] instanceof Date ? oldRow[6] : new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss") : Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+        var cBy = String(oldRow[7] || "admin").trim();
+        var uDate = oldRow[8] ? Utilities.formatDate(oldRow[8] instanceof Date ? oldRow[8] : new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss") : cDate;
+        var uBy = String(oldRow[9] || "admin").trim();
+
+        migratedRows.push([
+          pMonth, dMonth, defaultStaffId, pFrom, pTo, isAct, cDate, cBy, uDate, uBy
+        ]);
+      }
+
+      sheet.clearContents();
+      var combined = [headers].concat(migratedRows);
+      sheet.getRange(1, 1, combined.length, headers.length).setValues(combined);
+    } else {
+      if (sheet.getMaxColumns() < headers.length) {
+        sheet.insertColumnsAfter(sheet.getMaxColumns(), headers.length - sheet.getMaxColumns());
+      }
+      var hRange = sheet.getRange(1, 1, 1, headers.length);
+      hRange.setValues([headers]);
     }
 
-    var hRange = sheet.getRange(1, 1, 1, headers.length);
-    hRange.setValues([headers]);
-    hRange.setBackground("#1B3B36")
+    var headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setBackground("#1B3B36")
       .setFontColor("#FFFFFF")
       .setFontWeight("bold")
       .setHorizontalAlignment("center")
@@ -3060,12 +3334,12 @@ function setupSettingTimetableSheetSchema() {
     sheet.setRowHeight(1, 40);
     sheet.setFrozenRows(1);
 
-    if (lastRow > 1) {
+    var curLastRow = sheet.getLastRow();
+    if (curLastRow > 1) {
       try {
-        sheet.getRange(2, 1, lastRow - 1, 3).setNumberFormat("@");
-        sheet.getRange(2, 4, lastRow - 1, 2).setNumberFormat("0");
-        sheet.getRange(2, 1, lastRow - 1, 6).setHorizontalAlignment("center");
-        sheet.getRange(2, 7, lastRow - 1, 4).setHorizontalAlignment("center");
+        sheet.getRange(2, 1, curLastRow - 1, 5).setNumberFormat("@");
+        sheet.getRange(2, 1, curLastRow - 1, 6).setHorizontalAlignment("center");
+        sheet.getRange(2, 7, curLastRow - 1, 4).setHorizontalAlignment("center");
       } catch (e) {}
     }
 
@@ -3075,7 +3349,7 @@ function setupSettingTimetableSheetSchema() {
 
     return {
       success: true,
-      message: "ตั้งค่า Schema ชีตตั้งค่าตารางการจอง 10 คอลัมน์เรียบร้อยแล้ว"
+      message: "ตั้งค่า Schema ชีตตั้งค่าตารางการจอง 10 คอลัมน์ (period_month, day_month, staff_id, period_from, period_to, is_active) เรียบร้อยแล้ว"
     };
   } catch (err) {
     return {
@@ -3145,6 +3419,9 @@ function getReservationTimetable(periodMonth, requesterUsername) {
     var list = [];
 
     if (lastRow > 1) {
+      var headers = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 10)).getValues()[0].map(function(h) { return String(h || "").trim(); });
+      var isNewSchema = (headers.indexOf("staff_id") !== -1 || headers[2] === "staff_id");
+
       var data = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
       for (var r = 0; r < data.length; r++) {
         var row = data[r];
@@ -3152,23 +3429,42 @@ function getReservationTimetable(periodMonth, requesterUsername) {
         if (rowMonth !== targetMonth) continue;
 
         var dayMonth = normalizeDayMonth(row[1]);
-        var time = formatTimeSlot(row[2]);
-        var usageQuota = (row[3] !== "" && row[3] !== null && !isNaN(row[3])) ? parseInt(row[3], 10) : 0;
-        var quotaTotal = (row[4] !== "" && row[4] !== null && !isNaN(row[4])) ? parseInt(row[4], 10) : 5;
-        var isActive = (row[5] === false || String(row[5]).toLowerCase() === "false") ? false : true;
 
-        var createDate = row[6] instanceof Date ? Utilities.formatDate(row[6], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[6] || "-");
-        var createdBy = String(row[7] || "-");
-        var updateDate = row[8] instanceof Date ? Utilities.formatDate(row[8], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[8] || "-");
-        var updatedBy = String(row[9] || "-");
+        var staffId = "";
+        var periodFrom = "";
+        var periodTo = "";
+        var isActive = true;
+        var createDate = "-";
+        var createdBy = "-";
+        var updateDate = "-";
+        var updatedBy = "-";
+
+        if (isNewSchema) {
+          staffId = String(row[2] || "").trim();
+          periodFrom = formatTimeSlot(row[3]);
+          periodTo = formatTimeSlot(row[4]);
+          isActive = (row[5] === false || String(row[5]).toLowerCase() === "false") ? false : true;
+          createDate = row[6] instanceof Date ? Utilities.formatDate(row[6], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[6] || "-");
+          createdBy = String(row[7] || "-");
+          updateDate = row[8] instanceof Date ? Utilities.formatDate(row[8], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[8] || "-");
+          updatedBy = String(row[9] || "-");
+        } else {
+          periodFrom = formatTimeSlot(row[2]);
+          isActive = (row[5] === false || String(row[5]).toLowerCase() === "false") ? false : true;
+          createDate = row[6] instanceof Date ? Utilities.formatDate(row[6], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[6] || "-");
+          createdBy = String(row[7] || "-");
+          updateDate = row[8] instanceof Date ? Utilities.formatDate(row[8], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[8] || "-");
+          updatedBy = String(row[9] || "-");
+        }
 
         list.push({
           rowId: r + 2,
           periodMonth: rowMonth,
           dayMonth: dayMonth,
-          time: time,
-          usageQuota: usageQuota,
-          quotaTotal: quotaTotal,
+          staffId: staffId,
+          periodFrom: periodFrom,
+          periodTo: periodTo,
+          time: periodFrom, // maintain backwards compatibility
           isActive: isActive,
           createDate: createDate,
           createdBy: createdBy,
@@ -3178,11 +3474,13 @@ function getReservationTimetable(periodMonth, requesterUsername) {
       }
     }
 
-    // เรียงลำดับตามวันที่ (day_month) จาก 01 ถึง 31 แล้วตามด้วยช่วงเวลา
+    // เรียงตามวันที่ (day_month) จาก 01 ถึง 31 แล้วตามด้วย staffId แล้วตามด้วย periodFrom
     list.sort(function(a, b) {
       var dayDiff = a.dayMonth.localeCompare(b.dayMonth);
       if (dayDiff !== 0) return dayDiff;
-      return a.time.localeCompare(b.time);
+      var staffDiff = (a.staffId || "").localeCompare(b.staffId || "");
+      if (staffDiff !== 0) return staffDiff;
+      return (a.periodFrom || "").localeCompare(b.periodFrom || "");
     });
 
     return {
@@ -3226,6 +3524,9 @@ function getActiveTimetableSlotsByDate(dateStr) {
     var targetPeriodMonth = parts[0] + "-" + (parseInt(parts[1], 10) < 10 ? "0" + parseInt(parts[1], 10) : parts[1]);
     var targetDayMonth = normalizeDayMonth(parts[2]);
 
+    var headers = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 10)).getValues()[0].map(function(h) { return String(h || "").trim(); });
+    var isNewSchema = (headers.indexOf("staff_id") !== -1 || headers[2] === "staff_id");
+
     var data = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
     var activeSlots = [];
 
@@ -3235,11 +3536,17 @@ function getActiveTimetableSlotsByDate(dateStr) {
       var rDay = normalizeDayMonth(row[1]);
       if (rMonth !== targetPeriodMonth || rDay !== targetDayMonth) continue;
 
-      var rTime = formatTimeSlot(row[2]);
+      var rFrom = isNewSchema ? formatTimeSlot(row[3]) : formatTimeSlot(row[2]);
+      var rTo = isNewSchema ? formatTimeSlot(row[4]) : "";
       var rActive = (row[5] === false || String(row[5]).toLowerCase() === "false") ? false : true;
 
-      if (rActive && rTime) {
-        activeSlots.push(rTime);
+      if (rActive && rFrom) {
+        if (activeSlots.indexOf(rFrom) === -1) {
+          activeSlots.push(rFrom);
+        }
+        if (rTo && activeSlots.indexOf(rTo) === -1) {
+          activeSlots.push(rTo);
+        }
       }
     }
 
@@ -3259,8 +3566,12 @@ function getActiveTimetableSlotsByDate(dateStr) {
 }
 
 /**
- * สร้างตารางการจองประจำเดือน (Loop วันที่ และ Loop ช่วงเวลาที่เปิดใช้งาน)
- * @param {Object} payload { periodMonth: "2026-09", overwrite: false, quotaTotal: 5, operatorUsername: "admin" }
+ * สร้างตารางการจองประจำเดือน (Loop วันที่, Loop พนักงาน และ Loop ช่วงเวลา)
+ * 1. ตรวจสอบจำนวนวันในเดือนที่เลือก (เช่น เดือน 2026-09 มี 30 วัน สร้าง 01 ถึง 30)
+ * 2. ดึงค่า staff_id จาก Sheet_Name_Staff เฉพาะ is_active = true
+ * 3. ดึงช่วงเวลา period_from และ period_to จาก Sheet_Name_Setting_Selection_Reservation_Time
+ * 4. วันเสาร์ และ อาทิตย์ กำหนด is_active = false
+ * @param {Object} payload { periodMonth: "2026-09", overwrite: false, operatorUsername: "admin" }
  */
 function generateReservationTimetable(payload) {
   try {
@@ -3282,15 +3593,24 @@ function generateReservationTimetable(payload) {
       return { success: false, message: "ค่าปีหรือเดือนไม่ถูกต้อง" };
     }
 
-    // คำนวณจำนวนวันในเดือนที่เลือก (เช่น เดือน 9 มี 30 วัน, เดือน 10 มี 31 วัน, เดือน 2 มี 28 หรือ 29 วัน)
+    // 1. ตรวจสอบว่าเดือนที่เลือกมีกี่วัน (เช่น เดือน 2026-09 มี 30 วัน)
     var daysInMonth = new Date(year, month, 0).getDate();
 
-    // ดึงช่วงเวลาที่เปิดใช้งานจากชีตตั้งค่าตัวเลือกเวลาการจอง (Sheet_Name_Setting_Selection_Reservation_Time)
-    var activeTimeSlots = getReservationTimeSlots();
+    // 2. ดึงค่า staff_id จากตัวแปร Sheet_Name_Staff เฉพาะ field ที่ is_active = true
+    var activeStaffList = getActiveStaffList();
+    if (!activeStaffList || activeStaffList.length === 0) {
+      return {
+        success: false,
+        message: "ไม่พบข้อมูลพนักงานที่เปิดใช้งานในระบบ กรุณาเพิ่มหรือเปิดใช้งานข้อมูลพนักงานในชีต '" + SHEET_NAME_STAFF + "' ก่อนสร้างตารางการจอง"
+      };
+    }
+
+    // 3. ดึงค่าจาก sheet ในตัวแปร Sheet_Name_Setting_Selection_Reservation_Time (period_from และ period_to)
+    var activeTimeSlots = getActiveSettingTimeSlotsWithRange();
     if (!activeTimeSlots || activeTimeSlots.length === 0) {
       return {
         success: false,
-        message: "ไม่พบช่วงเวลาเปิดให้บริการในชีต 'ตั้งค่าตัวเลือกเวลาการจอง' กรุณาตั้งค่าและเปิดใช้งานช่วงเวลาก่อนสร้างตาราง"
+        message: "ไม่พบช่วงเวลาเปิดให้บริการในชีต '" + SHEET_NAME_SETTING_TIME + "' กรุณาตั้งค่าและเปิดใช้งานช่วงเวลาก่อนสร้างตาราง"
       };
     }
 
@@ -3308,11 +3628,10 @@ function generateReservationTimetable(payload) {
           existingCount++;
           var dStr = String(row[1] || "").trim();
           if (dStr.length === 1) dStr = "0" + dStr;
-          var tStr = formatTimeSlot(row[2]);
-          var key = dStr + "_" + tStr;
+          var sId = String(row[2] || "").trim();
+          var pFrom = formatTimeSlot(row[3]);
+          var key = dStr + "_" + sId + "_" + pFrom;
           existingMap[key] = {
-            usageQuota: (row[3] !== "" && row[3] !== null && !isNaN(row[3])) ? parseInt(row[3], 10) : 0,
-            quotaTotal: (row[4] !== "" && row[4] !== null && !isNaN(row[4])) ? parseInt(row[4], 10) : 5,
             isActive: (row[5] === false || String(row[5]).toLowerCase() === "false") ? false : true,
             createDate: row[6],
             createdBy: row[7]
@@ -3327,52 +3646,58 @@ function generateReservationTimetable(payload) {
         success: false,
         alreadyExists: true,
         existingCount: existingCount,
-        message: "พบข้อมูลตารางการจองของเดือน " + periodMonth + " อยู่แล้ว (" + existingCount + " รอบเวลา) ท่านต้องการสร้างใหม่ทับของเดิมหรือไม่?"
+        message: "พบข้อมูลตารางการจองของเดือน " + periodMonth + " อยู่แล้ว (" + existingCount + " รายการ) ท่านต้องการสร้างใหม่ทับของเดิมหรือไม่?"
       };
     }
 
     var operator = String(payload.operatorUsername || "admin").trim();
-    var defaultQuotaTotal = (payload.quotaTotal && parseInt(payload.quotaTotal, 10) > 0) ? parseInt(payload.quotaTotal, 10) : 5;
     var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
     var newRowsForMonth = [];
 
-    // วน Loop วันที่ (1 ถึง daysInMonth)
+    // วน Loop วันที่ (1 ถึง daysInMonth เช่น 01 ถึง 30)
     for (var d = 1; d <= daysInMonth; d++) {
       var dayMonthStr = ("0" + d).slice(-2); // "01", "02", ..., "30"
 
-      // ตรวจสอบวันเสาร์ และ อาทิตย์: วันเสาร์ (6) และ วันอาทิตย์ (0) ให้เปลี่ยนค่า is_active (is_flag) จาก true เป็น false
+      // ตรวจสอบวันเสาร์ และ อาทิตย์: วันเสาร์ (6) และ วันอาทิตย์ (0) ให้เปลี่ยนค่า is_active จาก true เป็น false
       var dateObj = new Date(year, month - 1, d, 12, 0, 0);
       var dayOfWeek = dateObj.getDay(); // 0 = Sunday (อาทิตย์), 6 = Saturday (เสาร์)
       var isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
 
-      // วน Loop ช่วงเวลาที่ดึงมาจากชีตตั้งค่าตัวเลือกเวลาการจอง
-      for (var s = 0; s < activeTimeSlots.length; s++) {
-        var t = activeTimeSlots[s];
-        var slotKey = dayMonthStr + "_" + t;
+      // วน Loop ในพนักงานแต่ละคน (staff_id จาก Sheet_Name_Staff เฉพาะ is_active = true)
+      for (var s = 0; s < activeStaffList.length; s++) {
+        var staffId = activeStaffList[s].staffId;
 
-        // หากเป็นการสร้างทับ และมีข้อมูลเดิม ให้รักษาจำนวนที่จองแล้ว (usage_quota) เดิมไว้
-        var usage = (payload.overwrite && existingMap[slotKey]) ? existingMap[slotKey].usageQuota : 0;
-        var qTotal = (payload.overwrite && existingMap[slotKey]) ? existingMap[slotKey].quotaTotal : defaultQuotaTotal;
-        // logic ตรวจสอบ วันเสาร์ และ อาทิตย์ ให้ทำการเปลี่ยนค่า is_active (is_flag) จาก true เป็น false
-        var isAct = isWeekend ? false : (payload.overwrite && existingMap[slotKey] ? existingMap[slotKey].isActive : true);
-        var cDate = (payload.overwrite && existingMap[slotKey] && existingMap[slotKey].createDate) ? existingMap[slotKey].createDate : nowStr;
-        var cBy = (payload.overwrite && existingMap[slotKey] && existingMap[slotKey].createdBy) ? existingMap[slotKey].createdBy : operator;
+        // วน Loop ช่วงเวลา (ดึงค่า period_from และ period_to จาก Sheet_Name_Setting_Selection_Reservation_Time)
+        for (var t = 0; t < activeTimeSlots.length; t++) {
+          var slot = activeTimeSlots[t];
+          var slotKey = dayMonthStr + "_" + staffId + "_" + slot.periodFrom;
 
-        newRowsForMonth.push([
-          periodMonth,      // 1. period_month
-          dayMonthStr,      // 2. day_month ("01", "02" ...)
-          t,                // 3. time
-          usage,            // 4. usage_quota (default 0)
-          qTotal,           // 5. quota_total (default 5)
-          isAct,            // 6. is_active (default true)
-          cDate,            // 7. create_date
-          cBy,              // 8. created_by
-          nowStr,           // 9. update_date
-          operator          // 10. updated_by
-        ]);
+          // ค่าเริ่มต้น: วันจันทร์-ศุกร์ = true, วันเสาร์-อาทิตย์ = false
+          var isAct = isWeekend ? false : (payload.overwrite && existingMap[slotKey] ? existingMap[slotKey].isActive : true);
+          var cDate = (payload.overwrite && existingMap[slotKey] && existingMap[slotKey].createDate) ? existingMap[slotKey].createDate : nowStr;
+          var cBy = (payload.overwrite && existingMap[slotKey] && existingMap[slotKey].createdBy) ? existingMap[slotKey].createdBy : operator;
+
+          newRowsForMonth.push([
+            periodMonth,      // 1. period_month
+            dayMonthStr,      // 2. day_month ("01", "02" ...)
+            staffId,          // 3. staff_id
+            slot.periodFrom,  // 4. period_from
+            slot.periodTo,    // 5. period_to
+            isAct,            // 6. is_active (default true, weekend = false)
+            cDate,            // 7. create_date
+            cBy,              // 8. created_by (username)
+            nowStr,           // 9. update_date
+            operator          // 10. updated_by (username)
+          ]);
+        }
       }
     }
+
+    var headers = [
+      "period_month", "day_month", "staff_id", "period_from", "period_to",
+      "is_active", "create_date", "created_by", "update_date", "updated_by"
+    ];
 
     // บันทึกข้อมูลลงชีตแบบ Batch เพื่อความรวดเร็วและแม่นยำ
     if (payload.overwrite && existingCount > 0) {
@@ -3384,10 +3709,6 @@ function generateReservationTimetable(payload) {
         }
       }
 
-      var headers = [
-        "period_month", "day_month", "time", "usage_quota", "quota_total",
-        "is_active", "create_date", "created_by", "update_date", "updated_by"
-      ];
       var combinedData = [headers].concat(preservedRows).concat(newRowsForMonth);
 
       sheet.clearContents();
@@ -3402,8 +3723,7 @@ function generateReservationTimetable(payload) {
 
       if (combinedData.length > 1) {
         try {
-          sheet.getRange(2, 1, combinedData.length - 1, 3).setNumberFormat("@");
-          sheet.getRange(2, 4, combinedData.length - 1, 2).setNumberFormat("0");
+          sheet.getRange(2, 1, combinedData.length - 1, 5).setNumberFormat("@");
           sheet.getRange(2, 1, combinedData.length - 1, 6).setHorizontalAlignment("center");
           sheet.getRange(2, 7, combinedData.length - 1, 4).setHorizontalAlignment("center");
         } catch (e) {}
@@ -3412,8 +3732,7 @@ function generateReservationTimetable(payload) {
       var startRow = sheet.getLastRow() + 1;
       sheet.getRange(startRow, 1, newRowsForMonth.length, 10).setValues(newRowsForMonth);
       try {
-        sheet.getRange(startRow, 1, newRowsForMonth.length, 3).setNumberFormat("@");
-        sheet.getRange(startRow, 4, newRowsForMonth.length, 2).setNumberFormat("0");
+        sheet.getRange(startRow, 1, newRowsForMonth.length, 5).setNumberFormat("@");
         sheet.getRange(startRow, 1, newRowsForMonth.length, 6).setHorizontalAlignment("center");
         sheet.getRange(startRow, 7, newRowsForMonth.length, 4).setHorizontalAlignment("center");
       } catch (e) {}
@@ -3425,9 +3744,10 @@ function generateReservationTimetable(payload) {
 
     return {
       success: true,
-      message: "สร้างตารางการจองเดือน " + periodMonth + " เรียบร้อยแล้ว (จำนวน " + newRowsForMonth.length + " รอบเวลา)",
+      message: "สร้างตารางการจองเดือน " + periodMonth + " เรียบร้อยแล้ว (จำนวน " + newRowsForMonth.length + " รายการ จากพนักงาน " + activeStaffList.length + " ท่าน)",
       periodMonth: periodMonth,
-      totalCreated: newRowsForMonth.length
+      totalCreated: newRowsForMonth.length,
+      staffCount: activeStaffList.length
     };
   } catch (err) {
     return {
@@ -3438,7 +3758,7 @@ function generateReservationTimetable(payload) {
 }
 
 /**
- * แก้ไขข้อมูลรอบเวลาในตารางการจอง (ปรับจำนวนโควต้าสูงสุด quota_total หรือเปิด/ปิด is_active)
+ * แก้ไขข้อมูลรอบเวลาในตารางการจอง (เปิด/ปิด is_active)
  */
 function updateTimetableSlot(payload) {
   try {
@@ -3457,29 +3777,16 @@ function updateTimetableSlot(payload) {
     var operator = String(payload.operatorUsername || "admin").trim();
     var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
-    var currentRow = sheet.getRange(rowId, 1, 1, 10).getValues()[0];
-    var currentUsage = (currentRow[3] !== "" && currentRow[3] !== null && !isNaN(currentRow[3])) ? parseInt(currentRow[3], 10) : 0;
-
-    var newQuotaTotal = (payload.quotaTotal !== undefined && !isNaN(payload.quotaTotal)) ? parseInt(payload.quotaTotal, 10) : parseInt(currentRow[4], 10);
-    if (newQuotaTotal < 1) {
-      return { success: false, message: "จำนวนโควต้าสูงสุดต้องมีอย่างน้อย 1 รายการ" };
-    }
-    if (newQuotaTotal < currentUsage) {
-      return { success: false, message: "โควต้าสูงสุด (" + newQuotaTotal + ") ต้องไม่น้อยกว่าจำนวนที่จองแล้ว (" + currentUsage + ")" };
-    }
-
     var newIsActive = (payload.isActive !== false && String(payload.isActive).toLowerCase() !== "false");
 
-    sheet.getRange(rowId, 5).setValue(newQuotaTotal); // quota_total
-    sheet.getRange(rowId, 6).setValue(newIsActive);    // is_active
-    sheet.getRange(rowId, 9).setValue(nowStr);        // update_date
-    sheet.getRange(rowId, 10).setValue(operator);     // updated_by
+    sheet.getRange(rowId, 6).setValue(newIsActive); // is_active
+    sheet.getRange(rowId, 9).setValue(nowStr);      // update_date
+    sheet.getRange(rowId, 10).setValue(operator);   // updated_by
 
     return {
       success: true,
       message: "แก้ไขข้อมูลรอบเวลาสำเร็จ",
       rowId: rowId,
-      quotaTotal: newQuotaTotal,
       isActive: newIsActive
     };
   } catch (err) {
@@ -3579,6 +3886,66 @@ function bulkToggleDayTimetableSlots(periodMonth, dayMonth, setActive, operatorU
     return {
       success: false,
       message: "เกิดข้อผิดพลาดในการเปลี่ยนสถานะ: " + err.message
+    };
+  }
+}
+
+/**
+ * สลับสถานะเปิด/ปิดใช้งานทุกรอบของพนักงานที่ระบุในวันที่ระบุ (Bulk Toggle Staff Day Slots)
+ */
+function bulkToggleStaffDayTimetableSlots(periodMonth, dayMonth, staffId, setActive, operatorUsername) {
+  try {
+    initSheetIfNeeded();
+    if (!periodMonth || !dayMonth || !staffId) {
+      return { success: false, message: "กรุณาระบุเดือน วันที่ และรหัสพนักงาน" };
+    }
+
+    var sheet = getSettingTimetableSheet();
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) {
+      return { success: false, message: "ไม่มีข้อมูลตารางการจองในระบบ" };
+    }
+
+    var operator = String(operatorUsername || "admin").trim();
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+    var targetDay = String(dayMonth).trim();
+    if (targetDay.length === 1) targetDay = "0" + targetDay;
+    var targetStaff = String(staffId).trim();
+
+    var data = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
+    var count = 0;
+    var changed = false;
+
+    for (var r = 0; r < data.length; r++) {
+      var rowMonth = String(data[r][0] || "").trim();
+      var rawDay = String(data[r][1] || "").trim();
+      if (rawDay.length === 1) rawDay = "0" + rawDay;
+      var rowStaff = String(data[r][2] || "").trim();
+
+      if (rowMonth === periodMonth && rawDay === targetDay && rowStaff === targetStaff) {
+        data[r][5] = (setActive === true || String(setActive).toLowerCase() === "true"); // is_active
+        data[r][8] = nowStr;    // update_date
+        data[r][9] = operator;  // updated_by
+        count++;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      sheet.getRange(2, 1, data.length, 10).setValues(data);
+    }
+
+    return {
+      success: true,
+      count: count,
+      staffId: targetStaff,
+      setActive: setActive,
+      message: (setActive ? "เปิดใช้งาน" : "ปิดการใช้งาน") + " ทุกรอบของพนักงาน " + targetStaff + " ในวันที่ " + targetDay + " สำเร็จ (" + count + " รอบ)"
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาดในการเปลี่ยนสถานะพนักงาน: " + err.message
     };
   }
 }
