@@ -56,6 +56,12 @@ function doGet(e) {
       return HtmlService.createHtmlOutput("<div style='font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #c3e6cb;background:#d4edda;border-radius:10px;'><h2 style='color:#155724;margin-top:0;'>✅ อัปเดต Schema ตัวเลือกเวลาการจองสำเร็จ</h2><p style='color:#155724;font-size:16px;'>" + resTime.message + "</p><hr style='border:0;border-top:1px solid #c3e6cb;margin:20px 0;'><p style='color:#6c757d;font-size:14px;'>Google Sheet ตั้งค่าตัวเลือกเวลาการจอง (Sheet_Name_Setting_Selection_Reservation_Time) ได้รับการตั้งค่าหัวตาราง 8 คอลัมน์ (period_from, period_to) เรียบร้อยแล้ว ท่านสามารถปิดหน้านี้แล้วเปิดใช้งานระบบได้ตามปกติ</p></div>");
     }
 
+    // กรณีเรียกด้วย ?action=setupSettingServicePrice เพื่อสั่งรันอัปเดต Schema ตัวเลือกค่าบริการผ่าน URL ได้ทันที
+    if (e && e.parameter && (e.parameter.action === "setupSettingServicePrice" || e.parameter.setupSettingServicePrice === "true")) {
+      var resPrice = setupSettingServicePriceSheetSchema();
+      return HtmlService.createHtmlOutput("<div style='font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #c3e6cb;background:#d4edda;border-radius:10px;'><h2 style='color:#155724;margin-top:0;'>✅ อัปเดต Schema ตัวเลือกค่าบริการสำเร็จ</h2><p style='color:#155724;font-size:16px;'>" + resPrice.message + "</p><hr style='border:0;border-top:1px solid #c3e6cb;margin:20px 0;'><p style='color:#6c757d;font-size:14px;'>Google Sheet ตั้งค่าตัวเลือกค่าบริการ (" + SHEET_NAME_SETTING_SERVICE_PRICE + ") ได้รับการตั้งค่าหัวตาราง 10 คอลัมน์ (service_id, service_name_th, service_name_en, price, is_active, delete_flag, create_date, created_by, update_date, updated_by) เรียบร้อยแล้ว ท่านสามารถปิดหน้านี้แล้วเปิดใช้งานระบบได้ตามปกติ</p></div>");
+    }
+
     // กรณีเรียกด้วย ?action=setupSettingTimetable เพื่อสั่งรันอัปเดต Schema ตารางการจองผ่าน URL ได้ทันที
     if (e && e.parameter && (e.parameter.action === "setupSettingTimetable" || e.parameter.setupSettingTimetable === "true")) {
       var resTimetable = setupSettingTimetableSheetSchema();
@@ -241,6 +247,18 @@ function getSettingTimetableSheet() {
 }
 
 /**
+ * Helper: ดึงหรือสร้างชีต "ตั้งค่าตัวเลือกค่าบริการ" (Sheet_Name_Setting_Service_Price)
+ */
+function getSettingServicePriceSheet() {
+  var ss = getSpreadsheet();
+  var sheet = ss.getSheetByName(SHEET_NAME_SETTING_SERVICE_PRICE);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME_SETTING_SERVICE_PRICE);
+  }
+  return sheet;
+}
+
+/**
  * Event Trigger เมื่อเปิด Google Sheet
  * สร้างเมนูจัดการระบบเพื่อให้ผู้ใช้กดอัปเดต Schema ได้สะดวกจากหน้าต่าง Google Sheet โดยตรง
  */
@@ -251,6 +269,7 @@ function onOpen() {
       .addItem("🔄 ตรวจสอบและอัปเดต Schema ข้อมูลลูกค้า (Customer Schema)", "setupCustomerSheetSchema")
       .addItem("🔄 ตรวจสอบและอัปเดต Schema ข้อมูลพนักงาน (Staff Schema)", "setupStaffSheetSchema")
       .addItem("🔄 ตรวจสอบและอัปเดต Schema ตัวเลือกเวลาการจอง (Setting Time Schema)", "setupSettingTimeSheetSchema")
+      .addItem("🔄 ตรวจสอบและอัปเดต Schema ตัวเลือกค่าบริการ (Setting Service Price Schema)", "setupSettingServicePriceSheetSchema")
       .addItem("🔄 ตรวจสอบและอัปเดต Schema ตารางการจอง (Setting Timetable Schema)", "setupSettingTimetableSheetSchema")
       .addItem("🔄 ตรวจสอบและตั้งค่า Schema ทั้งหมด (Init All Sheets)", "initSheetIfNeeded")
       .addToUi();
@@ -699,7 +718,10 @@ function initSheetIfNeeded() {
   // 3. ตรวจสอบชีต "ตั้งค่าตัวเลือกเวลาการจอง" (Sheet_Name_Setting_Selection_Reservation_Time)
   setupSettingTimeSheetSchema();
 
-  // 3.1 ตรวจสอบชีต "ตั้งค่าตารางการจอง" (Sheet_Name_Setting_Reservation_Timetable)
+  // 3.1 ตรวจสอบชีต "ตั้งค่าตัวเลือกค่าบริการ" (Sheet_Name_Setting_Service_Price)
+  setupSettingServicePriceSheetSchema();
+
+  // 3.2 ตรวจสอบชีต "ตั้งค่าตารางการจอง" (Sheet_Name_Setting_Reservation_Timetable)
   setupSettingTimetableSheetSchema();
 
   // 4. ตรวจสอบชีต "จองคิว" (Sheet_Name_Reservation)
@@ -2357,9 +2379,6 @@ function getCalendarData(periodMonthOrYear, maybeMonth) {
           if (!reservationsByDate[dateStr]) {
             reservationsByDate[dateStr] = {};
           }
-          if (!reservationsByDate[dateStr][timeSlot]) {
-            reservationsByDate[dateStr][timeSlot] = [];
-          }
 
           var custInfo = customerMap[custId] || {
             nickname: custId || "-",
@@ -2368,21 +2387,66 @@ function getCalendarData(periodMonthOrYear, maybeMonth) {
             phone: "-"
           };
 
-          reservationsByDate[dateStr][timeSlot].push({
+          var rawTimeStr = String(resData[r][3] || "").trim();
+          var primarySlot = formatTimeSlot(rawTimeStr);
+          var allSlotsToMap = [primarySlot];
+
+          // ค้นหารอบเวลาเริ่มต้นเพิ่มเติมกรณีบันทึกหลายช่วงไม่ต่อเนื่องกัน เช่น "09:00–10:00, 11:00–12:00"
+          var slotMatches = rawTimeStr.match(/(\d{1,2}:\d{2})\s*[-–]/g);
+          if (slotMatches && slotMatches.length > 1) {
+            slotMatches.forEach(function(sm) {
+              var sClean = formatTimeSlot(sm);
+              if (sClean && allSlotsToMap.indexOf(sClean) === -1) {
+                allSlotsToMap.push(sClean);
+              }
+            });
+          }
+
+          var bookingObj = {
             rowId: r + 1,
             reservationId: resId,
             customerId: custId,
             customerNickname: custInfo.nickname,
             customerFullName: (custInfo.firstname + " " + custInfo.lastname).trim(),
             customerPhone: custInfo.phone,
-            timeSlot: timeSlot,
+            timeSlot: primarySlot,
+            displayTime: rawTimeStr || primarySlot,
             date: dateStr,
             status: status,
             createdAt: createdAt,
             updatedAt: updatedAt
+          };
+
+          allSlotsToMap.forEach(function(ts) {
+            if (!ts) return;
+            if (!reservationsByDate[dateStr][ts]) {
+              reservationsByDate[dateStr][ts] = [];
+            }
+            reservationsByDate[dateStr][ts].push(bookingObj);
           });
         }
       }
+    }
+
+    // โหลดรายชื่อพนักงานทั้งหมดเพื่อทำ staffMap (ดึง nick_name จาก Sheet_Name_Staff)
+    var staffMap = {};
+    try {
+      var staffSheet = getStaffSheet();
+      var staffData = staffSheet.getDataRange().getValues();
+      for (var s = 1; s < staffData.length; s++) {
+        var sId = String(staffData[s][0] || "").trim();
+        if (sId) {
+          staffMap[sId] = {
+            staffId: sId,
+            nickname: String(staffData[s][2] || "").trim(),
+            firstname: String(staffData[s][3] || "").trim(),
+            lastname: String(staffData[s][4] || "").trim(),
+            name: (String(staffData[s][3] || "").trim() + " " + String(staffData[s][4] || "").trim()).trim()
+          };
+        }
+      }
+    } catch (sErr) {
+      Logger.log("Error loading staffMap: " + sErr.message);
     }
 
     // ดึงข้อมูลตารางการจองจาก Sheet_Name_Setting_Reservation_Timetable เพื่อนำมาจับคู่ (Matched) รายวัน
@@ -2453,8 +2517,12 @@ function getCalendarData(periodMonthOrYear, maybeMonth) {
             };
           }
 
+          var staffInfo = staffMap[rStaffId] || { nickname: rStaffId || "พนักงาน", name: "" };
+
           timetableByDate[fullDateStr].slots.push({
             staffId: rStaffId,
+            staffNickname: staffInfo.nickname,
+            staffFullName: staffInfo.name,
             time: rTime,
             periodFrom: rTime,
             periodTo: rTimeTo,
@@ -2465,6 +2533,7 @@ function getCalendarData(periodMonthOrYear, maybeMonth) {
           });
           timetableByDate[fullDateStr].slotMap[rTime] = {
             staffId: rStaffId,
+            staffNickname: staffInfo.nickname,
             periodFrom: rTime,
             periodTo: rTimeTo,
             usageQuota: rUsage,
@@ -2523,6 +2592,7 @@ function getCalendarData(periodMonthOrYear, maybeMonth) {
       permission: permission,
       todayStr: permission.todayStr,
       timeSlots: timeSlots,
+      staffMap: staffMap,
       reservationsByDate: reservationsByDate,
       timetableByDate: timetableByDate,
       availableMonths: availableMonths
@@ -2562,19 +2632,24 @@ function generateNextReservationId() {
 }
 
 /**
- * เพิ่มข้อมูลการจองใหม่ (ตรวจสอบสิทธิ์ช่วงเดือน และโควต้าไม่เกิน 5 คน)
+ * เพิ่มข้อมูลการจองใหม่ (ตรวจสอบสิทธิ์ช่วงเดือน และรอบเวลาของพนักงาน)
  */
 function addReservation(data) {
   try {
     initSheetIfNeeded();
 
     var dateStr = String(data.date || "").trim(); // YYYY-MM-DD
-    var timeSlot = formatTimeSlot(data.timeSlot || data.startTime || "");
+    var staffId = String(data.staffId || "").trim();
+    var startTime = formatTimeSlot(data.startTime || data.timeSlot || "");
+    var endTime = formatTimeSlot(data.endTime || "");
+    var hours = String(data.hours || "1").trim();
+    var timeSlot = startTime;
+    var displayTimeRange = (data.displayTime || data.timeSlot) ? String(data.displayTime || data.timeSlot).trim() : ((startTime && endTime) ? (startTime + " - " + endTime) : timeSlot);
     var customerId = String(data.customerId || "").trim();
     var status = String(data.status || "ยืนยันแล้ว").trim();
 
     if (!dateStr) return { success: false, message: "กรุณาระบุวันที่ที่จอง" };
-    if (!timeSlot) return { success: false, message: "กรุณาระบุเวลาที่จอง" };
+    if (!startTime) return { success: false, message: "กรุณาระบุเวลาที่จอง" };
     if (!customerId) return { success: false, message: "กรุณาเลือกลูกค้า" };
 
     var now = new Date();
@@ -2595,7 +2670,7 @@ function addReservation(data) {
     // เงื่อนไขข้อ 3 & 3.1: เมื่อถึงวันที่ปัจจุบัน แล้วเปรียบเทียบช่วงเวลานั้นๆ กับช่วงเวลาปัจจุบัน
     // หากเวลาปัจจุบันน้อยกว่า ช่วงเวลาที่กำหนด 15 นาที (ต้องจองก่อนถึงช่วงเวลาที่กำหนด 15 นาที -> nowTotalMinutes >= slotTotalMinutes - 15)
     // ให้ทำการปิดช่วงเวลานั้นๆ โดยกลับไป update ข้อมูลใน Sheet_Name_Setting_Reservation_Timetable column is_active = false
-    var slotParts = timeSlot.split(":");
+    var slotParts = startTime.split(":");
     var slotTotalMinutes = parseInt(slotParts[0], 10) * 60 + parseInt(slotParts[1], 10);
 
     if (dateStr === todayStr) {
@@ -2605,14 +2680,17 @@ function addReservation(data) {
           var ttSheetAuto = getSettingTimetableSheet();
           var ttLastRowAuto = ttSheetAuto.getLastRow();
           if (ttLastRowAuto > 1) {
+            var ttHeadersAuto = ttSheetAuto.getRange(1, 1, 1, Math.max(ttSheetAuto.getLastColumn(), 10)).getValues()[0].map(function(h) { return String(h || "").trim(); });
+            var isNewTtAuto = (ttHeadersAuto.indexOf("staff_id") !== -1 || ttHeadersAuto[2] === "staff_id");
             var ttDataAuto = ttSheetAuto.getRange(2, 1, ttLastRowAuto - 1, 6).getValues();
             var targetPeriodMonthAuto = dateStr.slice(0, 7);
-            var targetDayMonthAuto = dateStr.slice(8, 10);
+            var targetDayMonthAuto = normalizeDayMonth(dateStr.slice(8, 10));
             for (var ai = 0; ai < ttDataAuto.length; ai++) {
               var am = normalizePeriodMonth(ttDataAuto[ai][0]);
               var ad = normalizeDayMonth(ttDataAuto[ai][1]);
-              var at = formatTimeSlot(ttDataAuto[ai][2]);
-              if (am === targetPeriodMonthAuto && ad === targetDayMonthAuto && at === timeSlot) {
+              var aStaff = isNewTtAuto ? String(ttDataAuto[ai][2] || "").trim() : "";
+              var at = isNewTtAuto ? formatTimeSlot(ttDataAuto[ai][3]) : formatTimeSlot(ttDataAuto[ai][2]);
+              if (am === targetPeriodMonthAuto && ad === targetDayMonthAuto && (!staffId || aStaff === staffId) && at === startTime) {
                 ttSheetAuto.getRange(ai + 2, 6).setValue(false);
                 ttSheetAuto.getRange(ai + 2, 9).setValue(nowStr);
                 ttSheetAuto.getRange(ai + 2, 10).setValue("system");
@@ -2624,7 +2702,7 @@ function addReservation(data) {
 
         return {
           success: false,
-          message: "รอบเวลา " + timeSlot + " น. ปิดรับจองแล้ว (ต้องจองล่วงหน้าก่อนถึงช่วงเวลาอย่างน้อย 15 นาที)"
+          message: "รอบเวลา " + startTime + " น. ปิดรับจองแล้ว (ต้องจองล่วงหน้าก่อนถึงช่วงเวลาอย่างน้อย 15 นาที)"
         };
       }
     }
@@ -2651,46 +2729,54 @@ function addReservation(data) {
     var maxQuotaFromTimetable = 5;
 
     if (ttLastRow > 1) {
-      var ttData = ttSheet.getRange(2, 1, ttLastRow - 1, 6).getValues();
+      var ttHeaders = ttSheet.getRange(1, 1, 1, Math.max(ttSheet.getLastColumn(), 10)).getValues()[0].map(function(h) { return String(h || "").trim(); });
+      var isNewTtSchema = (ttHeaders.indexOf("staff_id") !== -1 || ttHeaders[2] === "staff_id");
+      var ttData = ttSheet.getRange(2, 1, ttLastRow - 1, Math.max(ttHeaders.length, 10)).getValues();
+
       for (var ti = 0; ti < ttData.length; ti++) {
         var tm = normalizePeriodMonth(ttData[ti][0]);
         var td = normalizeDayMonth(ttData[ti][1]);
-        var ttTime = formatTimeSlot(ttData[ti][2]);
+        if (tm !== targetPeriodMonth || td !== targetDayMonth) continue;
 
-        if (tm === targetPeriodMonth && td === targetDayMonth && ttTime === timeSlot) {
+        var rStaff = isNewTtSchema ? String(ttData[ti][2] || "").trim() : "";
+        var ttTime = isNewTtSchema ? formatTimeSlot(ttData[ti][3]) : formatTimeSlot(ttData[ti][2]);
+
+        if ((!staffId || rStaff === staffId) && ttTime === startTime) {
           var tIsActive = (ttData[ti][5] === false || String(ttData[ti][5]).toLowerCase() === "false") ? false : true;
           if (!tIsActive) {
             return {
               success: false,
-              message: "รอบเวลา " + timeSlot + " น. ในวันที่ " + dateStr + " ถูกปิดการใช้งาน (ไม่สามารถทำการจองได้)"
+              message: "รอบเวลา " + startTime + " น. ของพนักงานถูกปิดการใช้งาน (ไม่สามารถทำการจองได้)"
             };
           }
-          if (ttData[ti][3] !== "" && ttData[ti][3] !== null && !isNaN(ttData[ti][3])) {
-            currentUsageQuota = parseInt(ttData[ti][3], 10);
+          if (!isNewTtSchema) {
+            if (ttData[ti][3] !== "" && ttData[ti][3] !== null && !isNaN(ttData[ti][3])) {
+              currentUsageQuota = parseInt(ttData[ti][3], 10);
+            }
+            if (ttData[ti][4] !== "" && ttData[ti][4] !== null && !isNaN(ttData[ti][4])) {
+              maxQuotaFromTimetable = parseInt(ttData[ti][4], 10);
+            }
+            ttRowToUpdate = ti + 2;
           }
-          if (ttData[ti][4] !== "" && ttData[ti][4] !== null && !isNaN(ttData[ti][4])) {
-            maxQuotaFromTimetable = parseInt(ttData[ti][4], 10);
-          }
-          ttRowToUpdate = ti + 2;
           break;
         }
       }
     }
 
-    // เงื่อนไขข้อ 2: ตรวจสอบ usage_quota และ quota_total ว่า “จองเต็ม” แล้วหรือยัง
-    if (currentUsageQuota >= maxQuotaFromTimetable) {
+    // สำหรับ schema เดิม: ตรวจสอบ usage_quota และ quota_total ว่า “จองเต็ม” แล้วหรือยัง
+    if (!isNewTtSchema && currentUsageQuota >= maxQuotaFromTimetable) {
       return {
         success: false,
-        message: "ช่วงเวลา " + timeSlot + " น. เต็มแล้ว (โควต้าครบ " + currentUsageQuota + "/" + maxQuotaFromTimetable + " ท่านแล้ว)"
+        message: "ช่วงเวลา " + startTime + " น. เต็มแล้ว (โควต้าครบ " + currentUsageQuota + "/" + maxQuotaFromTimetable + " ท่านแล้ว)"
       };
     }
 
     var sheet = getReservationSheet();
     var reservationId = generateNextReservationId();
 
-    sheet.appendRow([reservationId, customerId, dateStr, timeSlot, status, nowStr, nowStr]);
+    sheet.appendRow([reservationId, customerId, dateStr, displayTimeRange, status, nowStr, nowStr]);
 
-    // เงื่อนไขข้อ 2: เมื่อทำการจองทุกครั้ง ให้กลับไป update ข้อมูลใน Sheet_Name_Setting_Reservation_Timetable column usage_quota (usage_quota += 1)
+    // สำหรับ schema เดิม: เมื่อทำการจองทุกครั้ง ให้กลับไป update ข้อมูลใน Sheet_Name_Setting_Reservation_Timetable column usage_quota (usage_quota += 1)
     if (ttRowToUpdate > 1) {
       try {
         var newUsage = currentUsageQuota + 1;
@@ -2705,7 +2791,7 @@ function addReservation(data) {
     return {
       success: true,
       reservationId: reservationId,
-      message: "บันทึกการจองรหัส " + reservationId + " ช่วงเวลา " + timeSlot + " น. เรียบร้อยแล้ว (โควต้า: " + (currentUsageQuota + 1) + "/" + maxQuotaFromTimetable + ")"
+      message: "บันทึกการจองรหัส " + reservationId + " ช่วงเวลา " + displayTimeRange + " น. (" + hours + " ชั่วโมง) เรียบร้อยแล้ว"
     };
   } catch (err) {
     return { success: false, message: "เกิดข้อผิดพลาดในการบันทึกการจอง: " + err.message };
@@ -3237,6 +3323,496 @@ function deleteSettingTimeSlot(rowId, operatorUsername) {
     return {
       success: false,
       message: "เกิดข้อผิดพลาดในการลบรอบเวลา: " + err.message
+    };
+  }
+}
+
+/**
+ * ==============================================================================
+ * การจัดการชีต "ตั้งค่าตัวเลือกค่าบริการ" (Sheet_Name_Setting_Service_Price)
+ * คอลัมน์ (Schema 10 คอลัมน์):
+ * 1. service_id: รหัสบริการ เก็บค่าเป็น 1,2,3 ไปเรื่อยๆ (auto increment)
+ * 2. service_name_th: ชื่อบริการภาษาไทย (Required)
+ * 3. service_name_en: ชื่อบริการภาษาอังกฤษ (Optional)
+ * 4. price: ราคาค่าบริการ
+ * 5. is_active: ถ้าเป็น true ให้แสดงผล ถ้าเป็น false ไม่ต้องแสดงผล
+ * 6. delete_flag: เป็น soft delete ถ้ามีค่าเป็น Y คือลบค่า ถ้าเป็น N คือยังไม่ถูกลบ
+ * 7. create_date: วันที่สร้าง
+ * 8. created_by: ผู้สร้าง (ใช้ค่า username มาบันทึก)
+ * 9. update_date: อัปเดตล่าสุด
+ * 10. updated_by: ผู้อัปเดต (ใช้ค่า username มาบันทึก)
+ * ==============================================================================
+ */
+
+/**
+ * ตั้งค่าและอัปเดต Schema ของชีต "ตั้งค่าตัวเลือกค่าบริการ" (Sheet_Name_Setting_Service_Price)
+ */
+function setupSettingServicePriceSheetSchema() {
+  try {
+    var sheet = getSettingServicePriceSheet();
+    var headers = ["service_id", "service_name_th", "service_name_en", "price", "is_active", "delete_flag", "create_date", "created_by", "update_date", "updated_by"];
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow === 0) {
+      sheet.appendRow(headers);
+      var headerRange = sheet.getRange(1, 1, 1, headers.length);
+      headerRange.setBackground("#1B3B36")
+        .setFontColor("#FFFFFF")
+        .setFontWeight("bold")
+        .setHorizontalAlignment("center")
+        .setVerticalAlignment("middle");
+      sheet.setRowHeight(1, 40);
+      sheet.setFrozenRows(1);
+
+      // ข้อมูลตัวอย่างเริ่มต้น (แยกชื่อภาษาไทย และภาษาอังกฤษ)
+      var defaultServices = [
+        [1, "นวดแผนไทย", "Thai Traditional Massage", 300, true, "N", nowStr, "admin", nowStr, "admin"],
+        [2, "นวดเท้า", "Foot Massage", 300, true, "N", nowStr, "admin", nowStr, "admin"],
+        [3, "นวดน้ำมันอโรม่า", "Aroma Oil Massage", 500, true, "N", nowStr, "admin", nowStr, "admin"],
+        [4, "นวดคอบ่าไหล่", "Head, Neck & Shoulder Massage", 350, true, "N", nowStr, "admin", nowStr, "admin"]
+      ];
+      for (var s = 0; s < defaultServices.length; s++) {
+        sheet.appendRow(defaultServices[s]);
+      }
+
+      sheet.getRange("A:A").setNumberFormat("0");
+      sheet.getRange("D:D").setNumberFormat("#,##0.00");
+      for (var sc = 1; sc <= headers.length; sc++) {
+        sheet.autoResizeColumn(sc);
+      }
+      return { success: true, message: "สร้างชีตตั้งค่าตัวเลือกค่าบริการ 10 คอลัมน์สำเร็จ" };
+    }
+
+    // Auto-migrate จากชีตเดิม (ถ้ามีคอลัมน์เดิม 9 คอลัมน์ หรือชื่อ service_name เดิม)
+    var currentCols = Math.max(sheet.getLastColumn(), 1);
+    var curHeaders = sheet.getRange(1, 1, 1, currentCols).getValues()[0].map(function(h) {
+      return String(h || "").trim();
+    });
+
+    // ตรวจสอบว่าถ้ายังไม่มี service_name_en และมี service_name ให้แทรกคอลัมน์ใหม่ถัดไป
+    if (curHeaders.indexOf("service_name_en") === -1) {
+      var nameColIdx = curHeaders.indexOf("service_name");
+      if (nameColIdx === -1) {
+        nameColIdx = curHeaders.indexOf("service_name_th");
+      }
+      if (nameColIdx !== -1) {
+        sheet.insertColumnAfter(nameColIdx + 1);
+      }
+    }
+
+    if (sheet.getMaxColumns() < headers.length) {
+      sheet.insertColumnsAfter(sheet.getMaxColumns(), headers.length - sheet.getMaxColumns());
+    }
+
+    var hRange = sheet.getRange(1, 1, 1, headers.length);
+    hRange.setValues([headers]);
+    hRange.setBackground("#1B3B36")
+      .setFontColor("#FFFFFF")
+      .setFontWeight("bold")
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle");
+    sheet.setRowHeight(1, 40);
+    sheet.setFrozenRows(1);
+
+    if (lastRow > 1) {
+      var numRows = lastRow - 1;
+      var dataRange = sheet.getRange(2, 1, numRows, headers.length);
+      var data = dataRange.getValues();
+      var changed = false;
+
+      for (var r = 0; r < data.length; r++) {
+        // 0: service_id
+        if (!data[r][0] || isNaN(parseInt(data[r][0], 10))) {
+          data[r][0] = r + 1;
+          changed = true;
+        }
+
+        // 1: service_name_th, 2: service_name_en
+        var thVal = String(data[r][1] || "").trim();
+        var enVal = String(data[r][2] || "").trim();
+
+        // ตรวจสอบกรณี migrate ข้อความเดิมที่มีรูปแบบ "ชื่อไทย (English Name)"
+        if (thVal && !enVal) {
+          var parenMatch = thVal.match(/^(.*?)\s*\((.*?)\)$/);
+          if (parenMatch) {
+            data[r][1] = parenMatch[1].trim();
+            data[r][2] = parenMatch[2].trim();
+            changed = true;
+          }
+        }
+        if (!data[r][1]) {
+          data[r][1] = "บริการทั่วไป";
+          changed = true;
+        }
+
+        // 3: price
+        if (data[r][3] === "" || isNaN(parseFloat(data[r][3]))) {
+          data[r][3] = 300;
+          changed = true;
+        }
+
+        // 4: is_active
+        if (data[r][4] === "" || data[r][4] === null || data[r][4] === undefined) {
+          data[r][4] = true;
+          changed = true;
+        }
+
+        // 5: delete_flag
+        if (!data[r][5] || String(data[r][5]).trim() === "") {
+          data[r][5] = "N";
+          changed = true;
+        }
+
+        // 6: create_date
+        if (!data[r][6]) {
+          data[r][6] = nowStr;
+          changed = true;
+        }
+
+        // 7: created_by
+        if (!data[r][7]) {
+          data[r][7] = "admin";
+          changed = true;
+        }
+
+        // 8: update_date
+        if (!data[r][8]) {
+          data[r][8] = nowStr;
+          changed = true;
+        }
+
+        // 9: updated_by
+        if (!data[r][9]) {
+          data[r][9] = "admin";
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        dataRange.setValues(data);
+      }
+    }
+
+    sheet.getRange("A:A").setNumberFormat("0");
+    sheet.getRange("D:D").setNumberFormat("#,##0.00");
+    for (var c = 1; c <= headers.length; c++) {
+      sheet.autoResizeColumn(c);
+    }
+
+    try {
+      var activeSs = SpreadsheetApp.getActiveSpreadsheet();
+      if (activeSs && typeof activeSs.toast === "function") {
+        activeSs.toast("อัปเดต Schema ตัวเลือกค่าบริการเรียบร้อยแล้ว (10 คอลัมน์)", "สำเร็จ", 5);
+      }
+    } catch (e) {}
+
+    return {
+      success: true,
+      message: "อัปเดต Schema ชีตตั้งค่าตัวเลือกค่าบริการ 10 คอลัมน์ (service_name_th, service_name_en) เรียบร้อยแล้ว"
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาดในการอัปเดต Schema ตัวเลือกค่าบริการ: " + err.message
+    };
+  }
+}
+
+/**
+ * ดึงรายการตัวเลือกค่าบริการ (Sheet_Name_Setting_Service_Price)
+ * - คอลัมน์ 10 คอลัมน์: service_id, service_name_th, service_name_en, price, is_active, delete_flag, create_date, created_by, update_date, updated_by
+ * - ดึงเฉพาะรายการที่ไม่ได้ลบ (delete_flag !== 'Y')
+ * - เรียงลำดับตาม service_id จากน้อยไปมาก
+ */
+function getSettingServicePrices(requesterUsername, onlyActive) {
+  try {
+    initSheetIfNeeded();
+    var sheet = getSettingServicePriceSheet();
+    var data = sheet.getDataRange().getValues();
+    var list = [];
+
+    if (data.length > 1) {
+      for (var r = 1; r < data.length; r++) {
+        var row = data[r];
+        var serviceId = parseInt(row[0], 10);
+        if (isNaN(serviceId)) continue;
+
+        var serviceNameTh = String(row[1] || "").trim();
+        var serviceNameEn = String(row[2] || "").trim();
+        var price = parseFloat(row[3]);
+        if (isNaN(price)) price = 0;
+
+        var isActive = (row[4] === false || String(row[4]).toLowerCase() === "false") ? false : true;
+        var deleteFlag = String(row[5] || "N").trim().toUpperCase();
+
+        if (deleteFlag === "Y") continue;
+        if (onlyActive === true && !isActive) continue;
+
+        var createDate = row[6] instanceof Date ? Utilities.formatDate(row[6], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[6] || "-");
+        var createdBy = String(row[7] || "-");
+        var updateDate = row[8] instanceof Date ? Utilities.formatDate(row[8], "Asia/Bangkok", "yyyy-MM-dd HH:mm") : String(row[8] || "-");
+        var updatedBy = String(row[9] || "-");
+
+        list.push({
+          rowId: r + 1,
+          serviceId: serviceId,
+          serviceNameTh: serviceNameTh,
+          serviceNameEn: serviceNameEn,
+          // serviceName เพื่อรองรับความเข้ากันได้ย้อนหลัง (Backward Compatibility)
+          serviceName: serviceNameTh + (serviceNameEn ? " (" + serviceNameEn + ")" : ""),
+          price: price,
+          isActive: isActive,
+          deleteFlag: deleteFlag,
+          createDate: createDate,
+          createdBy: createdBy,
+          updateDate: updateDate,
+          updatedBy: updatedBy
+        });
+      }
+    }
+
+    list.sort(function(a, b) {
+      return a.serviceId - b.serviceId;
+    });
+
+    return {
+      success: true,
+      data: list,
+      sheetName: SHEET_NAME_SETTING_SERVICE_PRICE,
+      message: "ดึงข้อมูลตัวเลือกค่าบริการสำเร็จ"
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาดในการดึงข้อมูลตัวเลือกค่าบริการ: " + err.message
+    };
+  }
+}
+
+/**
+ * เพิ่มตัวเลือกค่าบริการใหม่ (service_id เป็น auto increment: 1, 2, 3...)
+ * - service_name_th: ชื่อบริการภาษาไทย (Required)
+ * - service_name_en: ชื่อบริการภาษาอังกฤษ (Optional)
+ */
+function addSettingServicePrice(payload) {
+  try {
+    initSheetIfNeeded();
+    if (!payload) {
+      return { success: false, message: "ไม่พบข้อมูลที่ต้องการบันทึก" };
+    }
+
+    var serviceNameTh = String(payload.serviceNameTh || payload.service_name_th || payload.serviceName || payload.service_name || "").trim();
+    if (!serviceNameTh) {
+      return { success: false, message: "กรุณาระบุชื่อบริการภาษาไทย (service_name_th)" };
+    }
+
+    var serviceNameEn = String(payload.serviceNameEn || payload.service_name_en || "").trim();
+
+    var price = parseFloat(payload.price);
+    if (isNaN(price) || price < 0) {
+      return { success: false, message: "กรุณาระบุราคาค่าบริการที่ถูกต้อง (ตัวเลขมากกว่าหรือเท่ากับ 0)" };
+    }
+
+    var isActive = (payload.isActive !== false && String(payload.isActive).toLowerCase() !== "false");
+    var operator = String(payload.operatorUsername || "admin").trim();
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    var sheet = getSettingServicePriceSheet();
+    var data = sheet.getDataRange().getValues();
+
+    // หาค่า service_id สูงสุดเพื่อทำ Auto Increment 1, 2, 3...
+    var maxServiceId = 0;
+    if (data.length > 1) {
+      for (var r = 1; r < data.length; r++) {
+        var curId = parseInt(data[r][0], 10);
+        if (!isNaN(curId) && curId > maxServiceId) {
+          maxServiceId = curId;
+        }
+      }
+    }
+    var newServiceId = maxServiceId + 1;
+
+    sheet.appendRow([newServiceId, serviceNameTh, serviceNameEn, price, isActive, "N", nowStr, operator, nowStr, operator]);
+    var lastRow = sheet.getLastRow();
+    sheet.getRange(lastRow, 1).setNumberFormat("0");
+    sheet.getRange(lastRow, 4).setNumberFormat("#,##0.00");
+
+    return {
+      success: true,
+      serviceId: newServiceId,
+      message: "เพิ่มบริการ \"" + serviceNameTh + "\" (รหัส " + newServiceId + ") สำเร็จ"
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลค่าบริการ: " + err.message
+    };
+  }
+}
+
+/**
+ * แก้ไขตัวเลือกค่าบริการ
+ * - service_name_th: ชื่อบริการภาษาไทย (Required)
+ * - service_name_en: ชื่อบริการภาษาอังกฤษ (Optional)
+ */
+function updateSettingServicePrice(payload) {
+  try {
+    initSheetIfNeeded();
+    if (!payload || payload.serviceId === undefined || payload.serviceId === null) {
+      return { success: false, message: "ไม่พบรหัสบริการที่ต้องการแก้ไข" };
+    }
+
+    var targetServiceId = parseInt(payload.serviceId, 10);
+    var serviceNameTh = String(payload.serviceNameTh || payload.service_name_th || payload.serviceName || payload.service_name || "").trim();
+    if (!serviceNameTh) {
+      return { success: false, message: "กรุณาระบุชื่อบริการภาษาไทย (service_name_th)" };
+    }
+
+    var serviceNameEn = String(payload.serviceNameEn || payload.service_name_en || "").trim();
+
+    var price = parseFloat(payload.price);
+    if (isNaN(price) || price < 0) {
+      return { success: false, message: "กรุณาระบุราคาค่าบริการที่ถูกต้อง" };
+    }
+
+    var isActive = (payload.isActive !== false && String(payload.isActive).toLowerCase() !== "false");
+    var operator = String(payload.operatorUsername || "admin").trim();
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    var sheet = getSettingServicePriceSheet();
+    var data = sheet.getDataRange().getValues();
+    var targetRow = -1;
+
+    if (data.length > 1) {
+      for (var r = 1; r < data.length; r++) {
+        var sId = parseInt(data[r][0], 10);
+        if (sId === targetServiceId) {
+          targetRow = r + 1;
+          break;
+        }
+      }
+    }
+
+    if (targetRow <= 1) {
+      return { success: false, message: "ไม่พบบริการรหัส " + targetServiceId + " ในระบบ" };
+    }
+
+    sheet.getRange(targetRow, 2).setValue(serviceNameTh);
+    sheet.getRange(targetRow, 3).setValue(serviceNameEn);
+    sheet.getRange(targetRow, 4).setValue(price);
+    sheet.getRange(targetRow, 5).setValue(isActive);
+    sheet.getRange(targetRow, 9).setValue(nowStr);
+    sheet.getRange(targetRow, 10).setValue(operator);
+
+    return {
+      success: true,
+      message: "แก้ไขข้อมูลบริการ \"" + serviceNameTh + "\" สำเร็จ"
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาดในการแก้ไขข้อมูลค่าบริการ: " + err.message
+    };
+  }
+}
+
+/**
+ * ลบตัวเลือกค่าบริการ (Soft Delete: กำหนด delete_flag = 'Y' ในคอลัมน์ 6)
+ */
+function deleteSettingServicePrice(serviceId, operatorUsername) {
+  try {
+    initSheetIfNeeded();
+    serviceId = parseInt(serviceId, 10);
+    if (isNaN(serviceId)) {
+      return { success: false, message: "รหัสบริการไม่ถูกต้อง" };
+    }
+
+    var operator = String(operatorUsername || "admin").trim();
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    var sheet = getSettingServicePriceSheet();
+    var data = sheet.getDataRange().getValues();
+    var targetRow = -1;
+    var serviceName = "";
+
+    if (data.length > 1) {
+      for (var r = 1; r < data.length; r++) {
+        var sId = parseInt(data[r][0], 10);
+        if (sId === serviceId) {
+          targetRow = r + 1;
+          serviceName = String(data[r][1] || "");
+          break;
+        }
+      }
+    }
+
+    if (targetRow <= 1) {
+      return { success: false, message: "ไม่พบข้อมูลบริการที่ต้องการลบในระบบ" };
+    }
+
+    sheet.getRange(targetRow, 6).setValue("Y"); // delete_flag = 'Y'
+    sheet.getRange(targetRow, 9).setValue(nowStr);
+    sheet.getRange(targetRow, 10).setValue(operator);
+
+    return {
+      success: true,
+      message: "ลบบริการ \"" + serviceName + "\" เรียบร้อยแล้ว (Soft Delete)"
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาดในการลบข้อมูลค่าบริการ: " + err.message
+    };
+  }
+}
+
+/**
+ * สลับสถานะการเปิด/ปิดใช้งานตัวเลือกค่าบริการ (toggle is_active ในคอลัมน์ 5)
+ */
+function toggleSettingServicePriceStatus(serviceId, currentStatus, operatorUsername) {
+  try {
+    initSheetIfNeeded();
+    serviceId = parseInt(serviceId, 10);
+    if (isNaN(serviceId)) {
+      return { success: false, message: "รหัสบริการไม่ถูกต้อง" };
+    }
+
+    var newStatus = !currentStatus;
+    var operator = String(operatorUsername || "admin").trim();
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    var sheet = getSettingServicePriceSheet();
+    var data = sheet.getDataRange().getValues();
+    var targetRow = -1;
+
+    if (data.length > 1) {
+      for (var r = 1; r < data.length; r++) {
+        var sId = parseInt(data[r][0], 10);
+        if (sId === serviceId) {
+          targetRow = r + 1;
+          break;
+        }
+      }
+    }
+
+    if (targetRow <= 1) {
+      return { success: false, message: "ไม่พบข้อมูลบริการในระบบ" };
+    }
+
+    sheet.getRange(targetRow, 5).setValue(newStatus); // is_active = newStatus
+    sheet.getRange(targetRow, 9).setValue(nowStr);
+    sheet.getRange(targetRow, 10).setValue(operator);
+
+    return {
+      success: true,
+      newStatus: newStatus,
+      message: "เปลี่ยนสถานะเป็น " + (newStatus ? "เปิดใช้งาน" : "ปิดการใช้งาน") + " เรียบร้อยแล้ว"
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาดในการเปลี่ยนสถานะ: " + err.message
     };
   }
 }

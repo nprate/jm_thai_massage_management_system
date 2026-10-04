@@ -627,6 +627,134 @@
       width: 95% !important;
     }
 
+    .swal2-popup.swal-wide-booking {
+      max-width: 650px !important;
+      width: 95% !important;
+      border-radius: 18px !important;
+    }
+
+    /* สไตล์สำหรับ Cards พนักงานและปุ่มช่วงเวลารอบบริการใน Modal จองคิว */
+    .booking-cards-container {
+      margin-bottom: 12px;
+      overflow: visible;
+    }
+    .booking-staff-card {
+      border: 1.5px solid #E2E8F0;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      background: #FFFFFF;
+      margin-bottom: 8px;
+    }
+    .booking-staff-card:last-child {
+      margin-bottom: 0;
+    }
+    .booking-staff-card.selected-staff {
+      border-color: #1B3B36 !important;
+      box-shadow: 0 0 0 1.5px #1B3B36, 0 4px 10px rgba(27, 59, 54, 0.1);
+    }
+    .booking-staff-card .card-header {
+      background: #F8FAFC;
+      border-bottom: 1px solid transparent;
+      padding: 9px 14px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+    .booking-staff-card .card-header:hover {
+      background-color: #F1F5F9;
+    }
+    .booking-staff-card.is-expanded .card-header {
+      border-bottom: 1px solid #E2E8F0;
+      background-color: #F8FAFC;
+    }
+    .booking-staff-card.selected-staff .card-header {
+      background-color: #EBF7EE !important;
+    }
+    .booking-staff-card.selected-staff.is-expanded .card-header {
+      border-bottom-color: #C6E7D2;
+    }
+    .staff-expand-icon {
+      transition: transform 0.25s ease;
+      font-size: 0.82rem;
+      color: #64748B;
+    }
+    .booking-staff-card.is-expanded .staff-expand-icon {
+      transform: rotate(180deg);
+      color: #1B3B36;
+    }
+    .staff-avatar-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #E6F4EA;
+      color: #1B3B36;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
+    .booking-staff-card.selected-staff .staff-avatar-icon {
+      background: #1B3B36;
+      color: #FFFFFF;
+    }
+    .staff-nick-text {
+      color: #1B3B36;
+      font-size: 0.95rem;
+    }
+    .slot-btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .slot-select-btn {
+      background-color: #FFFFFF;
+      color: #334155;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.15s ease-in-out;
+      cursor: pointer;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 96px;
+      line-height: 1.25;
+    }
+    .slot-select-btn:hover:not(:disabled) {
+      border-color: #1B3B36;
+      color: #1B3B36;
+      background-color: #F8FAFC;
+    }
+    .slot-select-btn.selected {
+      background-color: #1B3B36 !important;
+      color: #FFFFFF !important;
+      border-color: #1B3B36 !important;
+      box-shadow: 0 2px 6px rgba(27, 59, 54, 0.3);
+    }
+    .slot-select-btn.selected:hover {
+      background-color: #265049 !important;
+    }
+    .slot-select-btn:disabled {
+      background-color: #F1F5F9 !important;
+      border-color: #E2E8F0 !important;
+      color: #94A3B8 !important;
+      cursor: not-allowed !important;
+      opacity: 0.65;
+    }
+    .slot-btn-main {
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .slot-btn-sub {
+      font-size: 0.68rem;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
     .swal2-title {
       font-size: 1.3rem !important;
       color: var(--spa-primary) !important;
@@ -1487,7 +1615,14 @@
                   <span id="sidebar-submenu-setting-time-text">ตั้งค่าตัวเลือกเวลาการจอง</span>
                 </a>
               </li>
-              <!-- Submenu 2: ตามตัวแปร Sheet_Name_Setting_Reservation_Timetable (ตั้งค่าตารางการจอง) -->
+              <!-- Submenu 2: ตามตัวแปร Sheet_Name_Setting_Service_Price (ตั้งค่าตัวเลือกค่าบริการ) -->
+              <li class="sidebar-menu-item" id="nav-item-setting-service-price">
+                <a href="javascript:void(0)" class="sidebar-link" id="menu-setting-service-price" onclick="switchSection('setting-service-price')">
+                  <i class="fa-solid fa-tags"></i>
+                  <span id="sidebar-submenu-setting-service-price-text">ตั้งค่าตัวเลือกค่าบริการ</span>
+                </a>
+              </li>
+              <!-- Submenu 3: ตามตัวแปร Sheet_Name_Setting_Reservation_Timetable (ตั้งค่าตารางการจอง) -->
               <li class="sidebar-menu-item" id="nav-item-setting-timetable">
                 <a href="javascript:void(0)" class="sidebar-link" id="menu-setting-timetable" onclick="switchSection('setting-timetable')">
                   <i class="fa-solid fa-calendar-days"></i>
@@ -1756,7 +1891,48 @@
           </div>
         </section>
 
-        <!-- SECTION 5: ตั้งค่าตารางการจอง (Sheet_Name_Setting_Reservation_Timetable) -->
+        <!-- SECTION 5: ตั้งค่าตัวเลือกค่าบริการ (Sheet_Name_Setting_Service_Price) -->
+        <section id="section-setting-service-price" class="content-section">
+          <div class="page-title-box">
+            <div class="page-title">
+              <h3 id="setting-service-price-page-title"><i class="fa-solid fa-tags me-2 text-warning"></i>ตั้งค่าตัวเลือกค่าบริการ</h3>
+              <p>จัดการรายการบริการและอัตราค่าบริการ (บาท) สามารถเพิ่ม แก้ไข ลบข้อมูล (Soft Delete) และเปิด/ปิดการแสดงผลได้</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              <button class="btn btn-outline-secondary" id="btn-refresh-setting-service-price" onclick="loadSettingServicePriceTableData(true)" title="รีเฟรชข้อมูล">
+                <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
+              </button>
+              <button class="btn btn-action-main" id="btn-open-add-setting-service-price" onclick="openAddServicePriceModal()">
+                <i class="fa-solid fa-plus"></i>
+                <span>เพิ่มตัวเลือกค่าบริการ</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="table-responsive">
+              <table id="settingServicePriceDataTable" class="table table-hover align-middle w-100">
+                <thead>
+                  <tr>
+                    <th style="width: 80px;" class="text-center">รหัสบริการ<br><small class="text-muted">(service_id)</small></th>
+                    <th>ชื่อบริการภาษาไทย (service_name_th)</th>
+                    <th>ชื่อบริการภาษาอังกฤษ (service_name_en)</th>
+                    <th style="width: 140px;" class="text-end">ราคาค่าบริการ (price)</th>
+                    <th style="width: 130px;" class="text-center">สถานะ (is_active)</th>
+                    <th style="width: 170px;">วันที่สร้าง / ผู้สร้าง</th>
+                    <th style="width: 170px;">อัปเดตล่าสุด / ผู้อัปเดต</th>
+                    <th style="width: 110px;" class="text-center">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="settingServicePriceTableBody">
+                  <!-- ข้อมูลตัวเลือกค่าบริการ -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 6: ตั้งค่าตารางการจอง (Sheet_Name_Setting_Reservation_Timetable) -->
         <section id="section-setting-timetable" class="content-section">
           <div class="page-title-box">
             <div class="page-title">
@@ -1894,11 +2070,13 @@
     let currentCustomerData = [];
     let currentStaffData = [];
     let currentSettingTimeData = [];
+    let currentServicePriceData = [];
     let currentTimetableData = [];
     let adminDataTableInstance = null;
     let customerDataTableInstance = null;
     let staffDataTableInstance = null;
     let settingTimeDataTableInstance = null;
+    let servicePriceDataTableInstance = null;
     let timetableDataTableInstance = null;
     let currentUser = null;
     let sheetNameAdmin = "ข้อมูลผู้ดูแลระบบ";
@@ -1998,6 +2176,11 @@
                 Sheet_Name_Setting_Selection_Reservation_Time = sheetNameSettingTime;
                 $('#sidebar-submenu-setting-time-text').text(Sheet_Name_Setting_Selection_Reservation_Time);
                 $('#setting-time-page-title').html('<i class="fa-solid fa-clock me-2 text-warning"></i>' + Sheet_Name_Setting_Selection_Reservation_Time);
+              }
+              if (config.sheetNameSettingServicePrice || config.Sheet_Name_Setting_Service_Price) {
+                Sheet_Name_Setting_Service_Price = config.sheetNameSettingServicePrice || config.Sheet_Name_Setting_Service_Price;
+                $('#sidebar-submenu-setting-service-price-text').text(Sheet_Name_Setting_Service_Price);
+                $('#setting-service-price-page-title').html('<i class="fa-solid fa-tags me-2 text-warning"></i>' + escapeHtml(Sheet_Name_Setting_Service_Price));
               }
               if (config.sheetNameSettingTimetable || config.Sheet_Name_Setting_Reservation_Timetable) {
                 sheetNameSettingTimetable = config.sheetNameSettingTimetable || config.Sheet_Name_Setting_Reservation_Timetable;
@@ -2200,8 +2383,8 @@
           switchSection('reservation');
           return;
         }
-      } else if (section === 'setting-time' || section === 'setting-timetable') {
-        // ตั้งค่าตัวเลือกเวลาการจอง / ตั้งค่าตารางการจอง: เฉพาะผู้ดูแลระบบ (8, 9) หรือ admin เท่านั้น
+      } else if (section === 'setting-time' || section === 'setting-service-price' || section === 'setting-timetable') {
+        // ตั้งค่าตัวเลือกเวลาการจอง / ตั้งค่าตัวเลือกค่าบริการ / ตั้งค่าตารางการจอง: เฉพาะผู้ดูแลระบบ (8, 9) หรือ admin เท่านั้น
         if (personFlag !== 8 && personFlag !== 9 && !isSystemAdmin) {
           Swal.fire({
             icon: 'warning',
@@ -2221,7 +2404,7 @@
       $('#menu-' + section).addClass('active');
 
       // หากเป็น Submenu ในเมนูการตั้งค่า ให้เปิด Submenu และเน้นเมนูแม่
-      if (section === 'setting-time' || section === 'setting-timetable') {
+      if (section === 'setting-time' || section === 'setting-service-price' || section === 'setting-timetable') {
         $('#setting-submenu').slideDown(200);
         $('#menu-setting').addClass('open');
       }
@@ -2240,6 +2423,8 @@
         loadCalendarData(currentCalendarYear, currentCalendarMonth, false);
       } else if (section === 'setting-time') {
         loadSettingTimeTableData(false);
+      } else if (section === 'setting-service-price') {
+        loadSettingServicePriceTableData(false);
       } else if (section === 'setting-timetable') {
         if (!currentStaffData || currentStaffData.length === 0) {
           loadStaffTableData(false);
@@ -4528,40 +4713,62 @@
             let availCnt = 0;
             let fullCnt = 0;
 
-            slotsListMock.forEach((sl, sIdx) => {
-              let slotActive = true;
-              if (isDay5) {
-                slotActive = false;
-              } else if (isDay10 && sIdx === 0) {
-                slotActive = false;
-              }
+            const mockStaffStaffList = [
+              { staffId: "JMC001", nickname: "หมอน้อย" },
+              { staffId: "JMC002", nickname: "หมอกานต์" }
+            ];
 
-              // เงื่อนไขข้อ 3.1: ถ้าเป็นวันนี้ และเวลาน้อยกว่า 15 นาที ให้ปิดช่วงเวลา
-              if (fullDateMock === todayStr) {
-                const sParts = sl.split(':');
-                const slotTotalMin = parseInt(sParts[0], 10) * 60 + parseInt(sParts[1], 10);
-                if (nowTotalMinutes >= slotTotalMin - 15) {
+            mockStaffStaffList.forEach((stf) => {
+              slotsListMock.forEach((sl, sIdx) => {
+                let slotActive = true;
+                if (isDay5) {
+                  slotActive = false;
+                } else if (isDay10 && sIdx === 0) {
                   slotActive = false;
                 }
-              }
 
-              let usageQ = 0;
-              if (mockReservations[fullDateMock] && mockReservations[fullDateMock][sl]) {
-                usageQ = mockReservations[fullDateMock][sl].length;
-              }
-              const isFull = (usageQ >= 5);
+                // เงื่อนไขข้อ 3.1: ถ้าเป็นวันนี้ และเวลาน้อยกว่า 15 นาที ให้ปิดช่วงเวลา
+                if (fullDateMock === todayStr) {
+                  const sParts = sl.split(':');
+                  const slotTotalMin = parseInt(sParts[0], 10) * 60 + parseInt(sParts[1], 10);
+                  if (nowTotalMinutes >= slotTotalMin - 15) {
+                    slotActive = false;
+                  }
+                }
 
-              if (slotActive) {
-                activeCnt++;
-                if (isFull) fullCnt++;
-                else availCnt++;
-              } else {
-                inactiveCnt++;
-              }
+                let usageQ = 0;
+                if (mockReservations[fullDateMock] && mockReservations[fullDateMock][sl]) {
+                  usageQ = mockReservations[fullDateMock][sl].length;
+                }
+                const isFull = (usageQ >= 5);
 
-              const slotObj = { time: sl, usageQuota: usageQ, quotaTotal: 5, isActive: slotActive, isFull: isFull };
-              tSlots.push(slotObj);
-              tSlotMap[sl] = slotObj;
+                if (slotActive) {
+                  activeCnt++;
+                  if (isFull) fullCnt++;
+                  else availCnt++;
+                } else {
+                  inactiveCnt++;
+                }
+
+                const parts = sl.split(':').map(Number);
+                const pToSl = `${String((parts[0] + 1) % 24).padStart(2, '0')}:${String(parts[1] || 0).padStart(2, '0')}`;
+
+                const slotObj = { 
+                  staffId: stf.staffId,
+                  staffNickname: stf.nickname,
+                  periodFrom: sl,
+                  periodTo: pToSl,
+                  time: sl, 
+                  usageQuota: usageQ, 
+                  quotaTotal: 5, 
+                  isActive: slotActive, 
+                  isFull: isFull 
+                };
+                tSlots.push(slotObj);
+                if (!tSlotMap[sl]) {
+                  tSlotMap[sl] = slotObj;
+                }
+              });
             });
 
             const allInact = (slotsListMock.length > 0 && activeCnt === 0);
@@ -4572,7 +4779,7 @@
               dayMonth: dStrMock,
               slots: tSlots,
               slotMap: tSlotMap,
-              totalSlots: slotsListMock.length,
+              totalSlots: slotsListMock.length * mockStaffStaffList.length,
               activeCount: activeCnt,
               inactiveCount: inactiveCnt,
               availableCount: availCnt,
@@ -4606,6 +4813,10 @@
             },
             todayStr: todayStr,
             timeSlots: defaultTimeSlots.map(s => formatTimeSlot(s)),
+            staffMap: {
+              "JMC001": { staffId: "JMC001", nickname: "หมอน้อย", name: "น้อย สุขเกษม" },
+              "JMC002": { staffId: "JMC002", nickname: "หมอกานต์", name: "กานต์ วงศ์สุวรรณ" }
+            },
             reservationsByDate: mockReservations,
             timetableByDate: mockTimetable,
             availableMonths: [`${currY}-${todayMStr}`, `${currY}-${currM + 1 < 10 ? '0' + (currM + 1) : (currM + 1)}`]
@@ -5259,63 +5470,41 @@
     }
 
     /**
-     * ดึงข้อมูล option เวลาจาก sheet ตัวแปร Sheet_Name_Setting_Reservation_Timetable
-     * ตามวันที่ที่กดจอง (dateStr) โดยดูว่าในวันที่นั้นๆ มีการตั้งค่า option เวลาไว้แบบไหนบ้าง
-     * และดึงเฉพาะเวลาที่มี is_active เท่ากับ true มาแสดงเป็น option ให้เลือกเท่านั้น
-     * @param {string} dateStr วันที่ที่กดจอง เช่น "2026-10-08"
-     * @returns {string[]} อาร์เรย์เวลาที่มี is_active = true เรียงลำดับจากเช้าไปค่ำ
+     * ดึงชื่อเล่นพนักงาน (nick_name) จาก Sheet_Name_Staff
+     * โดยตรวจสอบจาก calendarDataCache.staffMap, currentStaffData หรือ timetableByDate
      */
-    function getActiveTimetableSlotsForDate(dateStr) {
-      if (!dateStr) return [];
+    function getStaffNickname(staffId) {
+      if (!staffId || staffId === '-') return 'พนักงาน';
+      const target = String(staffId).trim().toLowerCase();
 
-      // 1. ดึงจาก calendarDataCache.timetableByDate ตามวันที่ที่กดจอง (ข้อมูลจาก Sheet_Name_Setting_Reservation_Timetable)
-      if (calendarDataCache && calendarDataCache.timetableByDate && calendarDataCache.timetableByDate[dateStr]) {
-        const dayTt = calendarDataCache.timetableByDate[dateStr];
-        if (dayTt.slots && dayTt.slots.length > 0) {
-          const timeSet = new Set();
-          dayTt.slots.forEach(item => {
-            if (item.isActive === true || String(item.isActive).toLowerCase() === 'true') {
-              const pFrom = formatTimeSlot(item.periodFrom || item.time);
-              const pTo = formatTimeSlot(item.periodTo);
-              if (pFrom) timeSet.add(pFrom);
-              if (pTo) timeSet.add(pTo);
-            }
-          });
-          const activeList = Array.from(timeSet);
-          if (activeList.length > 0) {
-            activeList.sort((a, b) => a.localeCompare(b));
-            return activeList;
+      // 1. ตรวจสอบจาก calendarDataCache.staffMap (ดึงจากชีต Sheet_Name_Staff)
+      if (calendarDataCache && calendarDataCache.staffMap) {
+        for (const sKey in calendarDataCache.staffMap) {
+          if (String(sKey).trim().toLowerCase() === target) {
+            const st = calendarDataCache.staffMap[sKey];
+            if (st && st.nickname) return st.nickname;
           }
         }
       }
 
-      // 2. ตรวจสอบจาก currentTimetableData (หากมีข้อมูลในหน่วยความจำของหน้าตั้งค่าตารางการจอง)
-      if (currentTimetableData && currentTimetableData.length > 0) {
-        const parts = dateStr.split('-');
-        if (parts.length === 3) {
-          const targetPeriodMonth = parts[0] + '-' + parts[1];
-          const targetDayMonth = normalizeDayMonth(parts[2]);
-          const timeSet = new Set();
-          currentTimetableData.forEach(item => {
-            const pMonth = normalizePeriodMonth(item.periodMonth);
-            const dMonth = normalizeDayMonth(item.dayMonth);
-            const act = (item.isActive === true || String(item.isActive).toLowerCase() === 'true');
-            if (pMonth === targetPeriodMonth && dMonth === targetDayMonth && act) {
-              const pFrom = formatTimeSlot(item.periodFrom || item.time || item.periodTime || item.period);
-              const pTo = formatTimeSlot(item.periodTo);
-              if (pFrom) timeSet.add(pFrom);
-              if (pTo) timeSet.add(pTo);
-            }
-          });
-          const activeList = Array.from(timeSet);
-          if (activeList.length > 0) {
-            activeList.sort((a, b) => a.localeCompare(b));
-            return activeList;
-          }
-        }
+      // 2. ตรวจสอบจาก currentStaffData (ชีตข้อมูลพนักงานในเครื่อง)
+      if (Array.isArray(currentStaffData) && currentStaffData.length > 0) {
+        const s = currentStaffData.find(item =>
+          String(item.staffId || '').trim().toLowerCase() === target ||
+          String(item.username || '').trim().toLowerCase() === target
+        );
+        if (s && s.nickname) return s.nickname;
       }
 
-      return [];
+      // 3. Fallback map สำหรับ mock preview
+      const fallbackMap = {
+        'jmc001': 'หมอน้อย',
+        'jmc002': 'หมอกานต์',
+        'jmc003': 'หมอบี'
+      };
+      if (fallbackMap[target]) return fallbackMap[target];
+
+      return staffId;
     }
 
     /**
@@ -5325,36 +5514,182 @@
       if (!sTime || !eTime) return '0';
       const sParts = sTime.split(':').map(Number);
       const eParts = eTime.split(':').map(Number);
-      const diff = (eParts[0] * 60 + eParts[1]) - (sParts[0] * 60 + sParts[1]);
+      const diff = (eParts[0] * 60 + (eParts[1] || 0)) - (sParts[0] * 60 + (sParts[1] || 0));
       if (diff <= 0) return '0';
       const hrs = diff / 60;
       return (hrs % 1 === 0) ? String(hrs) : hrs.toFixed(1).replace(/\.0$/, '');
     }
 
     /**
-     * ดึงตัวเลือกเวลาสิ้นสุดสัมพันธ์กับเวลาเริ่มต้น (เฉพาะเวลาที่มากกว่าเวลาเริ่มต้น)
+     * คำนวณจำนวนชั่วโมงรวมจากรายการรอบเวลาที่เลือก (รองรับทั้งช่วงต่อเนื่องและไม่ต่อเนื่อง)
+     * แต่ละรอบคิดตามระยะเวลาจริง เช่น รอบละ 1 ชม. เมื่อเลือก 2 รอบไม่ต่อเนื่องก็นับเป็น 2 ชม.
      */
-    function getValidEndTimes(selectedStartTime, allTimes) {
-      if (!selectedStartTime) return [];
-      const sParts = selectedStartTime.split(':').map(Number);
-      const sMins = sParts[0] * 60 + sParts[1];
-
-      let ends = (allTimes || []).filter(t => {
-        const parts = t.split(':').map(Number);
-        return (parts[0] * 60 + parts[1]) > sMins;
+    function calculateTotalSlotsHours(slots) {
+      if (!slots || slots.length === 0) return '0';
+      let totalMinutes = 0;
+      slots.forEach(s => {
+        const [h1, m1] = s.periodFrom.split(':').map(Number);
+        const [h2, m2] = s.periodTo.split(':').map(Number);
+        totalMinutes += (h2 * 60 + (m2 || 0)) - (h1 * 60 + (m1 || 0));
       });
+      const hrs = totalMinutes / 60;
+      return (hrs % 1 === 0) ? String(hrs) : hrs.toFixed(1).replace(/\.0$/, '');
+    }
 
-      // กรณีสำรองเพื่อความปลอดภัย หากไม่พบช่วงเวลาถัดไป
-      if (ends.length === 0) {
-        const nextH = Math.floor((sMins + 60) / 60) % 24;
-        const nextM = (sMins + 60) % 60;
-        ends = [`${String(nextH).padStart(2, '0')}:${String(nextM).padStart(2, '0')}`];
+    /**
+     * จัดรูปแบบข้อความแสดงช่วงเวลาที่เลือก (รวมกลุ่มช่วงเวลาที่ต่อเนื่องกัน และคั่นด้วยจุลภาคเมื่อไม่ต่อเนื่องกัน)
+     * ตัวอย่าง:
+     * - เลือก 09:00-10:00 และ 10:00-11:00 -> "09:00–11:00"
+     * - เลือก 09:00-10:00 และ 11:00-12:00 -> "09:00–10:00, 11:00–12:00"
+     * - เลือก 09:00-10:00, 10:00-11:00 และ 13:00-14:00 -> "09:00–11:00, 13:00–14:00"
+     */
+    function formatSelectedSlotsDisplay(slots) {
+      if (!slots || slots.length === 0) return '';
+      const sorted = [...slots].sort((a, b) => a.periodFrom.localeCompare(b.periodFrom));
+      const blocks = [];
+      let curBlock = { start: sorted[0].periodFrom, end: sorted[0].periodTo };
+
+      for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i].periodFrom === curBlock.end) {
+          curBlock.end = sorted[i].periodTo;
+        } else {
+          blocks.push(curBlock.start === curBlock.end ? curBlock.start : `${curBlock.start}–${curBlock.end}`);
+          curBlock = { start: sorted[i].periodFrom, end: sorted[i].periodTo };
+        }
       }
-      return ends;
+      blocks.push(curBlock.start === curBlock.end ? curBlock.start : `${curBlock.start}–${curBlock.end}`);
+      return blocks.join(', ');
+    }
+
+    /**
+     * ดึงข้อมูลรอบเวลาแยกตามพนักงานสำหรับ Modal จองคิว
+     * ดึงข้อมูลจาก Sheet_Name_Setting_Reservation_Timetable และเชื่อมโยงชื่อเล่นพนักงานจาก Sheet_Name_Staff
+     * @param {string} dateStr วันที่ที่เลือกจอง เช่น "2026-10-05"
+     * @returns {Array<{staffId: string, nickName: string, slots: Array<Object>}>}
+     */
+    function getStaffSlotsForBooking(dateStr) {
+      if (!dateStr) return [];
+
+      const now = new Date();
+      const currY = now.getFullYear();
+      const currM = now.getMonth() + 1;
+      const currD = now.getDate();
+      const realTodayStr = `${currY}-${currM < 10 ? '0' + currM : currM}-${currD < 10 ? '0' + currD : currD}`;
+      const cmpTodayStr = (calendarDataCache && calendarDataCache.todayStr) ? calendarDataCache.todayStr : realTodayStr;
+      const isToday = (dateStr === cmpTodayStr);
+      const nowTotalMinutes = now.getHours() * 60 + now.getMinutes();
+
+      const staffMap = {};
+
+      function addSlotToStaff(sId, pFrom, pTo, act, isFullVal) {
+        if (!sId || !pFrom) return;
+        const staffKey = String(sId).trim();
+        if (!staffMap[staffKey]) {
+          staffMap[staffKey] = {
+            staffId: staffKey,
+            nickName: getStaffNickname(staffKey),
+            slots: []
+          };
+        }
+
+        let pToFinal = pTo;
+        if (!pToFinal) {
+          const parts = pFrom.split(':').map(Number);
+          pToFinal = `${String((parts[0] + 1) % 24).padStart(2, '0')}:${String(parts[1] || 0).padStart(2, '0')}`;
+        }
+
+        const isActive = (act === true || String(act).toLowerCase() === 'true');
+        let isPastCutoff = false;
+        if (isToday && isActive) {
+          const parts = pFrom.split(':').map(Number);
+          const slotMins = parts[0] * 60 + (parts[1] || 0);
+          if (nowTotalMinutes >= slotMins - 15) {
+            isPastCutoff = true;
+          }
+        }
+
+        const isFull = !!isFullVal;
+        const isDisabled = !isActive || isPastCutoff || isFull;
+
+        // ป้องกัน slot ซ้ำในพนักงานคนเดียวกัน
+        const exists = staffMap[staffKey].slots.find(s => s.periodFrom === pFrom && s.periodTo === pToFinal);
+        if (!exists) {
+          staffMap[staffKey].slots.push({
+            periodFrom: pFrom,
+            periodTo: pToFinal,
+            displayTime: `${pFrom}–${pToFinal}`,
+            isActive: isActive,
+            isPastCutoff: isPastCutoff,
+            isFull: isFull,
+            isDisabled: isDisabled
+          });
+        }
+      }
+
+      // 1. ดึงจาก calendarDataCache.timetableByDate[dateStr].slots
+      if (calendarDataCache && calendarDataCache.timetableByDate && calendarDataCache.timetableByDate[dateStr]) {
+        const dayTt = calendarDataCache.timetableByDate[dateStr];
+        if (dayTt.slots && dayTt.slots.length > 0) {
+          dayTt.slots.forEach(item => {
+            const sId = item.staffId || 'JMC001';
+            const pFrom = formatTimeSlot(item.periodFrom || item.time);
+            const pTo = formatTimeSlot(item.periodTo);
+            addSlotToStaff(sId, pFrom, pTo, item.isActive, item.isFull);
+          });
+        }
+      }
+
+      // 2. ถ้ายังไม่มี ให้ค้นจาก currentTimetableData
+      if (Object.keys(staffMap).length === 0 && currentTimetableData && currentTimetableData.length > 0) {
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+          const targetPeriodMonth = parts[0] + '-' + parts[1];
+          const targetDayMonth = normalizeDayMonth(parts[2]);
+          currentTimetableData.forEach(item => {
+            const pMonth = normalizePeriodMonth(item.periodMonth);
+            const dMonth = normalizeDayMonth(item.dayMonth);
+            if (pMonth === targetPeriodMonth && dMonth === targetDayMonth) {
+              const sId = item.staffId || 'JMC001';
+              const pFrom = formatTimeSlot(item.periodFrom || item.time || item.periodTime || item.period);
+              const pTo = formatTimeSlot(item.periodTo);
+              addSlotToStaff(sId, pFrom, pTo, item.isActive, false);
+            }
+          });
+        }
+      }
+
+      // 3. Fallback / Mock preview: หากยังไม่มี ให้สร้างข้อมูลตัวอย่างพนักงานและรอบเวลา
+      if (Object.keys(staffMap).length === 0) {
+        const defaultStaff = [
+          { staffId: 'JMC001', nickname: 'หมอน้อย' },
+          { staffId: 'JMC002', nickname: 'หมอกานต์' }
+        ];
+        const defaultTimes = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+        defaultStaff.forEach(st => {
+          defaultTimes.forEach((t, idx) => {
+            if (idx < defaultTimes.length - 1) {
+              addSlotToStaff(st.staffId, t, defaultTimes[idx + 1], true, false);
+            } else {
+              addSlotToStaff(st.staffId, t, '18:00', true, false);
+            }
+          });
+        });
+      }
+
+      // แปลง object เป็น array และจัดเรียง
+      const staffList = Object.values(staffMap);
+      staffList.forEach(st => {
+        st.slots.sort((a, b) => a.periodFrom.localeCompare(b.periodFrom));
+      });
+      staffList.sort((a, b) => a.staffId.localeCompare(b.staffId));
+      return staffList;
     }
 
     /**
      * เปิดหน้าต่าง Modal สำหรับเพิ่มการจองคิวในช่อง calendar ที่สามารถ "จองได้"
+     * ดึงข้อมูลจาก Sheet_Name_Setting_Reservation_Timetable แสดงผลในรูปแบบ Card
+     * Header แสดงชื่อพนักงาน (nick_name) จาก Sheet_Name_Staff
+     * Body แสดงช่วงเวลา (period_from–period_to) เป็นปุ่มแบบ Multiple selection
      */
     function openBookingModal(dateStr, slot) {
       if (!calendarDataCache) return;
@@ -5365,6 +5700,7 @@
       const currD = now.getDate();
       const realTodayStr = `${currY}-${currM < 10 ? '0' + currM : currM}-${currD < 10 ? '0' + currD : currD}`;
       const cmpTodayStr = calendarDataCache.todayStr || realTodayStr;
+      const isToday = (dateStr === cmpTodayStr);
 
       // เงื่อนไขข้อ 1: ห้ามจองวันที่ในอดีตเด็ดขาด
       if (dateStr < cmpTodayStr) {
@@ -5401,90 +5737,20 @@
         });
         return;
       }
-      if (dayTimetable && dayTimetable.isAllFull) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'จองเต็มทุกรอบแล้ว',
-          text: 'วันที่ ' + dateStr + ' รอบเวลาทั้งหมดในวันนี้จองเต็มตามโควต้าแล้ว',
-          confirmButtonColor: '#1B3B36'
-        });
-        return;
-      }
 
-      // 1. ดึงข้อมูล option เวลาจาก sheet ตัวแปร Sheet_Name_Setting_Reservation_Timetable แทนของเดิม
-      // 1.1. ให้ดึงข้อมูลตาม วันที่ ที่กดจอง โดยดูว่า ในวันที่นั้นๆ มีการตั้งค่า option เวลาไว้แบบไหนบ้าง
-      // โดยดึงเฉพาะ เวลาที่มี is_active เท่ากับ true มาแสดงเป็น option ให้เลือกเท่านั้น
-      const allActiveTimes = getActiveTimetableSlotsForDate(dateStr);
+      // ดึงข้อมูลรอบเวลาแยกตามพนักงานจาก Sheet_Name_Setting_Reservation_Timetable
+      const staffSlotsList = getStaffSlotsForBooking(dateStr);
+      const hasAnyAvailableSlot = staffSlotsList.some(st => st.slots.some(s => !s.isDisabled));
 
-      if (allActiveTimes.length === 0) {
+      if (!hasAnyAvailableSlot) {
         Swal.fire({
           icon: 'warning',
           title: 'ไม่มีรอบเวลาที่เปิดให้บริการ',
-          text: `วันที่ ${dateStr} ไม่พบรอบเวลาที่เปิดใช้งาน (is_active = true) ในตารางการจอง (${Sheet_Name_Setting_Reservation_Timetable})`,
+          text: `วันที่ ${dateStr} ไม่พบรอบเวลาที่เปิดใช้งานในตารางการจอง (${Sheet_Name_Setting_Reservation_Timetable})`,
           confirmButtonColor: '#1B3B36'
         });
         return;
       }
-
-      // คัดกรองเอาเวลารอบสุดท้ายของวันออก จาก option กรณีถ้าเป็น การเลือก "เวลาเริ่มต้น"
-      const eligibleStartSlots = (allActiveTimes.length > 1) 
-        ? allActiveTimes.slice(0, -1) 
-        : allActiveTimes;
-
-      const isToday = (dateStr === cmpTodayStr);
-      let startTimeOptions = [];
-
-      if (isToday) {
-        // 1.1.1. ถ้าวันที่จอง เป็นวันที่ปัจจุบัน เวลาใน dropdown จะแสดงเฉพาะ ตัวเลือกเวลาที่ มากกว่า เวลาปัจจุบัน 15 นาที
-        // เช่น ถ้า เวลาปัจจุบัน คือ 08:30 ดังนั้น ใน dropdown รอบเวลา 09:00 แสดงในตัวเลือกได้ แต่ถ้า เวลาปัจจุบัน 08:45 เวลาในตัวเลือกจะ แสดง รอบเวลา 10:00 (รอบถัดไปแทน ไม่มี 09:00 ให้เลือก)
-        const currentHour = now.getHours();
-        const currentMin = now.getMinutes();
-        const nowTotalMinutes = currentHour * 60 + currentMin;
-
-        startTimeOptions = eligibleStartSlots.filter(t => {
-          const parts = t.split(':').map(Number);
-          const slotTotalMinutes = parts[0] * 60 + parts[1];
-          return (slotTotalMinutes - nowTotalMinutes) > 15;
-        });
-      } else {
-        // 1.1.2. ถ้าวันที่จอง ไม่ใช้วันที่ปัจจุบัน ให้แสดง dropdown ตามปกติ (คัดกรองรอบสุดท้ายของวันออกแล้ว)
-        startTimeOptions = [...eligibleStartSlots];
-      }
-
-      if (startTimeOptions.length === 0) {
-        Swal.fire({
-          icon: 'info',
-          title: 'ไม่มีรอบเวลาที่สามารถจองได้',
-          html: `<div class="text-center">รอบเวลาเริ่มต้นของวันนี้ (<strong>${escapeHtml(dateStr)}</strong>) ได้ปิดรับจองแล้ว<br><small class="text-muted">(ต้องเลือกเวลาที่มากกว่าเวลาปัจจุบัน 15 นาทีขึ้นไป และไม่รวมรอบสุดท้ายของวัน)</small></div>`,
-          confirmButtonColor: '#1B3B36'
-        });
-        return;
-      }
-
-      // กำหนดค่าเริ่มต้นของเวลาเริ่มต้น
-      let initialStartTime = startTimeOptions[0];
-      if (slot && startTimeOptions.includes(formatTimeSlot(slot))) {
-        initialStartTime = formatTimeSlot(slot);
-      }
-
-      // 1.2. Field เลือก "เวลาสิ้นสุด" เป็น dropdown ดึงข้อมูลสัมพันธ์กับ "เวลาเริ่มต้น" (เฉพาะเวลาที่มากกว่า)
-      const initialEndTimes = getValidEndTimes(initialStartTime, allActiveTimes);
-      const initialEndTime = initialEndTimes.length > 0 ? initialEndTimes[0] : '';
-
-      // 1.3. Field จำนวนชั่วโมง คำนวณจากเวลาเริ่มต้นและเวลาสิ้นสุด
-      const initialHours = calculateHoursVal(initialStartTime, initialEndTime);
-
-      let startTimeOptionsHtml = '';
-      startTimeOptions.forEach(t => {
-        const isSel = (t === initialStartTime) ? 'selected' : '';
-        startTimeOptionsHtml += `<option value="${escapeHtml(t)}" ${isSel}>${escapeHtml(t)} น.</option>`;
-      });
-
-      let endTimeOptionsHtml = '';
-      initialEndTimes.forEach((t, idx) => {
-        const isSel = (idx === 0) ? 'selected' : '';
-        endTimeOptionsHtml += `<option value="${escapeHtml(t)}" ${isSel}>${escapeHtml(t)} น.</option>`;
-      });
 
       // ดึงรายชื่อลูกค้าที่มีอยู่ในระบบ
       let customerOptions = '<option value="">-- เลือกข้อมูลลูกค้า --</option>';
@@ -5505,6 +5771,68 @@
       const dayName = THAI_DAY_NAMES[dateObj.getDay()];
       const thaiDateDisplay = `${dayName}ที่ ${d} ${THAI_MONTH_NAMES[m - 1]} พ.ศ. ${y + 543} (${dateStr})`;
 
+      // 1. สร้าง Cards พนักงานและปุ่มช่วงเวลารอบบริการ
+      let staffCardsHtml = '';
+      staffSlotsList.forEach(st => {
+        const availableSlotsCount = st.slots.filter(s => !s.isDisabled).length;
+        let buttonsHtml = '';
+
+        if (st.slots.length === 0) {
+          buttonsHtml = '<div class="text-muted small py-2 px-1"><i class="fa-solid fa-circle-exclamation me-1 text-warning"></i>ไม่มีรอบเวลาในวันนี้</div>';
+        } else {
+          st.slots.forEach(s => {
+            const timeLabel = `${escapeHtml(s.periodFrom)}–${escapeHtml(s.periodTo)}`;
+            let statusHint = '';
+            if (s.isDisabled) {
+              if (s.isPastCutoff) statusHint = '<span class="slot-btn-sub text-danger">ปิดรับ</span>';
+              else if (s.isFull) statusHint = '<span class="slot-btn-sub text-danger">เต็ม</span>';
+              else statusHint = '<span class="slot-btn-sub text-muted">ปิด</span>';
+            }
+            buttonsHtml += `
+              <button type="button" 
+                class="btn slot-select-btn ${s.isDisabled ? 'disabled' : ''}" 
+                data-staff-id="${escapeHtml(st.staffId)}" 
+                data-period-from="${escapeHtml(s.periodFrom)}" 
+                data-period-to="${escapeHtml(s.periodTo)}"
+                ${s.isDisabled ? 'disabled' : ''}
+                title="${s.isDisabled ? (s.isPastCutoff ? 'ปิดรับจองล่วงหน้า 15 นาทีก่อนเริ่มรอบ' : (s.isFull ? 'รอบเวลานี้เต็มแล้ว' : 'ปิดการใช้งาน')) : ('คลิกเพื่อเลือกรอบ ' + timeLabel + ' น.')}">
+                <span class="slot-btn-main">${timeLabel}</span>
+                ${statusHint}
+              </button>
+            `;
+          });
+        }
+
+        staffCardsHtml += `
+          <div class="card booking-staff-card" id="staff-card-${escapeHtml(st.staffId)}" data-staff-id="${escapeHtml(st.staffId)}">
+            <div class="card-header py-2 px-3 d-flex align-items-center justify-content-between staff-card-header" title="คลิกเพื่อแสดง/ซ่อนรอบเวลา">
+              <div class="d-flex align-items-center gap-2">
+                <div class="staff-avatar-icon">
+                  <i class="fa-solid fa-user-nurse"></i>
+                </div>
+                <div>
+                  <span class="fw-bold staff-nick-text">${escapeHtml(st.nickName)}</span>
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge ${availableSlotsCount > 0 ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary'}" style="font-size:0.75rem;">
+                  ${availableSlotsCount > 0 ? `ว่าง ${availableSlotsCount} รอบ` : 'ไม่มีรอบว่าง'}
+                </span>
+                <span class="badge bg-success text-white staff-selected-badge" style="display: none; font-size:0.75rem;">
+                  เลือก 0 รอบ
+                </span>
+                <i class="fa-solid fa-chevron-down staff-expand-icon ms-1"></i>
+              </div>
+            </div>
+            <div class="card-body p-2 staff-card-body" style="display: none;">
+              <div class="slot-btn-group">
+                ${buttonsHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
       const formHtml = `
         <div class="text-start">
           <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center gap-2" style="font-size:0.85rem; border-radius:10px;">
@@ -5514,31 +5842,39 @@
             </div>
           </div>
 
-          <!-- 1.1 Field เวลาเริ่มต้น และ 1.2 Field เวลาสิ้นสุด -->
-          <div class="row g-2 mb-3">
-            <div class="col-6">
-              <label class="swal-form-label"><i class="fa-solid fa-clock text-warning me-1"></i>เวลาเริ่มต้น <span class="req">*</span></label>
-              <select id="swal-book-start-time" class="swal-input-custom" style="font-weight: 600;">
-                ${startTimeOptionsHtml}
-              </select>
-            </div>
-            <div class="col-6">
-              <label class="swal-form-label"><i class="fa-solid fa-clock text-info me-1"></i>เวลาสิ้นสุด <span class="req">*</span></label>
-              <select id="swal-book-end-time" class="swal-input-custom" style="font-weight: 600;">
-                ${endTimeOptionsHtml}
-              </select>
+          <!-- Cards รายการพนักงานและช่วงเวลา (Sheet_Name_Setting_Reservation_Timetable) -->
+          <div class="mb-3">
+            <label class="swal-form-label mb-1">
+              <i class="fa-solid fa-user-nurse text-primary me-1"></i>เลือกพนักงานและช่วงเวลาที่เปิดให้บริการ <span class="req">*</span>
+            </label>
+            <div class="booking-cards-container">
+              ${staffCardsHtml}
             </div>
           </div>
 
-          <!-- 1.3 Field จำนวนชั่วโมง เป็นแบบ disabled -->
+          <!-- แถบสรุปช่วงเวลาที่เลือก -->
+          <div id="booking-summary-box" class="alert alert-secondary py-2 px-3 mb-3 d-flex align-items-center justify-content-between" style="font-size:0.84rem; border-radius:8px;">
+            <div id="booking-summary-text" class="text-muted">
+              <i class="fa-regular fa-hand-pointer me-1 text-muted"></i> กรุณาคลิกเลือกรอบเวลาที่ต้องการจอง
+            </div>
+          </div>
+
+          <!-- ฟิลด์ จำนวนชั่วโมง คำนวณอัตโนมัติ -->
           <div class="swal-form-group mb-3">
             <label class="swal-form-label"><i class="fa-solid fa-hourglass-half text-secondary me-1"></i>จำนวนชั่วโมง</label>
             <div class="input-group">
-              <input type="text" id="swal-book-hours" class="form-control text-center fw-bold fs-5 bg-light" value="${initialHours}" disabled readonly style="color: #1B3B36; border: 1.5px solid #CBD5E1; border-radius: 8px;">
+              <input type="text" id="swal-book-hours" class="form-control text-center fw-bold fs-5 bg-light" value="0" disabled readonly style="color: #1B3B36; border: 1.5px solid #CBD5E1; border-radius: 8px;">
               <span class="input-group-text bg-light text-muted fw-semibold">ชั่วโมง</span>
             </div>
-            <small class="text-muted" style="font-size:0.75rem;">* ระบบคำนวณจำนวนชั่วโมงอัตโนมัติจากเวลาเริ่มต้นและเวลาสิ้นสุด</small>
+            <small class="text-muted" style="font-size:0.75rem;">* ระบบคำนวณจำนวนชั่วโมงอัตโนมัติจากทุกช่วงเวลาที่เลือก (เลือกต่อเนื่องหรือไม่ต่อเนื่องกันก็ได้ นับรอบละ 1 ชั่วโมง)</small>
           </div>
+
+          <!-- Hidden inputs เก็บค่าที่เลือก -->
+          <input type="hidden" id="swal-book-staff-id" value="">
+          <input type="hidden" id="swal-book-staff-nickname" value="">
+          <input type="hidden" id="swal-book-start-time" value="">
+          <input type="hidden" id="swal-book-end-time" value="">
+          <input type="hidden" id="swal-book-display-time" value="">
 
           <!-- เลือกลูกค้า -->
           <div class="swal-form-group mb-3">
@@ -5567,6 +5903,10 @@
       Swal.fire({
         title: '<i class="fa-solid fa-calendar-plus text-warning me-2"></i>จองคิว',
         html: formHtml,
+        width: '640px',
+        customClass: {
+          popup: 'swal-wide-booking'
+        },
         showCancelButton: true,
         confirmButtonText: '<i class="fa-solid fa-check me-1"></i> ยืนยันการจอง',
         cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
@@ -5575,48 +5915,164 @@
         reverseButtons: true,
         focusConfirm: false,
         didOpen: () => {
-          const $startSelect = $('#swal-book-start-time');
-          const $endSelect = $('#swal-book-end-time');
-          const $hoursInput = $('#swal-book-hours');
+          let selectedStaffId = null;
+          let selectedSlots = []; // Array of { periodFrom: string, periodTo: string }
 
-          function updateHoursDisplay() {
-            const sVal = $startSelect.val();
-            const eVal = $endSelect.val();
-            $hoursInput.val(calculateHoursVal(sVal, eVal));
-          }
+          function updateUI() {
+            // เรียงลำดับ selectedSlots ตามเวลาเริ่มต้น
+            selectedSlots.sort((a, b) => a.periodFrom.localeCompare(b.periodFrom));
 
-          // 1.2.1. เมื่อทำการเลือก option ใน dropdown “เวลาเริ่มต้น” เรียบร้อยแล้ว
-          // field เลือกเวลา “เวลาสิ้นสุด” ดึงข้อมูล ตัวเลือก โดยมี option เฉพาะเวลาที่มากกว่าในช่วงเวลาเริ่มต้น มาแสดงเท่านั้น
-          function onStartTimeChange() {
-            const curStart = $startSelect.val();
-            const validEnds = getValidEndTimes(curStart, allActiveTimes);
-            let endHtml = '';
-            validEnds.forEach((t) => {
-              endHtml += `<option value="${escapeHtml(t)}">${escapeHtml(t)} น.</option>`;
-            });
-            $endSelect.html(endHtml);
-            if (validEnds.length > 0) {
-              $endSelect.val(validEnds[0]);
+            const hours = calculateTotalSlotsHours(selectedSlots);
+            const timeDisplayStr = formatSelectedSlotsDisplay(selectedSlots);
+
+            const minFrom = selectedSlots.length > 0 ? selectedSlots[0].periodFrom : '';
+            const maxTo = selectedSlots.length > 0 ? selectedSlots[selectedSlots.length - 1].periodTo : '';
+
+            // อัปเดตฟิลด์ จำนวนชั่วโมง และ hidden inputs
+            $('#swal-book-hours').val(hours);
+            $('#swal-book-start-time').val(minFrom);
+            $('#swal-book-end-time').val(maxTo);
+            $('#swal-book-display-time').val(timeDisplayStr);
+            $('#swal-book-staff-id').val(selectedStaffId || '');
+            $('#swal-book-staff-nickname').val(selectedStaffId ? getStaffNickname(selectedStaffId) : '');
+
+            // อัปเดตแถบสรุป
+            if (selectedSlots.length > 0 && selectedStaffId) {
+              const nick = getStaffNickname(selectedStaffId);
+              const summaryHtml = `
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <i class="fa-solid fa-circle-check text-success"></i>
+                  <span><strong>พนักงาน:</strong> ${escapeHtml(nick)}</span>
+                  <span class="text-muted">|</span>
+                  <span><strong>ช่วงเวลา:</strong> ${escapeHtml(timeDisplayStr)} น. (${hours} ชั่วโมง)</span>
+                </div>
+              `;
+              $('#booking-summary-text').html(summaryHtml);
+              $('#booking-summary-box').removeClass('alert-secondary').addClass('alert-success');
+            } else {
+              $('#booking-summary-text').html(`
+                <i class="fa-regular fa-hand-pointer me-1 text-muted"></i>
+                <span class="text-muted">กรุณาคลิกเลือกรอบเวลาที่ต้องการจอง</span>
+              `);
+              $('#booking-summary-box').removeClass('alert-success').addClass('alert-secondary');
             }
-            updateHoursDisplay();
+
+            // อัปเดตสถานะ Card และปุ่ม
+            $('.booking-staff-card').each(function() {
+              const cId = $(this).data('staff-id');
+              const $c = $(this);
+              if (cId === selectedStaffId && selectedSlots.length > 0) {
+                $c.addClass('selected-staff');
+                $c.find('.staff-selected-badge').text(`เลือก ${selectedSlots.length} รอบ`).show();
+              } else {
+                $c.removeClass('selected-staff');
+                $c.find('.staff-selected-badge').hide();
+              }
+            });
+
+            $('.slot-select-btn').each(function() {
+              const bStaffId = $(this).data('staff-id');
+              const bFrom = $(this).data('period-from');
+              const bTo = $(this).data('period-to');
+
+              if (bStaffId === selectedStaffId && selectedSlots.some(s => s.periodFrom === bFrom && s.periodTo === bTo)) {
+                $(this).addClass('selected');
+              } else {
+                $(this).removeClass('selected');
+              }
+            });
           }
 
-          $startSelect.on('change', onStartTimeChange);
-          $endSelect.on('change', updateHoursDisplay);
+          // 1.1 จัดการคลิก Header เพื่อ Collapse / Expand แบบ Accordion
+          $('.staff-card-header').on('click', function(e) {
+            e.preventDefault();
+            const $card = $(this).closest('.booking-staff-card');
+            const $body = $card.find('.staff-card-body');
+            const isExpanded = $card.hasClass('is-expanded');
+
+            if (isExpanded) {
+              // หากกำลังแสดงอยู่ ให้คลิกเพื่อหุบลง
+              $card.removeClass('is-expanded');
+              $body.slideUp(180);
+            } else {
+              // หุบ body ของพนักงานท่านอื่นลงทั้งหมด (ข้อ 1.1)
+              $('.booking-staff-card').not($card).each(function() {
+                $(this).removeClass('is-expanded');
+                $(this).find('.staff-card-body').slideUp(180);
+              });
+
+              // แสดง body ของพนักงานท่านที่คลิกขึ้นมา
+              $card.addClass('is-expanded');
+              $body.slideDown(180);
+            }
+          });
+
+          // จัดการเมื่อคลิกปุ่มช่วงเวลา (รองรับการเลือกอิสระ ทั้งต่อเนื่องและไม่ต่อเนื่อง)
+          $('.slot-select-btn').on('click', function(e) {
+            e.preventDefault();
+            if ($(this).prop('disabled') || $(this).hasClass('disabled')) return;
+
+            const clickedStaffId = $(this).data('staff-id');
+            const pFrom = $(this).data('period-from');
+            const pTo = $(this).data('period-to');
+
+            // กรณีที่ 1: คลิกเลือกพนักงานคนใหม่ -> สลับไปเลือกพนักงานคนนั้นทันที
+            if (clickedStaffId !== selectedStaffId) {
+              selectedStaffId = clickedStaffId;
+              selectedSlots = [{ periodFrom: pFrom, periodTo: pTo }];
+              updateUI();
+              return;
+            }
+
+            // กรณีที่ 2: พนักงานคนเดิม -> ตรวจสอบว่ารอบนี้ถูกเลือกอยู่แล้วหรือไม่
+            const existingIdx = selectedSlots.findIndex(s => s.periodFrom === pFrom && s.periodTo === pTo);
+
+            if (existingIdx !== -1) {
+              // คลิกซ้ำที่รอบเดิม -> ยกเลิกการเลือกรอบนี้ (Toggle off)
+              selectedSlots.splice(existingIdx, 1);
+              if (selectedSlots.length === 0) {
+                selectedStaffId = null;
+              }
+            } else {
+              // คลิกเพิ่มรอบเวลาใหม่ (Toggle on) สามารถเลือกทั้งต่อเนื่องหรือไม่ต่อเนื่องกันได้
+              // เช่น เลือก "09:00-10:00" แล้วข้ามไปเลือก "11:00-12:00" ก็นับเป็น 2 ชั่วโมง (รอบละ 1 ชั่วโมง)
+              selectedSlots.push({ periodFrom: pFrom, periodTo: pTo });
+            }
+
+            updateUI();
+          });
+
+          // กำหนดค่าเริ่มต้น (Pre-selection) เฉพาะกรณีที่มีการส่ง slot เข้ามาเจาะจง
+          if (slot) {
+            const normSlot = formatTimeSlot(slot);
+            for (const st of staffSlotsList) {
+              const matchedSlot = st.slots.find(s => s.periodFrom === normSlot && !s.isDisabled);
+              if (matchedSlot) {
+                selectedStaffId = st.staffId;
+                selectedSlots = [{ periodFrom: matchedSlot.periodFrom, periodTo: matchedSlot.periodTo }];
+                const $targetCard = $(`#staff-card-${st.staffId}`);
+                if ($targetCard.length > 0) {
+                  $targetCard.addClass('is-expanded');
+                  $targetCard.find('.staff-card-body').show();
+                }
+                break;
+              }
+            }
+          }
+
+          updateUI();
         },
         preConfirm: () => {
+          const selectedStaffId = $('#swal-book-staff-id').val();
           const selectedStartTime = $('#swal-book-start-time').val();
           const selectedEndTime = $('#swal-book-end-time').val();
+          const selectedDisplayTime = $('#swal-book-display-time').val();
           const calculatedHours = $('#swal-book-hours').val();
           const selectedCustomer = $('#swal-book-customer').val();
           const selectedStatus = $('#swal-book-status').val();
 
-          if (!selectedStartTime) {
-            Swal.showValidationMessage('กรุณาเลือกเวลาเริ่มต้น');
-            return false;
-          }
-          if (!selectedEndTime) {
-            Swal.showValidationMessage('กรุณาเลือกเวลาสิ้นสุด');
+          if (!selectedStaffId || !selectedStartTime || !selectedEndTime || calculatedHours === '0' || !calculatedHours) {
+            Swal.showValidationMessage('กรุณาคลิกเลือกรอบเวลาและพนักงานที่ต้องการจอง');
             return false;
           }
           if (!selectedCustomer) {
@@ -5624,16 +6080,10 @@
             return false;
           }
 
-          // ตรวจสอบว่าไม่เลือกเวลารอบสุดท้ายของวันเป็นเวลาเริ่มต้น
-          if (allActiveTimes.length > 1 && selectedStartTime === allActiveTimes[allActiveTimes.length - 1]) {
-            Swal.showValidationMessage('ไม่สามารถเลือกเวลารอบสุดท้ายของวันเป็นเวลาเริ่มต้นได้');
-            return false;
-          }
-
-          // 1.1.1. ตรวจสอบเงื่อนไข cutoff 15 นาทีอีกครั้ง หากเป็นวันที่ปัจจุบัน
+          // ตรวจสอบเงื่อนไข cutoff 15 นาทีหากเป็นวันที่ปัจจุบัน
           if (isToday) {
             const parts = selectedStartTime.split(':').map(Number);
-            const slotMins = parts[0] * 60 + parts[1];
+            const slotMins = parts[0] * 60 + (parts[1] || 0);
             const curH = new Date().getHours();
             const curM = new Date().getMinutes();
             const curTotal = curH * 60 + curM;
@@ -5643,10 +6093,15 @@
             }
           }
 
+          const staffNick = $('#swal-book-staff-nickname').val() || getStaffNickname(selectedStaffId);
           const opUser = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+
           return {
             date: dateStr,
-            timeSlot: selectedStartTime,
+            staffId: selectedStaffId,
+            staffNickname: staffNick,
+            timeSlot: selectedDisplayTime || `${selectedStartTime} - ${selectedEndTime}`,
+            displayTime: selectedDisplayTime,
             startTime: selectedStartTime,
             endTime: selectedEndTime,
             hours: calculatedHours,
@@ -5709,8 +6164,9 @@
         if (!calendarDataCache.reservationsByDate[payload.date]) {
           calendarDataCache.reservationsByDate[payload.date] = {};
         }
-        if (!calendarDataCache.reservationsByDate[payload.date][payload.timeSlot]) {
-          calendarDataCache.reservationsByDate[payload.date][payload.timeSlot] = [];
+        const keySlot = payload.startTime || payload.timeSlot;
+        if (!calendarDataCache.reservationsByDate[payload.date][keySlot]) {
+          calendarDataCache.reservationsByDate[payload.date][keySlot] = [];
         }
 
         const cust = (currentCustomerData || []).find(c => c.customerId === payload.customerId) || {};
@@ -5720,19 +6176,25 @@
           customerNickname: cust.nickname || 'ลูกค้า',
           customerFullName: `${cust.firstname || ''} ${cust.lastname || ''}`.trim(),
           customerPhone: cust.phone || '-',
-          timeSlot: payload.timeSlot,
+          timeSlot: keySlot,
+          startTime: payload.startTime,
+          endTime: payload.endTime,
+          displayTime: (payload.startTime && payload.endTime) ? `${payload.startTime} - ${payload.endTime}` : payload.timeSlot,
+          staffId: payload.staffId,
+          staffNickname: payload.staffNickname,
+          hours: payload.hours,
           date: payload.date,
           status: payload.status || 'ยืนยันแล้ว',
           createdAt: 'เมื่อสักครู่'
         };
 
-        calendarDataCache.reservationsByDate[payload.date][payload.timeSlot].push(newBooking);
+        calendarDataCache.reservationsByDate[payload.date][keySlot].push(newBooking);
         renderCalendar(calendarDataCache);
 
         Swal.fire({
           icon: 'success',
           title: 'จองคิวสำเร็จ (โหมดจำลอง)',
-          text: `บันทึกการจองรอบ ${payload.startTime || payload.timeSlot} - ${payload.endTime || ''} น. (${payload.hours || 1} ชม.) สำหรับคุณ ${cust.nickname || payload.customerId} เรียบร้อยแล้ว`,
+          text: `บันทึกการจองรอบ ${payload.startTime || payload.timeSlot} - ${payload.endTime || ''} น. (${payload.hours || 1} ชม.) พนักงาน ${payload.staffNickname || ''} สำหรับคุณ ${cust.nickname || payload.customerId} เรียบร้อยแล้ว`,
           confirmButtonColor: '#1B3B36'
         });
       }
@@ -6493,6 +6955,692 @@
           calendarDataCache = null;
           loadSettingTimeTableData(true);
         });
+      }
+    }
+
+    // =============================================================
+    // 7.1 การจัดการตัวเลือกค่าบริการ (Sheet_Name_Setting_Service_Price)
+    // =============================================================
+
+    /**
+     * ดึงข้อมูลตัวเลือกค่าบริการจาก Google Sheet
+     */
+    function loadSettingServicePriceTableData(isManualRefresh, callback) {
+      if (typeof isManualRefresh === 'function') {
+        callback = isManualRefresh;
+        isManualRefresh = false;
+      }
+      const requester = (currentUser && currentUser.username) ? currentUser.username : '';
+
+      const $refreshIcon = $('#btn-refresh-setting-service-price i');
+      if (isManualRefresh) {
+        $refreshIcon.addClass('fa-spin');
+      }
+
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSystemAdmin = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin');
+
+      // ตรวจสอบสิทธิ์: เฉพาะ Admin (8, 9) หรือ admin username เท่านั้น
+      if (userFlag !== 8 && userFlag !== 9 && !isSystemAdmin) {
+        $refreshIcon.removeClass('fa-spin');
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์เข้าถึง',
+          text: 'คุณไม่มีสิทธิ์ในการจัดการตั้งค่าตัวเลือกค่าบริการ',
+          confirmButtonColor: '#1B3B36'
+        }).then(() => {
+          switchSection('reservation');
+        });
+        return;
+      }
+
+      // แสดง Loading ในตารางถ้ายังไม่มีข้อมูล
+      if (!currentServicePriceData || currentServicePriceData.length === 0) {
+        if (!servicePriceDataTableInstance) {
+          $('#settingServicePriceTableBody').html('<tr><td colspan="7" class="text-center py-4 text-muted"><i class="fa-solid fa-circle-notch fa-spin me-2 text-warning"></i>กำลังโหลดข้อมูลตัวเลือกค่าบริการ...</td></tr>');
+        }
+      }
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            $refreshIcon.removeClass('fa-spin');
+            if (response && response.success) {
+              currentServicePriceData = response.data || [];
+              renderSettingServicePriceTable(currentServicePriceData);
+              if (typeof callback === 'function') {
+                callback();
+              }
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถโหลดข้อมูลได้',
+                text: (response && response.message) ? response.message : 'เกิดข้อผิดพลาดในการโหลดข้อมูลตัวเลือกค่าบริการ',
+                confirmButtonColor: '#1B3B36'
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            $refreshIcon.removeClass('fa-spin');
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: 'โหลดข้อมูลล้มเหลว: ' + (err.message || err),
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .getSettingServicePrices(requester, false);
+      } else {
+        // Mock fallback สำหรับ Browser Preview
+        setTimeout(() => {
+          $refreshIcon.removeClass('fa-spin');
+          if (!window.mockSettingServicePrices) {
+            const initialServices = [
+              { id: 1, nameTh: "นวดแผนไทย", nameEn: "Thai Traditional Massage", price: 300, isActive: true },
+              { id: 2, nameTh: "นวดเท้า", nameEn: "Foot Massage", price: 300, isActive: true },
+              { id: 3, nameTh: "นวดน้ำมันอโรม่า", nameEn: "Aroma Oil Massage", price: 500, isActive: true },
+              { id: 4, nameTh: "นวดคอบ่าไหล่", nameEn: "Head, Neck & Shoulder Massage", price: 350, isActive: true }
+            ];
+            window.mockSettingServicePrices = initialServices.map((srv, idx) => ({
+              rowId: idx + 2,
+              serviceId: srv.id,
+              serviceNameTh: srv.nameTh,
+              serviceNameEn: srv.nameEn,
+              serviceName: srv.nameTh + (srv.nameEn ? " (" + srv.nameEn + ")" : ""),
+              price: srv.price,
+              isActive: srv.isActive,
+              deleteFlag: 'N',
+              createDate: '2026-10-04 10:00',
+              createdBy: 'admin',
+              updateDate: '2026-10-04 10:00',
+              updatedBy: 'admin'
+            }));
+          }
+          currentServicePriceData = window.mockSettingServicePrices.filter(x => x.deleteFlag !== 'Y');
+          currentServicePriceData.sort((a, b) => a.serviceId - b.serviceId);
+          renderSettingServicePriceTable(currentServicePriceData);
+          if (typeof callback === 'function') {
+            callback();
+          }
+        }, 200);
+      }
+    }
+
+    /**
+     * เรนเดอร์ตารางตัวเลือกค่าบริการ (DataTable)
+     */
+    function renderSettingServicePriceTable(dataList) {
+      if (servicePriceDataTableInstance) {
+        servicePriceDataTableInstance.destroy();
+        servicePriceDataTableInstance = null;
+      }
+
+      const $tbody = $('#settingServicePriceTableBody');
+      $tbody.empty();
+
+      if (!dataList || dataList.length === 0) {
+        $tbody.html('<tr><td colspan="8" class="text-center py-4 text-muted">ไม่พบข้อมูลตัวเลือกค่าบริการ (คลิก "เพิ่มตัวเลือกค่าบริการ" เพื่อเริ่มต้น)</td></tr>');
+        return;
+      }
+
+      dataList.forEach((item, index) => {
+        const serviceIdVal = item.serviceId;
+        const serviceNameThVal = item.serviceNameTh || item.serviceName || '-';
+        const serviceNameEnVal = item.serviceNameEn || '';
+        const priceFormatted = Number(item.price || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const statusBadge = item.isActive
+          ? `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 cursor-pointer" onclick="toggleServicePriceStatus(${serviceIdVal}, true)" title="คลิกเพื่อปิดการใช้งาน"><i class="fa-solid fa-circle-check me-1"></i>เปิดใช้งาน</span>`
+          : `<span class="badge bg-secondary-subtle text-secondary border px-2 py-1 cursor-pointer" onclick="toggleServicePriceStatus(${serviceIdVal}, false)" title="คลิกเพื่อเปิดใช้งาน"><i class="fa-solid fa-circle-xmark me-1"></i>ปิดการใช้งาน</span>`;
+
+        const tr = `
+          <tr>
+            <td class="text-center font-monospace">
+              <span class="badge bg-light text-dark border px-2 py-1 fs-6">${serviceIdVal}</span>
+            </td>
+            <td>
+              <div class="fw-bold text-dark fs-6">${escapeHtml(serviceNameThVal)}</div>
+            </td>
+            <td>
+              ${serviceNameEnVal ? `<div class="text-secondary fw-medium">${escapeHtml(serviceNameEnVal)}</div>` : `<span class="text-muted">-</span>`}
+            </td>
+            <td class="text-end font-monospace">
+              <span class="fw-bold text-success fs-6">${priceFormatted}</span> <small class="text-muted">บาท</small>
+            </td>
+            <td class="text-center">
+              ${statusBadge}
+            </td>
+            <td>
+              <div class="fw-semibold">${escapeHtml(item.createDate || '-')}</div>
+              <small class="text-muted"><i class="fa-solid fa-user-pen me-1"></i>${escapeHtml(item.createdBy || '-')}</small>
+            </td>
+            <td>
+              <div class="fw-semibold">${escapeHtml(item.updateDate || '-')}</div>
+              <small class="text-muted"><i class="fa-solid fa-user-check me-1"></i>${escapeHtml(item.updatedBy || '-')}</small>
+            </td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-warning" title="แก้ไขบริการ" onclick="openEditServicePriceModal(${serviceIdVal})">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button class="btn btn-outline-danger" title="ลบบริการ (Soft Delete)" onclick="confirmDeleteServicePrice(${serviceIdVal})">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+        $tbody.append(tr);
+      });
+
+      servicePriceDataTableInstance = $('#settingServicePriceDataTable').DataTable({
+        language: getDatatableThaiLang(),
+        responsive: true,
+        pageLength: 10,
+        lengthMenu: [5, 10, 25, 50],
+        order: [[0, 'asc']], // เรียงตาม service_id
+        columnDefs: [
+          { orderable: false, targets: [7] } // คอลัมน์จัดการ ไม่ให้ sort
+        ]
+      });
+    }
+
+    /**
+     * Modal เพิ่มข้อมูลตัวเลือกค่าบริการ
+     */
+    function openAddServicePriceModal() {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSystemAdmin = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin');
+      if (userFlag !== 8 && userFlag !== 9 && !isSystemAdmin) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์เพิ่มข้อมูล',
+          text: 'คุณไม่มีสิทธิ์ในการเพิ่มตัวเลือกค่าบริการ',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      Swal.fire({
+        title: '<i class="fa-solid fa-tags text-warning me-2"></i>เพิ่มตัวเลือกค่าบริการ',
+        html: `
+          <div class="swal-form-group mb-3 text-start">
+            <label class="swal-form-label"><i class="fa-solid fa-tag me-1 text-primary"></i>ชื่อบริการภาษาไทย (service_name_th) <span class="req">*</span></label>
+            <input id="swal-service-name-th" type="text" class="swal-input-custom" placeholder="เช่น นวดแผนไทย" required>
+          </div>
+          <div class="swal-form-group mb-3 text-start">
+            <label class="swal-form-label"><i class="fa-solid fa-language me-1 text-info"></i>ชื่อบริการภาษาอังกฤษ (service_name_en) <span class="text-muted">(ไม่บังคับ / Optional)</span></label>
+            <input id="swal-service-name-en" type="text" class="swal-input-custom" placeholder="เช่น Thai Traditional Massage">
+          </div>
+          <div class="swal-form-group mb-3 text-start">
+            <label class="swal-form-label"><i class="fa-solid fa-baht-sign me-1 text-success"></i>ราคาค่าบริการ (price) <span class="req">* (บาท)</span></label>
+            <div class="input-group">
+              <input id="swal-service-price" type="number" step="0.01" min="0" class="form-control text-end fw-bold" placeholder="0.00" value="300" style="border-radius: 8px 0 0 8px; border: 1.5px solid #CBD5E1;" required>
+              <span class="input-group-text bg-light text-muted fw-semibold">บาท</span>
+            </div>
+            <small class="text-muted" style="font-size:0.75rem;">* รหัสบริการ (service_id) จะถูกสร้างเป็นตัวเลขเพิ่มขึ้นอัตโนมัติ (Auto increment: 1, 2, 3...)</small>
+          </div>
+          <div class="swal-form-group mb-2 text-start">
+            <label class="swal-form-label"><i class="fa-solid fa-toggle-on me-1 text-secondary"></i>สถานะการแสดงผล (is_active)</label>
+            <div class="form-check form-switch mt-1">
+              <input class="form-check-input" type="checkbox" id="swal-service-is-active" checked style="cursor: pointer; width: 44px; height: 22px;">
+              <label class="form-check-label ms-2 fw-semibold text-success" for="swal-service-is-active" id="swal-service-status-label" style="cursor: pointer;">
+                เปิดใช้งาน (แสดงผลในระบบ)
+              </label>
+            </div>
+          </div>
+        `,
+        width: '520px',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-save me-1"></i> บันทึกข้อมูล',
+        cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+        confirmButtonColor: '#1B3B36',
+        cancelButtonColor: '#718096',
+        reverseButtons: true,
+        didOpen: () => {
+          $('#swal-service-is-active').on('change', function() {
+            if ($(this).is(':checked')) {
+              $('#swal-service-status-label').text('เปิดใช้งาน (แสดงผลในระบบ)').removeClass('text-muted').addClass('text-success');
+            } else {
+              $('#swal-service-status-label').text('ปิดการใช้งาน (ไม่แสดงผล)').removeClass('text-success').addClass('text-muted');
+            }
+          });
+          setTimeout(() => { $('#swal-service-name-th').focus(); }, 150);
+        },
+        preConfirm: () => {
+          const serviceNameTh = $('#swal-service-name-th').val().trim();
+          const serviceNameEn = $('#swal-service-name-en').val().trim();
+          const priceRaw = $('#swal-service-price').val().trim();
+          const isActive = $('#swal-service-is-active').is(':checked');
+
+          if (!serviceNameTh) {
+            Swal.showValidationMessage('กรุณาระบุชื่อบริการภาษาไทย (service_name_th)');
+            return false;
+          }
+          if (priceRaw === '' || isNaN(parseFloat(priceRaw)) || parseFloat(priceRaw) < 0) {
+            Swal.showValidationMessage('กรุณาระบุราคาค่าบริการที่ถูกต้อง');
+            return false;
+          }
+
+          const operator = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+          return {
+            serviceNameTh: serviceNameTh,
+            serviceNameEn: serviceNameEn,
+            price: parseFloat(priceRaw),
+            isActive: isActive,
+            operatorUsername: operator
+          };
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value) {
+          submitAddSettingServicePrice(result.value);
+        }
+      });
+    }
+
+    /**
+     * ส่งข้อมูลเพิ่มตัวเลือกค่าบริการ
+     */
+    function submitAddSettingServicePrice(payload) {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        Swal.fire({
+          title: 'กำลังบันทึกข้อมูล...',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'สำเร็จ',
+                text: res.message,
+                confirmButtonColor: '#1B3B36'
+              }).then(() => {
+                loadSettingServicePriceTableData(true);
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถบันทึกได้',
+                text: res ? res.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+                confirmButtonColor: '#1B3B36'
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: err.message || err,
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .addSettingServicePrice(payload);
+      } else {
+        // Mock ใน Browser Preview
+        if (!window.mockSettingServicePrices) window.mockSettingServicePrices = [];
+        const nextId = (window.mockSettingServicePrices.length > 0)
+          ? Math.max(...window.mockSettingServicePrices.map(x => x.serviceId || 0)) + 1
+          : 1;
+
+        const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16);
+        window.mockSettingServicePrices.push({
+          rowId: window.mockSettingServicePrices.length + 2,
+          serviceId: nextId,
+          serviceNameTh: payload.serviceNameTh,
+          serviceNameEn: payload.serviceNameEn || '',
+          serviceName: payload.serviceNameTh + (payload.serviceNameEn ? " (" + payload.serviceNameEn + ")" : ""),
+          price: payload.price,
+          isActive: payload.isActive,
+          deleteFlag: 'N',
+          createDate: nowStr,
+          createdBy: payload.operatorUsername,
+          updateDate: nowStr,
+          updatedBy: payload.operatorUsername
+        });
+
+        Swal.fire({
+          icon: 'success',
+          title: 'บันทึกสำเร็จ (โหมดจำลอง)',
+          text: `เพิ่มบริการ "${payload.serviceNameTh}" รหัส ${nextId} เรียบร้อยแล้ว`,
+          timer: 1500,
+          showConfirmButton: false
+        }).then(() => {
+          loadSettingServicePriceTableData(true);
+        });
+      }
+    }
+
+    /**
+     * Modal แก้ไขข้อมูลตัวเลือกค่าบริการ
+     */
+    function openEditServicePriceModal(serviceId, serviceNameTh, serviceNameEn, price, isActive) {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSystemAdmin = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin');
+      if (userFlag !== 8 && userFlag !== 9 && !isSystemAdmin) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์แก้ไขข้อมูล',
+          text: 'คุณไม่มีสิทธิ์ในการแก้ไขตัวเลือกค่าบริการ',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      if (serviceNameTh === undefined && currentServicePriceData) {
+        const item = currentServicePriceData.find(x => x.serviceId === serviceId);
+        if (item) {
+          serviceNameTh = item.serviceNameTh || item.serviceName || '';
+          serviceNameEn = item.serviceNameEn || '';
+          price = item.price;
+          isActive = item.isActive;
+        }
+      }
+
+      Swal.fire({
+        title: '<i class="fa-solid fa-pen-to-square text-warning me-2"></i>แก้ไขตัวเลือกค่าบริการ',
+        html: `
+          <div class="swal-form-group mb-3 text-start">
+            <label class="swal-form-label"><i class="fa-solid fa-hashtag me-1 text-secondary"></i>รหัสบริการ (service_id)</label>
+            <input type="text" class="swal-input-custom bg-light fw-bold" value="${serviceId}" disabled readonly style="color:#1B3B36;">
+          </div>
+          <div class="swal-form-group mb-3 text-start">
+            <label class="swal-form-label"><i class="fa-solid fa-tag me-1 text-primary"></i>ชื่อบริการภาษาไทย (service_name_th) <span class="req">*</span></label>
+            <input id="swal-edit-service-name-th" type="text" class="swal-input-custom" value="${escapeHtml(serviceNameTh || '')}" required>
+          </div>
+          <div class="swal-form-group mb-3 text-start">
+            <label class="swal-form-label"><i class="fa-solid fa-language me-1 text-info"></i>ชื่อบริการภาษาอังกฤษ (service_name_en) <span class="text-muted">(ไม่บังคับ / Optional)</span></label>
+            <input id="swal-edit-service-name-en" type="text" class="swal-input-custom" value="${escapeHtml(serviceNameEn || '')}" placeholder="เช่น Thai Traditional Massage">
+          </div>
+          <div class="swal-form-group mb-3 text-start">
+            <label class="swal-form-label"><i class="fa-solid fa-baht-sign me-1 text-success"></i>ราคาค่าบริการ (price) <span class="req">* (บาท)</span></label>
+            <div class="input-group">
+              <input id="swal-edit-service-price" type="number" step="0.01" min="0" class="form-control text-end fw-bold" value="${price}" style="border-radius: 8px 0 0 8px; border: 1.5px solid #CBD5E1;" required>
+              <span class="input-group-text bg-light text-muted fw-semibold">บาท</span>
+            </div>
+          </div>
+          <div class="swal-form-group mb-2 text-start">
+            <label class="swal-form-label"><i class="fa-solid fa-toggle-on me-1 text-secondary"></i>สถานะการแสดงผล (is_active)</label>
+            <div class="form-check form-switch mt-1">
+              <input class="form-check-input" type="checkbox" id="swal-edit-service-is-active" ${isActive ? 'checked' : ''} style="cursor: pointer; width: 44px; height: 22px;">
+              <label class="form-check-label ms-2 fw-semibold ${isActive ? 'text-success' : 'text-muted'}" for="swal-edit-service-is-active" id="swal-edit-service-status-label" style="cursor: pointer;">
+                ${isActive ? 'เปิดใช้งาน (แสดงผลในระบบ)' : 'ปิดการใช้งาน (ไม่แสดงผล)'}
+              </label>
+            </div>
+          </div>
+        `,
+        width: '520px',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-save me-1"></i> บันทึกการแก้ไข',
+        cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+        confirmButtonColor: '#1B3B36',
+        cancelButtonColor: '#718096',
+        reverseButtons: true,
+        didOpen: () => {
+          $('#swal-edit-service-is-active').on('change', function() {
+            if ($(this).is(':checked')) {
+              $('#swal-edit-service-status-label').text('เปิดใช้งาน (แสดงผลในระบบ)').removeClass('text-muted').addClass('text-success');
+            } else {
+              $('#swal-edit-service-status-label').text('ปิดการใช้งาน (ไม่แสดงผล)').removeClass('text-success').addClass('text-muted');
+            }
+          });
+          setTimeout(() => { $('#swal-edit-service-name-th').focus(); }, 150);
+        },
+        preConfirm: () => {
+          const sNameTh = $('#swal-edit-service-name-th').val().trim();
+          const sNameEn = $('#swal-edit-service-name-en').val().trim();
+          const pVal = $('#swal-edit-service-price').val().trim();
+          const isAct = $('#swal-edit-service-is-active').is(':checked');
+
+          if (!sNameTh) {
+            Swal.showValidationMessage('กรุณาระบุชื่อบริการภาษาไทย (service_name_th)');
+            return false;
+          }
+          if (pVal === '' || isNaN(parseFloat(pVal)) || parseFloat(pVal) < 0) {
+            Swal.showValidationMessage('กรุณาระบุราคาค่าบริการที่ถูกต้อง');
+            return false;
+          }
+
+          const operator = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+          return {
+            serviceId: serviceId,
+            serviceNameTh: sNameTh,
+            serviceNameEn: sNameEn,
+            price: parseFloat(pVal),
+            isActive: isAct,
+            operatorUsername: operator
+          };
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value) {
+          submitUpdateSettingServicePrice(result.value);
+        }
+      });
+    }
+
+    /**
+     * ส่งข้อมูลแก้ไขตัวเลือกค่าบริการ
+     */
+    function submitUpdateSettingServicePrice(payload) {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        Swal.fire({
+          title: 'กำลังบันทึกการแก้ไข...',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'สำเร็จ',
+                text: res.message,
+                confirmButtonColor: '#1B3B36'
+              }).then(() => {
+                loadSettingServicePriceTableData(true);
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถบันทึกได้',
+                text: res ? res.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+                confirmButtonColor: '#1B3B36'
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: err.message || err,
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .updateSettingServicePrice(payload);
+      } else {
+        // Mock ใน Browser Preview
+        if (window.mockSettingServicePrices) {
+          const item = window.mockSettingServicePrices.find(x => x.serviceId === payload.serviceId);
+          if (item) {
+            item.serviceNameTh = payload.serviceNameTh;
+            item.serviceNameEn = payload.serviceNameEn || '';
+            item.serviceName = payload.serviceNameTh + (payload.serviceNameEn ? " (" + payload.serviceNameEn + ")" : "");
+            item.price = payload.price;
+            item.isActive = payload.isActive;
+            item.updateDate = new Date().toISOString().replace('T', ' ').slice(0, 16);
+            item.updatedBy = payload.operatorUsername;
+          }
+        }
+        Swal.fire({
+          icon: 'success',
+          title: 'แก้ไขสำเร็จ (โหมดจำลอง)',
+          text: `แก้ไขบริการ "${payload.serviceNameTh}" เรียบร้อยแล้ว`,
+          timer: 1500,
+          showConfirmButton: false
+        }).then(() => {
+          loadSettingServicePriceTableData(true);
+        });
+      }
+    }
+
+    /**
+     * ลบตัวเลือกค่าบริการ (Soft Delete)
+     */
+    function confirmDeleteServicePrice(serviceId, serviceName) {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSystemAdmin = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin');
+      if (userFlag !== 8 && userFlag !== 9 && !isSystemAdmin) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีสิทธิ์ลบข้อมูล',
+          text: 'คุณไม่มีสิทธิ์ในการลบตัวเลือกค่าบริการ',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      if (!serviceName && currentServicePriceData) {
+        const item = currentServicePriceData.find(x => x.serviceId === serviceId);
+        if (item) {
+          serviceName = item.serviceNameTh || item.serviceName || ('รหัส ' + serviceId);
+        }
+      }
+
+      Swal.fire({
+        title: 'ยืนยันการลบบริการ?',
+        html: `คุณต้องการลบรายการบริการ <strong>"${escapeHtml(serviceName || ('รหัส ' + serviceId))}"</strong> (รหัส ${serviceId}) หรือไม่?<br><small class="text-danger">* ข้อมูลจะถูกทำเครื่องหมายเป็นลบ (Soft Delete: delete_flag = 'Y')</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#718096',
+        confirmButtonText: '<i class="fa-solid fa-trash-can me-1"></i> ยืนยันการลบ',
+        cancelButtonText: '<i class="fa-solid fa-xmark me-1"></i> ยกเลิก',
+        reverseButtons: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+          executeDeleteSettingServicePrice(serviceId, serviceName);
+        }
+      });
+    }
+
+    /**
+     * ส่งคำขอลบตัวเลือกค่าบริการ
+     */
+    function executeDeleteSettingServicePrice(serviceId, serviceName) {
+      const operator = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        Swal.fire({
+          title: 'กำลังลบข้อมูล...',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'ลบสำเร็จ',
+                text: res.message,
+                confirmButtonColor: '#1B3B36'
+              }).then(() => {
+                loadSettingServicePriceTableData(true);
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถลบข้อมูลได้',
+                text: res ? res.message : 'เกิดข้อผิดพลาดในการลบข้อมูล',
+                confirmButtonColor: '#1B3B36'
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: err.message || err,
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .deleteSettingServicePrice(serviceId, operator);
+      } else {
+        // Mock ใน Browser Preview
+        if (window.mockSettingServicePrices) {
+          const item = window.mockSettingServicePrices.find(x => x.serviceId === serviceId);
+          if (item) {
+            item.deleteFlag = 'Y';
+            item.updateDate = new Date().toISOString().replace('T', ' ').slice(0, 16);
+            item.updatedBy = operator;
+          }
+        }
+        Swal.fire({
+          icon: 'success',
+          title: 'ลบสำเร็จ (โหมดจำลอง)',
+          text: `ลบบริการ "${serviceName}" เรียบร้อยแล้ว (Soft Delete)`,
+          timer: 1500,
+          showConfirmButton: false
+        }).then(() => {
+          loadSettingServicePriceTableData(true);
+        });
+      }
+    }
+
+    /**
+     * สลับสถานะเปิด/ปิดการใช้งานตัวเลือกค่าบริการ (Toggle is_active)
+     */
+    function toggleServicePriceStatus(serviceId, currentStatus) {
+      const userFlag = (currentUser && currentUser.personFlag) ? parseInt(currentUser.personFlag, 10) : 9;
+      const isSystemAdmin = Boolean(currentUser && currentUser.username && currentUser.username.toLowerCase() === 'admin');
+      if (userFlag !== 8 && userFlag !== 9 && !isSystemAdmin) {
+        return;
+      }
+
+      const operator = (currentUser && currentUser.username) ? currentUser.username : 'admin';
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              const item = currentServicePriceData.find(x => x.serviceId === serviceId);
+              if (item) {
+                item.isActive = res.newStatus;
+              }
+              renderSettingServicePriceTable(currentServicePriceData);
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: res ? res.message : 'ไม่สามารถเปลี่ยนสถานะได้',
+                confirmButtonColor: '#1B3B36'
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: err.message || err,
+              confirmButtonColor: '#1B3B36'
+            });
+          })
+          .toggleSettingServicePriceStatus(serviceId, currentStatus, operator);
+      } else {
+        // Mock
+        if (window.mockSettingServicePrices) {
+          const item = window.mockSettingServicePrices.find(x => x.serviceId === serviceId);
+          if (item) {
+            item.isActive = !currentStatus;
+          }
+        }
+        const item = currentServicePriceData.find(x => x.serviceId === serviceId);
+        if (item) {
+          item.isActive = !currentStatus;
+        }
+        renderSettingServicePriceTable(currentServicePriceData);
       }
     }
 
