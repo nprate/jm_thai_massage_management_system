@@ -223,6 +223,201 @@ function renameReservationSheetIfNeeded() {
 }
 
 /**
+ * ตรวจสอบและตั้งค่า Schema ของชีต "จองคิว" (Sheet_Name_Reservation)
+ * ฟิลด์เรียงตามลำดับใหม่ 10 คอลัมน์ (1.1 - 1.10):
+ * 1. reserve_code (JM + reserve_date[YYYYMMDD] + customer_id[no JM] + staff_id[no JM])
+ * 2. reserve_date (YYYY-MM-DD)
+ * 3. reserve_time (ช่วงเวลา เช่น 09:00–10:00)
+ * 4. customer_id (รหัสลูกค้า เช่น JM0001)
+ * 5. staff_id (รหัสพนักงาน เช่น JMS001)
+ * 6. cancel_flag (boolean, default false)
+ * 7. create_date (วันที่สร้าง เช่น YYYY-MM-DD HH:mm:ss)
+ * 8. created_by (ผู้สร้าง ใช้ username ที่ล็อกอิน)
+ * 9. update_date (อัปเดตล่าสุด เช่น YYYY-MM-DD HH:mm:ss)
+ * 10. updated_by (ผู้อัปเดต ใช้ username ที่ล็อกอิน)
+ */
+function setupReservationSheetSchema() {
+  try {
+    renameReservationSheetIfNeeded();
+    var sheet = getReservationSheet();
+    var lastRow = sheet.getLastRow();
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+    var newHeaders = [
+      "reserve_code", 
+      "reserve_date", 
+      "reserve_time", 
+      "customer_id", 
+      "staff_id", 
+      "cancel_flag",
+      "create_date",
+      "created_by",
+      "update_date",
+      "updated_by"
+    ];
+
+    if (lastRow === 0) {
+      sheet.appendRow(newHeaders);
+      var headerRange = sheet.getRange(1, 1, 1, newHeaders.length);
+      headerRange.setBackground("#1B3B36");
+      headerRange.setFontColor("#FFFFFF");
+      headerRange.setFontWeight("bold");
+      headerRange.setHorizontalAlignment("center");
+      headerRange.setVerticalAlignment("middle");
+      sheet.setRowHeight(1, 40);
+      sheet.setFrozenRows(1);
+
+      // ข้อมูลตัวอย่างเริ่มต้น
+      var todayStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd");
+      var sampleDateNoDash = todayStr.replace(/[^0-9]/g, "");
+      var sampleCode = "JM" + sampleDateNoDash + "0001S001";
+      sheet.appendRow([sampleCode, todayStr, "17:00–18:00", "JM0001", "JMS001", false, nowStr, "admin", nowStr, "admin"]);
+
+      try {
+        sheet.getRange(1, 1, sheet.getLastRow(), newHeaders.length).setNumberFormat("@");
+      } catch (e) {}
+
+      for (var c = 1; c <= newHeaders.length; c++) {
+        try { sheet.autoResizeColumn(c); } catch (e) {}
+      }
+      return { success: true, message: "สร้าง Schema ชีตจองคิวใหม่สำเร็จ (10 คอลัมน์)" };
+    }
+
+    // ตรวจสอบ headers ปัจจุบัน
+    var lastCol = Math.max(sheet.getLastColumn(), 1);
+    var currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) { 
+      return String(h || "").trim(); 
+    });
+
+    var hasNewSchema = (currentHeaders.length >= 10 && 
+                        currentHeaders[0] === "reserve_code" && 
+                        currentHeaders[1] === "reserve_date" && 
+                        currentHeaders[2] === "reserve_time" && 
+                        currentHeaders[3] === "customer_id" && 
+                        currentHeaders[4] === "staff_id" && 
+                        currentHeaders[5] === "cancel_flag" &&
+                        currentHeaders[6] === "create_date" &&
+                        currentHeaders[7] === "created_by" &&
+                        currentHeaders[8] === "update_date" &&
+                        currentHeaders[9] === "updated_by");
+
+    if (!hasNewSchema) {
+      // ทำการ Auto-Migrate จาก schema เดิม
+      var allData = sheet.getDataRange().getValues();
+      var oldHeaderRow = allData[0].map(function(h) { return String(h || "").trim(); });
+
+      var idxOldCode = oldHeaderRow.indexOf("reserve_code");
+      if (idxOldCode === -1) idxOldCode = oldHeaderRow.indexOf("รหัสการจอง");
+      if (idxOldCode === -1) idxOldCode = 0;
+
+      var idxOldDate = oldHeaderRow.indexOf("reserve_date");
+      if (idxOldDate === -1) idxOldDate = oldHeaderRow.indexOf("วันที่ที่จอง");
+      if (idxOldDate === -1) idxOldDate = (oldHeaderRow.indexOf("customer_id") === 3) ? 1 : 2;
+
+      var idxOldTime = oldHeaderRow.indexOf("reserve_time");
+      if (idxOldTime === -1) idxOldTime = oldHeaderRow.indexOf("เวลาที่จอง");
+      if (idxOldTime === -1) idxOldTime = (oldHeaderRow.indexOf("customer_id") === 3) ? 2 : 3;
+
+      var idxOldCust = oldHeaderRow.indexOf("customer_id");
+      if (idxOldCust === -1) idxOldCust = oldHeaderRow.indexOf("รหัสลูกค้า");
+      if (idxOldCust === -1) idxOldCust = (oldHeaderRow.indexOf("reserve_date") === 1) ? 3 : 1;
+
+      var idxOldStaff = oldHeaderRow.indexOf("staff_id");
+      var idxOldCancel = oldHeaderRow.indexOf("cancel_flag");
+      var idxOldStatus = oldHeaderRow.indexOf("สถานะการจอง");
+
+      var idxOldCreateDate = oldHeaderRow.indexOf("create_date");
+      if (idxOldCreateDate === -1) idxOldCreateDate = oldHeaderRow.indexOf("วันที่สร้าง");
+
+      var idxOldCreatedBy = oldHeaderRow.indexOf("created_by");
+      if (idxOldCreatedBy === -1) idxOldCreatedBy = oldHeaderRow.indexOf("ผู้สร้าง");
+
+      var idxOldUpdateDate = oldHeaderRow.indexOf("update_date");
+      if (idxOldUpdateDate === -1) idxOldUpdateDate = oldHeaderRow.indexOf("อัปเดตล่าสุด");
+
+      var idxOldUpdatedBy = oldHeaderRow.indexOf("updated_by");
+      if (idxOldUpdatedBy === -1) idxOldUpdatedBy = oldHeaderRow.indexOf("ผู้อัปเดต");
+
+      var migratedRows = [];
+      for (var r = 1; r < allData.length; r++) {
+        var row = allData[r];
+        var custId = (idxOldCust !== -1 && idxOldCust < row.length) ? String(row[idxOldCust] || "").trim() : "JM0001";
+        var rDateVal = (idxOldDate !== -1 && idxOldDate < row.length) ? row[idxOldDate] : "";
+        var dateStr = "";
+        if (rDateVal instanceof Date) {
+          dateStr = Utilities.formatDate(rDateVal, "Asia/Bangkok", "yyyy-MM-dd");
+        } else {
+          dateStr = String(rDateVal || "").trim().slice(0, 10);
+        }
+        var timeStr = (idxOldTime !== -1 && idxOldTime < row.length) ? String(row[idxOldTime] || "").trim() : "";
+        var staffId = (idxOldStaff !== -1 && idxOldStaff < row.length && row[idxOldStaff]) ? String(row[idxOldStaff]).trim() : "JMS001";
+        
+        var isCanceled = false;
+        if (idxOldCancel !== -1 && idxOldCancel < row.length) {
+          var cv = row[idxOldCancel];
+          isCanceled = (cv === true || String(cv).toLowerCase() === "true" || String(cv).toUpperCase() === "Y");
+        } else if (idxOldStatus !== -1 && idxOldStatus < row.length) {
+          isCanceled = (String(row[idxOldStatus] || "").indexOf("ยกเลิก") !== -1);
+        }
+
+        var rCode = (idxOldCode !== -1 && idxOldCode < row.length) ? String(row[idxOldCode] || "").trim() : "";
+        if (!rCode || rCode.indexOf("BK") === 0) {
+          rCode = generateReservationCode(dateStr, custId, staffId);
+        }
+
+        var createDateVal = "";
+        if (idxOldCreateDate !== -1 && idxOldCreateDate < row.length && row[idxOldCreateDate]) {
+          var crVal = row[idxOldCreateDate];
+          createDateVal = (crVal instanceof Date) ? Utilities.formatDate(crVal, "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss") : String(crVal).trim();
+        }
+        if (!createDateVal) createDateVal = nowStr;
+
+        var createdByVal = (idxOldCreatedBy !== -1 && idxOldCreatedBy < row.length && row[idxOldCreatedBy]) ? String(row[idxOldCreatedBy]).trim() : "admin";
+
+        var updateDateVal = "";
+        if (idxOldUpdateDate !== -1 && idxOldUpdateDate < row.length && row[idxOldUpdateDate]) {
+          var upVal = row[idxOldUpdateDate];
+          updateDateVal = (upVal instanceof Date) ? Utilities.formatDate(upVal, "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss") : String(upVal).trim();
+        }
+        if (!updateDateVal) updateDateVal = nowStr;
+
+        var updatedByVal = (idxOldUpdatedBy !== -1 && idxOldUpdatedBy < row.length && row[idxOldUpdatedBy]) ? String(row[idxOldUpdatedBy]).trim() : "admin";
+
+        migratedRows.push([rCode, dateStr, timeStr, custId, staffId, isCanceled, createDateVal, createdByVal, updateDateVal, updatedByVal]);
+      }
+
+      sheet.clearContents();
+      sheet.getRange(1, 1, 1, newHeaders.length).setValues([newHeaders]);
+      var hRange = sheet.getRange(1, 1, 1, newHeaders.length);
+      hRange.setBackground("#1B3B36");
+      hRange.setFontColor("#FFFFFF");
+      hRange.setFontWeight("bold");
+      hRange.setHorizontalAlignment("center");
+      hRange.setVerticalAlignment("middle");
+      sheet.setRowHeight(1, 40);
+      sheet.setFrozenRows(1);
+
+      if (migratedRows.length > 0) {
+        sheet.getRange(2, 1, migratedRows.length, newHeaders.length).setValues(migratedRows);
+      }
+
+      try {
+        sheet.getRange(1, 1, sheet.getLastRow(), newHeaders.length).setNumberFormat("@");
+      } catch (e) {}
+
+      for (var c2 = 1; c2 <= newHeaders.length; c2++) {
+        try { sheet.autoResizeColumn(c2); } catch (e) {}
+      }
+      return { success: true, message: "อัปเกรด Schema ชีตจองคิวเป็นรูปแบบใหม่เรียบร้อยแล้ว (10 คอลัมน์, " + migratedRows.length + " แถว)" };
+    }
+    return { success: true, message: "Schema ชีตจองคิวเป็นรูปแบบใหม่เรียบร้อยแล้ว (10 คอลัมน์)" };
+  } catch (err) {
+    Logger.log("Error in setupReservationSheetSchema: " + err.message);
+    return { success: false, message: err.message };
+  }
+}
+
+
+/**
  * Helper: ดึงหรือสร้างชีต "ตั้งค่าตัวเลือกเวลาการจอง" (Sheet_Name_Setting_Selection_Reservation_Time)
  */
 function getSettingTimeSheet() {
@@ -268,6 +463,7 @@ function onOpen() {
       .createMenu("⚙️ จัดการระบบ (JM System)")
       .addItem("🔄 ตรวจสอบและอัปเดต Schema ข้อมูลลูกค้า (Customer Schema)", "setupCustomerSheetSchema")
       .addItem("🔄 ตรวจสอบและอัปเดต Schema ข้อมูลพนักงาน (Staff Schema)", "setupStaffSheetSchema")
+      .addItem("🔄 ตรวจสอบและอัปเดต Schema การจองคิว (Reservation Schema)", "setupReservationSheetSchema")
       .addItem("🔄 ตรวจสอบและอัปเดต Schema ตัวเลือกเวลาการจอง (Setting Time Schema)", "setupSettingTimeSheetSchema")
       .addItem("🔄 ตรวจสอบและอัปเดต Schema ตัวเลือกค่าบริการ (Setting Service Price Schema)", "setupSettingServicePriceSheetSchema")
       .addItem("🔄 ตรวจสอบและอัปเดต Schema ตารางการจอง (Setting Timetable Schema)", "setupSettingTimetableSheetSchema")
@@ -445,8 +641,8 @@ function setupCustomerSheetSchema() {
 /**
  * ตั้งค่าและอัปเดต Schema ของชีตข้อมูลพนักงาน (Sheet_Name_Staff) ให้เป็น 13 คอลัมน์ภาษาอังกฤษ
  * Schema:
- * 1. staff_id (ขึ้นต้นด้วย JMC ตามด้วยเลข 3 หลัก เช่น JMC001, JMC002... running number ไม่ซ้ำเดิม)
- * 2. pwd (รหัสผ่าน login ค่าเริ่มต้นเป็น phone_number)
+ * 1. staff_id (ขึ้นต้นด้วย JMS ตามด้วยเลข 3 หลัก เช่น JMS001, JMS002... running number ไม่ซ้ำเดิม)
+ * 2. pwd (รหัสผ่าน login ค่าเริ่มต้นเป็น phone_number ตัวเลข 10 หลัก)
  * 3. nick_name (ชื่อเล่น)
  * 4. first_name (ชื่อจริง)
  * 5. last_name (นามสกุล)
@@ -466,12 +662,12 @@ function setupStaffSheetSchema() {
     var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
     var staffHeaders = [
-      "staff_id",     // 1. รหัสพนักงาน (ใช้ login)
-      "pwd",          // 2. รหัสผ่าน login (ค่าเริ่มต้นเป็น phone_number)
+      "staff_id",     // 1. รหัสพนักงาน (ใช้ login เช่น JMS001)
+      "pwd",          // 2. รหัสผ่าน login (ค่าเริ่มต้นเป็น phone_number 10 หลัก)
       "nick_name",    // 3. ชื่อเล่น
       "first_name",   // 4. ชื่อจริง
       "last_name",    // 5. นามสกุล
-      "phone_number", // 6. เบอร์โทร (10 หลัก)
+      "phone_number", // 6. เบอร์โทร (ตัวเลข 10 หลัก)
       "create_date",  // 7. วันที่สร้าง
       "created_by",   // 8. ผู้สร้าง (username)
       "update_date",  // 9. อัปเดตล่าสุด
@@ -496,9 +692,9 @@ function setupStaffSheetSchema() {
       sheet.setRowHeight(1, 40);
       sheet.setFrozenRows(1);
 
-      // แถวเริ่มต้น: staff_id = JMC001, pwd = phone_number, person_flag = 2
+      // แถวเริ่มต้น: staff_id = JMS001, pwd = phone_number, person_flag = 2
       sheet.appendRow([
-        "JMC001", "0891234567", "หมอน้อย", "สมใจ", "ใจดี", "0891234567",
+        "JMS001", "0891234567", "หมอน้อย", "สมใจ", "ใจดี", "0891234567",
         nowStr, "admin", nowStr, "admin", true, 2, "N"
       ]);
 
@@ -541,10 +737,14 @@ function setupStaffSheetSchema() {
       var values = dataRange.getValues();
 
       for (var i = 0; i < values.length; i++) {
-        // 1. staff_id
-        if (!values[i][0] || String(values[i][0]).trim() === "") {
-          values[i][0] = "JMC" + ("000" + (i + 1)).slice(-3);
+        // 1. staff_id: ถ้าว่าง หรือขึ้นต้นด้วย JMC ให้แปลงเป็น JMS (เช่น JMC001 -> JMS001)
+        var curSid = String(values[i][0] || "").trim();
+        if (!curSid) {
+          values[i][0] = "JMS" + ("000" + (i + 1)).slice(-3);
+        } else if (/^JMC(\d+)$/i.test(curSid)) {
+          values[i][0] = curSid.replace(/^JMC/i, "JMS");
         }
+
         // 6. phone_number (ตัวเลข 10 หลัก)
         var phoneVal = String(values[i][5] || "").trim();
         var cleanPhone = phoneVal.replace(/[^0-9]/g, '');
@@ -554,7 +754,8 @@ function setupStaffSheetSchema() {
         if (cleanPhone.length === 10) {
           values[i][5] = cleanPhone;
         }
-        // 2. pwd
+
+        // 2. pwd (รหัสผ่านเริ่มต้นใช้เบอร์โทรศัพท์ 10 หลัก)
         if (!values[i][1] || String(values[i][1]).trim() === "") {
           values[i][1] = cleanPhone || phoneVal || "1234";
         }
@@ -605,16 +806,49 @@ function setupStaffSheetSchema() {
       sheet.autoResizeColumn(colIdx);
     }
 
+    // ซิงค์รหัสพนักงานในชีตตั้งค่าตารางการจอง (ถ้ามี JMC ให้เปลี่ยนเป็น JMS ด้วย)
+    migrateStaffTimetableReferences();
+
     try {
       var activeSs = SpreadsheetApp.getActiveSpreadsheet();
       if (activeSs && typeof activeSs.toast === "function") {
-        activeSs.toast("อัปเดต Schema ข้อมูลพนักงานเป็น 13 คอลัมน์ (พร้อม pwd) เรียบร้อยแล้ว", "สำเร็จ", 5);
+        activeSs.toast("อัปเดต Schema ข้อมูลพนักงานเป็น JMS (13 คอลัมน์) เรียบร้อยแล้ว", "สำเร็จ", 5);
       }
     } catch (e) {}
 
-    return { success: true, message: "อัปเดต Schema ข้อมูลพนักงาน 13 คอลัมน์ (พร้อม pwd) และเติมรหัสผ่านเริ่มต้นเรียบร้อยแล้ว" };
+    return { success: true, message: "อัปเดต Schema ข้อมูลพนักงาน JMS 13 คอลัมน์ (พร้อม pwd) และเติมรหัสผ่านเริ่มต้นเรียบร้อยแล้ว" };
   } catch (err) {
     return { success: false, message: "เกิดข้อผิดพลาดในการอัปเดต Schema พนักงาน: " + err.message };
+  }
+}
+
+/**
+ * ซิงค์รหัสพนักงานเดิมที่อาจเป็น JMC ให้เป็น JMS ในชีต "ตั้งค่าตารางการจอง"
+ */
+function migrateStaffTimetableReferences() {
+  try {
+    var ss = getSpreadsheet();
+    var ttSheet = ss.getSheetByName(SHEET_NAME_SETTING_TIMETABLE);
+    if (!ttSheet) return;
+    var ttLastRow = ttSheet.getLastRow();
+    if (ttLastRow > 1) {
+      var ttHeaders = ttSheet.getRange(1, 1, 1, Math.max(ttSheet.getLastColumn(), 10)).getValues()[0].map(function(h) { return String(h || "").trim(); });
+      var staffColIdx = (ttHeaders.indexOf("staff_id") !== -1) ? (ttHeaders.indexOf("staff_id") + 1) : 3;
+      var staffColVals = ttSheet.getRange(2, staffColIdx, ttLastRow - 1, 1).getValues();
+      var ttChanged = false;
+      for (var r = 0; r < staffColVals.length; r++) {
+        var sVal = String(staffColVals[r][0] || "").trim();
+        if (/^JMC(\d+)$/i.test(sVal)) {
+          staffColVals[r][0] = sVal.replace(/^JMC/i, "JMS");
+          ttChanged = true;
+        }
+      }
+      if (ttChanged) {
+        ttSheet.getRange(2, staffColIdx, ttLastRow - 1, 1).setValues(staffColVals);
+      }
+    }
+  } catch (e) {
+    Logger.log("migrateStaffTimetableReferences error: " + e.message);
   }
 }
 
@@ -725,39 +959,8 @@ function initSheetIfNeeded() {
   setupSettingTimetableSheetSchema();
 
   // 4. ตรวจสอบชีต "จองคิว" (Sheet_Name_Reservation)
-  // ฟิลด์: 2.1.1.1 รหัสการจอง, 2.1.1.2 รหัสลูกค้า, 2.1.1.3 วันที่ที่จอง, 2.1.1.4 เวลาที่จอง, 2.1.1.5 สถานะการจอง, 2.1.1.6 วันที่สร้าง, 2.1.1.7 อัปเดตล่าสุด
-  renameReservationSheetIfNeeded();
-  var resSheet = getReservationSheet();
-  var resLastRow = resSheet.getLastRow();
-  var resHeaders = ["รหัสการจอง", "รหัสลูกค้า", "วันที่ที่จอง", "เวลาที่จอง", "สถานะการจอง", "วันที่สร้าง", "อัปเดตล่าสุด"];
-
-  if (resLastRow === 0) {
-    resSheet.appendRow(resHeaders);
-    var resHeaderRange = resSheet.getRange(1, 1, 1, resHeaders.length);
-    resHeaderRange.setBackground("#1B3B36");
-    resHeaderRange.setFontColor("#FFFFFF");
-    resHeaderRange.setFontWeight("bold");
-    resHeaderRange.setHorizontalAlignment("center");
-    resHeaderRange.setVerticalAlignment("middle");
-    resSheet.setRowHeight(1, 40);
-    resSheet.setFrozenRows(1);
-
-    // ข้อมูลตัวอย่างการจองเพื่อแสดงผลทันที
-    var todayStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd");
-    resSheet.appendRow(["BK0001", "JM0001", todayStr, "17:30", "ยืนยันแล้ว", nowStr, nowStr]);
-
-    try {
-      resSheet.getRange("D:D").setNumberFormat("@");
-    } catch (e) {}
-
-    for (var rc = 1; rc <= resHeaders.length; rc++) {
-      resSheet.autoResizeColumn(rc);
-    }
-    } else {
-      try {
-        resSheet.getRange("D:D").setNumberFormat("@");
-      } catch (e) {}
-    }
+  // ฟิลด์เรียงตามลำดับใหม่ (1.1 - 1.6): reserve_code, reserve_date, reserve_time, customer_id, staff_id, cancel_flag
+  setupReservationSheetSchema();
   } catch (err) {
     Logger.log("Error in initSheetIfNeeded: " + err.message);
   } finally {
@@ -779,15 +982,18 @@ function loginUser(username, password) {
       return { success: false, message: "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน" };
     }
 
-    // 1. ตรวจสอบการล็อกอินของพนักงาน (รหัสพนักงานขึ้นต้นด้วย "JMC" ตามด้วยเลข 3 หลัก เช่น JMC001)
-    if (cleanUsername.indexOf("jmc") === 0) {
+    // 1. ตรวจสอบการล็อกอินของพนักงาน (รหัสพนักงานขึ้นต้นด้วย "JMS" หรือ "JMC" ตามด้วยเลข 3 หลัก เช่น JMS001)
+    if (cleanUsername.indexOf("jms") === 0 || cleanUsername.indexOf("jmc") === 0) {
       var staffSheet = getStaffSheet();
       var staffData = staffSheet.getDataRange().getValues();
 
       if (staffData.length > 1) {
         for (var s = 1; s < staffData.length; s++) {
           var rowStaffId = String(staffData[s][0] || "").trim().toLowerCase();
-          if (rowStaffId === cleanUsername) {
+          var normClean = cleanUsername.replace(/^jmc/i, "jms");
+          var normRow = rowStaffId.replace(/^jmc/i, "jms");
+
+          if (rowStaffId === cleanUsername || normRow === normClean) {
             var staffPhone = String(staffData[s][5] || "").trim().replace(/[^0-9]/g, '');
             if (/^\d{9}$/.test(staffPhone)) {
               staffPhone = "0" + staffPhone;
@@ -812,12 +1018,12 @@ function loginUser(username, password) {
               return { success: false, message: "บัญชีพนักงานนี้ถูกปิดการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" };
             }
 
-            // ตรวจสอบรหัสผ่าน (ตรงกับ pwd หรือตรงกับเบอร์โทรศัพท์)
+            // ตรวจสอบรหัสผ่าน (ตรงกับ pwd หรือตรงกับเบอร์โทรศัพท์ 10 หลัก)
             if (cleanPassword === expectedStaffPwd || cleanPassword === staffPhone) {
               return {
                 success: true,
                 user: {
-                  username: String(staffData[s][0] || "").trim(), // e.g. "JMC001"
+                  username: String(staffData[s][0] || "").trim(), // e.g. "JMS001"
                   nickname: staffNickname || String(staffData[s][0] || "").trim(),
                   firstname: staffFirstname,
                   lastname: staffLastname,
@@ -829,7 +1035,7 @@ function loginUser(username, password) {
                 }
               };
             } else {
-              return { success: false, message: "รหัสผ่านไม่ถูกต้อง (สำหรับพนักงานเข้าใช้งานครั้งแรก ให้ใช้เบอร์โทรศัพท์)" };
+              return { success: false, message: "รหัสผ่านไม่ถูกต้อง (สำหรับพนักงานเข้าใช้งานครั้งแรก ให้ใช้เบอร์โทรศัพท์ 10 หลัก)" };
             }
           }
         }
@@ -1704,12 +1910,12 @@ function deleteCustomer(rowId, updatedBy) {
 // ==============================================================================
 // CRUD: ข้อมูลพนักงาน (Staff Management - Sheet_Name_Staff)
 // Schema 13 คอลัมน์:
-// 1. staff_id (ขึ้นต้นด้วย JMC ตามด้วยเลข 3 หลัก เช่น JMC001, JMC002...)
-// 2. pwd (รหัสผ่าน login ค่าเริ่มต้นเป็น phone_number)
+// 1. staff_id (ขึ้นต้นด้วย JMS ตามด้วยเลข 3 หลัก เช่น JMS001, JMS002...)
+// 2. pwd (รหัสผ่าน login ค่าเริ่มต้นเป็น phone_number 10 หลัก)
 // 3. nick_name (ชื่อเล่น)
 // 4. first_name (ชื่อจริง)
 // 5. last_name (นามสกุล)
-// 6. phone_number (เบอร์โทร ตัวเลข 10 หลักล้วน)
+// 6. phone_number (เบอร์โทร ตัวเลข 10 หลักล้วน เช่น 0861111111)
 // 7. create_date (วันที่สร้าง)
 // 8. created_by (ผู้สร้าง โดยนำ username ที่ login มาบันทึก)
 // 9. update_date (อัปเดตล่าสุด)
@@ -1720,15 +1926,15 @@ function deleteCustomer(rowId, updatedBy) {
 // ==============================================================================
 
 /**
- * สร้างรหัสพนักงานอัตโนมัติ (Pattern: JMC ตามด้วยตัวเลข 3 หลัก เริ่มต้น JMC001)
- * รันลำดับ number ถัดไปเสมอเมื่อทำการเพิ่มข้อมูลพนักงานใหม่
+ * สร้างรหัสพนักงานอัตโนมัติ (Pattern: JMS ตามด้วยตัวเลข 3 หลัก เริ่มต้น JMS001)
+ * รันลำดับ number ถัดไปเสมอเมื่อทำการเพิ่มข้อมูลพนักงานใหม่ (เช่น JMS001, JMS002, JMS003...)
  * โดยตรวจสอบจากทุกแถวใน Sheet (รวมแถวที่ถูก Soft Delete) เพื่อไม่ให้รหัสซ้ำค่าเดิม
  */
 function generateNextStaffId() {
   var sheet = getStaffSheet();
   var lastRow = sheet.getLastRow();
   if (lastRow <= 1) {
-    return "JMC001";
+    return "JMS001";
   }
 
   var idValues = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
@@ -1736,7 +1942,7 @@ function generateNextStaffId() {
 
   for (var i = 0; i < idValues.length; i++) {
     var val = String(idValues[i][0] || "").trim();
-    var match = val.match(/^JMC(\d+)$/i);
+    var match = val.match(/^(?:JMS|JMC)(\d+)$/i);
     if (match) {
       var num = parseInt(match[1], 10);
       if (num > maxNum) {
@@ -1746,7 +1952,7 @@ function generateNextStaffId() {
   }
 
   var nextNum = maxNum + 1;
-  return nextNum < 1000 ? "JMC" + ("000" + nextNum).slice(-3) : "JMC" + nextNum;
+  return nextNum < 1000 ? "JMS" + ("000" + nextNum).slice(-3) : "JMS" + nextNum;
 }
 
 /**
@@ -1838,7 +2044,7 @@ function getStaffs(requesterUsername) {
 }
 
 /**
- * เพิ่มข้อมูลพนักงานใหม่ (สร้างรหัสอัตโนมัติ เช่น JMC001, JMC002)
+ * เพิ่มข้อมูลพนักงานใหม่ (สร้างรหัสอัตโนมัติ เช่น JMS001, JMS002, JMS003)
  * @param {object} staffData { nickname, firstname, lastname, phone, password, isActive, createdBy }
  */
 function addStaff(staffData) {
@@ -1877,8 +2083,8 @@ function addStaff(staffData) {
     if (!rawPhone) {
       return { success: false, message: "กรุณากรอก 'เบอร์โทรศัพท์' ของพนักงาน" };
     }
-    if (!/^[0-9]{10}$/.test(phone)) {
-      return { success: false, message: "เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น (เช่น 0861111111)" };
+    if (!/^\d{10}$/.test(rawPhone)) {
+      return { success: false, message: "เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น เช่น 0861111111" };
     }
 
     var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
@@ -1968,8 +2174,8 @@ function updateStaff(staffData) {
     if (!rawPhone) {
       return { success: false, message: "กรุณากรอก 'เบอร์โทรศัพท์' ของพนักงาน" };
     }
-    if (!/^[0-9]{10}$/.test(phone)) {
-      return { success: false, message: "เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น (เช่น 0861111111)" };
+    if (!/^\d{10}$/.test(rawPhone)) {
+      return { success: false, message: "เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น เช่น 0861111111" };
     }
 
     var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
@@ -2356,14 +2562,52 @@ function getCalendarData(periodMonthOrYear, maybeMonth) {
     var targetMonthPrefix = targetPeriodMonth;
 
     if (resData.length > 1) {
+      var resHeaders = resData[0].map(function(h) { return String(h || "").trim(); });
+      var idxCode = resHeaders.indexOf("reserve_code");
+      if (idxCode === -1) idxCode = resHeaders.indexOf("รหัสการจอง");
+      if (idxCode === -1) idxCode = 0;
+
+      var idxDate = resHeaders.indexOf("reserve_date");
+      if (idxDate === -1) idxDate = resHeaders.indexOf("วันที่ที่จอง");
+      if (idxDate === -1) idxDate = (resHeaders.indexOf("customer_id") === 3) ? 1 : 2;
+
+      var idxTime = resHeaders.indexOf("reserve_time");
+      if (idxTime === -1) idxTime = resHeaders.indexOf("เวลาที่จอง");
+      if (idxTime === -1) idxTime = (resHeaders.indexOf("customer_id") === 3) ? 2 : 3;
+
+      var idxCust = resHeaders.indexOf("customer_id");
+      if (idxCust === -1) idxCust = resHeaders.indexOf("รหัสลูกค้า");
+      if (idxCust === -1) idxCust = (resHeaders.indexOf("reserve_date") === 1) ? 3 : 1;
+
+      var idxStaff = resHeaders.indexOf("staff_id");
+      var idxCancel = resHeaders.indexOf("cancel_flag");
+      if (idxCancel === -1) idxCancel = resHeaders.indexOf("สถานะการจอง");
+
+      var idxCreateDate = resHeaders.indexOf("create_date");
+      if (idxCreateDate === -1) idxCreateDate = resHeaders.indexOf("วันที่สร้าง");
+
+      var idxCreatedBy = resHeaders.indexOf("created_by");
+      if (idxCreatedBy === -1) idxCreatedBy = resHeaders.indexOf("ผู้สร้าง");
+
+      var idxUpdateDate = resHeaders.indexOf("update_date");
+      if (idxUpdateDate === -1) idxUpdateDate = resHeaders.indexOf("อัปเดตล่าสุด");
+
+      var idxUpdatedBy = resHeaders.indexOf("updated_by");
+      if (idxUpdatedBy === -1) idxUpdatedBy = resHeaders.indexOf("ผู้อัปเดต");
+
       for (var r = 1; r < resData.length; r++) {
-        var resId = String(resData[r][0] || "").trim();
-        var custId = String(resData[r][1] || "").trim();
-        var dateRaw = resData[r][2];
-        var timeSlot = formatTimeSlot(resData[r][3]);
-        var status = String(resData[r][4] || "ยืนยันแล้ว").trim();
-        var createdAt = resData[r][5] ? formatDateDisplay(resData[r][5]) : "-";
-        var updatedAt = resData[r][6] ? formatDateDisplay(resData[r][6]) : "-";
+        var resId = String(resData[r][idxCode] || "").trim();
+        var custId = (idxCust !== -1 && idxCust < resData[r].length) ? String(resData[r][idxCust] || "").trim() : "";
+        var dateRaw = (idxDate !== -1 && idxDate < resData[r].length) ? resData[r][idxDate] : "";
+        var rawTimeStr = (idxTime !== -1 && idxTime < resData[r].length) ? String(resData[r][idxTime] || "").trim() : "";
+        var rowStaffId = (idxStaff !== -1 && idxStaff < resData[r].length) ? String(resData[r][idxStaff] || "").trim() : "";
+
+        var isCanceled = false;
+        if (idxCancel !== -1 && idxCancel < resData[r].length) {
+          var cVal = resData[r][idxCancel];
+          isCanceled = (cVal === true || String(cVal).toLowerCase() === "true" || String(cVal).trim() === "ยกเลิก" || String(cVal).trim().toUpperCase() === "Y");
+        }
+        if (isCanceled) continue;
 
         if (!dateRaw) continue;
 
@@ -2373,6 +2617,22 @@ function getCalendarData(periodMonthOrYear, maybeMonth) {
         } else {
           dateStr = String(dateRaw).trim().slice(0, 10);
         }
+
+        var rowCreateDate = "-";
+        if (idxCreateDate !== -1 && idxCreateDate < resData[r].length && resData[r][idxCreateDate]) {
+          var cr = resData[r][idxCreateDate];
+          rowCreateDate = (cr instanceof Date) ? Utilities.formatDate(cr, "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss") : String(cr).trim();
+        }
+
+        var rowCreatedBy = (idxCreatedBy !== -1 && idxCreatedBy < resData[r].length && resData[r][idxCreatedBy]) ? String(resData[r][idxCreatedBy]).trim() : "-";
+
+        var rowUpdateDate = "-";
+        if (idxUpdateDate !== -1 && idxUpdateDate < resData[r].length && resData[r][idxUpdateDate]) {
+          var up = resData[r][idxUpdateDate];
+          rowUpdateDate = (up instanceof Date) ? Utilities.formatDate(up, "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss") : String(up).trim();
+        }
+
+        var rowUpdatedBy = (idxUpdatedBy !== -1 && idxUpdatedBy < resData[r].length && resData[r][idxUpdatedBy]) ? String(resData[r][idxUpdatedBy]).trim() : "-";
 
         // ตรวจสอบว่าอยู่ในเดือนและปีที่ระบุหรือไม่
         if (dateStr.indexOf(targetMonthPrefix) === 0) {
@@ -2387,7 +2647,6 @@ function getCalendarData(periodMonthOrYear, maybeMonth) {
             phone: "-"
           };
 
-          var rawTimeStr = String(resData[r][3] || "").trim();
           var primarySlot = formatTimeSlot(rawTimeStr);
           var allSlotsToMap = [primarySlot];
 
@@ -2405,16 +2664,23 @@ function getCalendarData(periodMonthOrYear, maybeMonth) {
           var bookingObj = {
             rowId: r + 1,
             reservationId: resId,
+            reserveCode: resId,
             customerId: custId,
+            staffId: rowStaffId,
             customerNickname: custInfo.nickname,
             customerFullName: (custInfo.firstname + " " + custInfo.lastname).trim(),
             customerPhone: custInfo.phone,
             timeSlot: primarySlot,
             displayTime: rawTimeStr || primarySlot,
             date: dateStr,
-            status: status,
-            createdAt: createdAt,
-            updatedAt: updatedAt
+            status: "ยืนยันแล้ว",
+            cancelFlag: false,
+            createDate: rowCreateDate,
+            createdBy: rowCreatedBy,
+            updateDate: rowUpdateDate,
+            updatedBy: rowUpdatedBy,
+            createdAt: rowCreateDate,
+            updatedAt: rowUpdateDate
           };
 
           allSlotsToMap.forEach(function(ts) {
@@ -2606,7 +2872,21 @@ function getCalendarData(periodMonthOrYear, maybeMonth) {
 }
 
 /**
- * สร้างรหัสการจองอัตโนมัติ (Pattern: BK ตามด้วยตัวเลข 4 หลัก เช่น BK0001)
+ * ข้อ 1.1 & 1.1.1: สร้างรหัสการจอง reserve_code
+ * รูปแบบ: ขึ้นต้นด้วย “JM” + ค่า “reserve_date” (YYYYMMDD) + ค่า “customer_id” (ตัด JM ออก) + ค่า “staff_id” (ตัด JM ออก เช่น JMS001 -> S001)
+ * ตัวอย่างผลลัพธ์ เช่น JM202610050001S001 เป็นต้น
+ */
+function generateReservationCode(dateStr, customerId, staffId) {
+  var cleanDate = String(dateStr || "").replace(/[^0-9]/g, ""); // e.g. 2026-10-05 -> 20261005
+  var cleanCust = String(customerId || "").trim().replace(/^jm/i, "");
+  var normStaff = String(staffId || "").trim().replace(/^jmc/i, "JMS");
+  var cleanStaff = normStaff.replace(/^jm/i, "");
+
+  return "JM" + cleanDate + cleanCust + cleanStaff;
+}
+
+/**
+ * สร้างรหัสการจองอัตโนมัติ (Fallback)
  */
 function generateNextReservationId() {
   initSheetIfNeeded();
@@ -2632,7 +2912,14 @@ function generateNextReservationId() {
 }
 
 /**
- * เพิ่มข้อมูลการจองใหม่ (ตรวจสอบสิทธิ์ช่วงเดือน และรอบเวลาของพนักงาน)
+ * เพิ่มข้อมูลการจองใหม่ (บันทึกลง Sheet_Name_Reservation ตามลำดับ Schema ใหม่ 6 คอลัมน์)
+ * 1.1. reserve_code (JM + reserve_date + customer_id[ตัด JM] + staff_id[ตัด JM])
+ * 1.2. reserve_date (YYYY-MM-DD)
+ * 1.3. reserve_time (ช่วงเวลาที่จอง)
+ * 1.4. customer_id (รหัสลูกค้า)
+ * 1.5. staff_id (รหัสพนักงาน)
+ * 1.6. cancel_flag (default เป็น false)
+ * 2. ถ้ามีการ “เลือกช่วงเวลา” มา มากกว่า 1 ช่วงเวลา ให้ทำการวน loop บันทึกค่า
  */
 function addReservation(data) {
   try {
@@ -2640,16 +2927,10 @@ function addReservation(data) {
 
     var dateStr = String(data.date || "").trim(); // YYYY-MM-DD
     var staffId = String(data.staffId || "").trim();
-    var startTime = formatTimeSlot(data.startTime || data.timeSlot || "");
-    var endTime = formatTimeSlot(data.endTime || "");
-    var hours = String(data.hours || "1").trim();
-    var timeSlot = startTime;
-    var displayTimeRange = (data.displayTime || data.timeSlot) ? String(data.displayTime || data.timeSlot).trim() : ((startTime && endTime) ? (startTime + " - " + endTime) : timeSlot);
     var customerId = String(data.customerId || "").trim();
-    var status = String(data.status || "ยืนยันแล้ว").trim();
 
     if (!dateStr) return { success: false, message: "กรุณาระบุวันที่ที่จอง" };
-    if (!startTime) return { success: false, message: "กรุณาระบุเวลาที่จอง" };
+    if (!staffId) return { success: false, message: "กรุณาเลือกพนักงานผู้ให้บริการ" };
     if (!customerId) return { success: false, message: "กรุณาเลือกลูกค้า" };
 
     var now = new Date();
@@ -2657,7 +2938,6 @@ function addReservation(data) {
     var nowHour = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "HH"), 10);
     var nowMin = parseInt(Utilities.formatDate(now, "Asia/Bangkok", "mm"), 10);
     var nowTotalMinutes = nowHour * 60 + nowMin;
-    var nowStr = Utilities.formatDate(now, "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
     // เงื่อนไขข้อ 1: เฉพาะตั้งแต่วันที่ปัจจุบันเป็นต้นไป (ห้ามจองย้อนหลังเด็ดขาด)
     if (dateStr < todayStr) {
@@ -2665,46 +2945,6 @@ function addReservation(data) {
         success: false,
         message: "ไม่อนุญาตให้จองย้อนหลัง สามารถจองได้ตั้งแต่วันที่ปัจจุบัน (" + todayStr + ") เป็นต้นไป"
       };
-    }
-
-    // เงื่อนไขข้อ 3 & 3.1: เมื่อถึงวันที่ปัจจุบัน แล้วเปรียบเทียบช่วงเวลานั้นๆ กับช่วงเวลาปัจจุบัน
-    // หากเวลาปัจจุบันน้อยกว่า ช่วงเวลาที่กำหนด 15 นาที (ต้องจองก่อนถึงช่วงเวลาที่กำหนด 15 นาที -> nowTotalMinutes >= slotTotalMinutes - 15)
-    // ให้ทำการปิดช่วงเวลานั้นๆ โดยกลับไป update ข้อมูลใน Sheet_Name_Setting_Reservation_Timetable column is_active = false
-    var slotParts = startTime.split(":");
-    var slotTotalMinutes = parseInt(slotParts[0], 10) * 60 + parseInt(slotParts[1], 10);
-
-    if (dateStr === todayStr) {
-      if (nowTotalMinutes >= slotTotalMinutes - 15) {
-        // อัปเดตใน Sheet_Name_Setting_Reservation_Timetable ให้ is_active = false
-        try {
-          var ttSheetAuto = getSettingTimetableSheet();
-          var ttLastRowAuto = ttSheetAuto.getLastRow();
-          if (ttLastRowAuto > 1) {
-            var ttHeadersAuto = ttSheetAuto.getRange(1, 1, 1, Math.max(ttSheetAuto.getLastColumn(), 10)).getValues()[0].map(function(h) { return String(h || "").trim(); });
-            var isNewTtAuto = (ttHeadersAuto.indexOf("staff_id") !== -1 || ttHeadersAuto[2] === "staff_id");
-            var ttDataAuto = ttSheetAuto.getRange(2, 1, ttLastRowAuto - 1, 6).getValues();
-            var targetPeriodMonthAuto = dateStr.slice(0, 7);
-            var targetDayMonthAuto = normalizeDayMonth(dateStr.slice(8, 10));
-            for (var ai = 0; ai < ttDataAuto.length; ai++) {
-              var am = normalizePeriodMonth(ttDataAuto[ai][0]);
-              var ad = normalizeDayMonth(ttDataAuto[ai][1]);
-              var aStaff = isNewTtAuto ? String(ttDataAuto[ai][2] || "").trim() : "";
-              var at = isNewTtAuto ? formatTimeSlot(ttDataAuto[ai][3]) : formatTimeSlot(ttDataAuto[ai][2]);
-              if (am === targetPeriodMonthAuto && ad === targetDayMonthAuto && (!staffId || aStaff === staffId) && at === startTime) {
-                ttSheetAuto.getRange(ai + 2, 6).setValue(false);
-                ttSheetAuto.getRange(ai + 2, 9).setValue(nowStr);
-                ttSheetAuto.getRange(ai + 2, 10).setValue("system");
-                break;
-              }
-            }
-          }
-        } catch (eAuto) {}
-
-        return {
-          success: false,
-          message: "รอบเวลา " + startTime + " น. ปิดรับจองแล้ว (ต้องจองล่วงหน้าก่อนถึงช่วงเวลาอย่างน้อย 15 นาที)"
-        };
-      }
     }
 
     // ตรวจสอบสิทธิ์การแก้ไขเดือน (เลือกจองได้เฉพาะเดือนล่าสุดและเดือนถัดไป)
@@ -2719,79 +2959,133 @@ function addReservation(data) {
       };
     }
 
-    // ตรวจสอบสถานะการเปิดใช้งานและโควต้าจาก Sheet_Name_Setting_Reservation_Timetable
-    var ttSheet = getSettingTimetableSheet();
-    var ttLastRow = ttSheet.getLastRow();
-    var targetPeriodMonth = parts[0] + "-" + (month < 10 ? "0" + month : month);
-    var targetDayMonth = normalizeDayMonth(parts[2]);
-    var ttRowToUpdate = -1;
-    var currentUsageQuota = 0;
-    var maxQuotaFromTimetable = 5;
+    // เตรียมรายการช่วงเวลา (items) จากข้อมูลที่ส่งมา
+    var items = (data.items && Array.isArray(data.items) && data.items.length > 0) ? data.items : [];
+    if (items.length === 0) {
+      var sTime = formatTimeSlot(data.startTime || data.timeSlot || "");
+      var eTime = formatTimeSlot(data.endTime || "");
+      var singleLabel = (data.displayTime || data.timeSlot) ? String(data.displayTime || data.timeSlot).trim() : ((sTime && eTime) ? (sTime + "–" + eTime) : sTime);
+      if (sTime) {
+        items.push({
+          periodFrom: sTime,
+          periodTo: eTime,
+          timeLabel: singleLabel
+        });
+      }
+    }
 
-    if (ttLastRow > 1) {
-      var ttHeaders = ttSheet.getRange(1, 1, 1, Math.max(ttSheet.getLastColumn(), 10)).getValues()[0].map(function(h) { return String(h || "").trim(); });
-      var isNewTtSchema = (ttHeaders.indexOf("staff_id") !== -1 || ttHeaders[2] === "staff_id");
-      var ttData = ttSheet.getRange(2, 1, ttLastRow - 1, Math.max(ttHeaders.length, 10)).getValues();
+    if (items.length === 0) {
+      return { success: false, message: "กรุณาเลือกช่วงเวลาที่ต้องการจอง" };
+    }
 
-      for (var ti = 0; ti < ttData.length; ti++) {
-        var tm = normalizePeriodMonth(ttData[ti][0]);
-        var td = normalizeDayMonth(ttData[ti][1]);
-        if (tm !== targetPeriodMonth || td !== targetDayMonth) continue;
-
-        var rStaff = isNewTtSchema ? String(ttData[ti][2] || "").trim() : "";
-        var ttTime = isNewTtSchema ? formatTimeSlot(ttData[ti][3]) : formatTimeSlot(ttData[ti][2]);
-
-        if ((!staffId || rStaff === staffId) && ttTime === startTime) {
-          var tIsActive = (ttData[ti][5] === false || String(ttData[ti][5]).toLowerCase() === "false") ? false : true;
-          if (!tIsActive) {
+    // ตรวจสอบ cutoff 15 นาทีหากเป็นวันที่ปัจจุบัน
+    if (dateStr === todayStr) {
+      for (var chk = 0; chk < items.length; chk++) {
+        var itChk = items[chk];
+        var fromParts = String(itChk.periodFrom || "").split(":");
+        if (fromParts.length >= 2) {
+          var chkMinutes = parseInt(fromParts[0], 10) * 60 + parseInt(fromParts[1], 10);
+          if (nowTotalMinutes >= chkMinutes - 15) {
             return {
               success: false,
-              message: "รอบเวลา " + startTime + " น. ของพนักงานถูกปิดการใช้งาน (ไม่สามารถทำการจองได้)"
+              message: "รอบเวลา " + itChk.periodFrom + " น. ปิดรับจองแล้ว (ต้องจองล่วงหน้าก่อนถึงช่วงเวลาอย่างน้อย 15 นาที)"
             };
           }
-          if (!isNewTtSchema) {
-            if (ttData[ti][3] !== "" && ttData[ti][3] !== null && !isNaN(ttData[ti][3])) {
-              currentUsageQuota = parseInt(ttData[ti][3], 10);
-            }
-            if (ttData[ti][4] !== "" && ttData[ti][4] !== null && !isNaN(ttData[ti][4])) {
-              maxQuotaFromTimetable = parseInt(ttData[ti][4], 10);
-            }
-            ttRowToUpdate = ti + 2;
-          }
-          break;
         }
       }
     }
 
-    // สำหรับ schema เดิม: ตรวจสอบ usage_quota และ quota_total ว่า “จองเต็ม” แล้วหรือยัง
-    if (!isNewTtSchema && currentUsageQuota >= maxQuotaFromTimetable) {
-      return {
-        success: false,
-        message: "ช่วงเวลา " + startTime + " น. เต็มแล้ว (โควต้าครบ " + currentUsageQuota + "/" + maxQuotaFromTimetable + " ท่านแล้ว)"
-      };
-    }
+    var opUser = String(data.operatorUsername || data.created_by || data.username || "admin").trim();
+    var nowStr = Utilities.formatDate(now, "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
     var sheet = getReservationSheet();
-    var reservationId = generateNextReservationId();
+    var lastRowBefore = sheet.getLastRow();
+    var headers = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 10)).getValues()[0].map(function(h) { 
+      return String(h || "").trim(); 
+    });
 
-    sheet.appendRow([reservationId, customerId, dateStr, displayTimeRange, status, nowStr, nowStr]);
+    var idxCode = headers.indexOf("reserve_code");
+    if (idxCode === -1) idxCode = headers.indexOf("รหัสการจอง");
+    if (idxCode === -1) idxCode = 0;
 
-    // สำหรับ schema เดิม: เมื่อทำการจองทุกครั้ง ให้กลับไป update ข้อมูลใน Sheet_Name_Setting_Reservation_Timetable column usage_quota (usage_quota += 1)
-    if (ttRowToUpdate > 1) {
+    var idxDate = headers.indexOf("reserve_date");
+    if (idxDate === -1) idxDate = headers.indexOf("วันที่ที่จอง");
+    if (idxDate === -1) idxDate = (headers.indexOf("customer_id") === 3) ? 1 : 2;
+
+    var idxTime = headers.indexOf("reserve_time");
+    if (idxTime === -1) idxTime = headers.indexOf("เวลาที่จอง");
+    if (idxTime === -1) idxTime = (headers.indexOf("customer_id") === 3) ? 2 : 3;
+
+    var idxCust = headers.indexOf("customer_id");
+    if (idxCust === -1) idxCust = headers.indexOf("รหัสลูกค้า");
+    if (idxCust === -1) idxCust = (headers.indexOf("reserve_date") === 1) ? 3 : 1;
+
+    var idxStaff = headers.indexOf("staff_id");
+    if (idxStaff === -1) idxStaff = 4;
+
+    var idxCancel = headers.indexOf("cancel_flag");
+    if (idxCancel === -1) idxCancel = headers.indexOf("สถานะการจอง");
+    if (idxCancel === -1) idxCancel = 5;
+
+    var idxCreateDate = headers.indexOf("create_date");
+    if (idxCreateDate === -1) idxCreateDate = headers.indexOf("วันที่สร้าง");
+    if (idxCreateDate === -1) idxCreateDate = 6;
+
+    var idxCreatedBy = headers.indexOf("created_by");
+    if (idxCreatedBy === -1) idxCreatedBy = headers.indexOf("ผู้สร้าง");
+    if (idxCreatedBy === -1) idxCreatedBy = 7;
+
+    var idxUpdateDate = headers.indexOf("update_date");
+    if (idxUpdateDate === -1) idxUpdateDate = headers.indexOf("อัปเดตล่าสุด");
+    if (idxUpdateDate === -1) idxUpdateDate = 8;
+
+    var idxUpdatedBy = headers.indexOf("updated_by");
+    if (idxUpdatedBy === -1) idxUpdatedBy = headers.indexOf("ผู้อัปเดต");
+    if (idxUpdatedBy === -1) idxUpdatedBy = 9;
+
+    // 1.1: สร้างรหัสการจองตาม Pattern: "JM" + reserve_date (YYYYMMDD) + customer_id (ตัด JM) + staff_id (ตัด JM)
+    var reserveCode = generateReservationCode(dateStr, customerId, staffId);
+
+    // 2. ถ้ามีการเลือกช่วงเวลามากกว่า 1 ช่วงเวลา ให้ทำการวน loop บันทึกค่า
+    var colCount = Math.max(headers.length, 10);
+    var rowsToAppend = [];
+
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      var pFrom = formatTimeSlot(it.periodFrom || "");
+      var pTo = formatTimeSlot(it.periodTo || "");
+      var slotTimeStr = it.timeLabel || ((pFrom && pTo) ? (pFrom + "–" + pTo) : pFrom);
+
+      var newRow = new Array(colCount);
+      for (var f = 0; f < colCount; f++) newRow[f] = "";
+
+      newRow[idxCode] = reserveCode;
+      newRow[idxDate] = dateStr;
+      newRow[idxTime] = slotTimeStr;
+      newRow[idxCust] = customerId;
+      newRow[idxStaff] = staffId;
+      newRow[idxCancel] = false;
+      if (idxCreateDate < colCount) newRow[idxCreateDate] = nowStr;
+      if (idxCreatedBy < colCount) newRow[idxCreatedBy] = opUser;
+      if (idxUpdateDate < colCount) newRow[idxUpdateDate] = nowStr;
+      if (idxUpdatedBy < colCount) newRow[idxUpdatedBy] = opUser;
+
+      rowsToAppend.push(newRow);
+    }
+
+    if (rowsToAppend.length > 0) {
+      sheet.getRange(lastRowBefore + 1, 1, rowsToAppend.length, colCount).setValues(rowsToAppend);
       try {
-        var newUsage = currentUsageQuota + 1;
-        ttSheet.getRange(ttRowToUpdate, 4).setValue(newUsage);
-        ttSheet.getRange(ttRowToUpdate, 9).setValue(nowStr);
-        ttSheet.getRange(ttRowToUpdate, 10).setValue(data.operatorUsername || "system");
-      } catch (e) {
-        Logger.log("Error updating usage_quota in timetable: " + e.message);
-      }
+        sheet.getRange(lastRowBefore + 1, 1, rowsToAppend.length, colCount).setNumberFormat("@");
+      } catch (e) {}
     }
 
     return {
       success: true,
-      reservationId: reservationId,
-      message: "บันทึกการจองรหัส " + reservationId + " ช่วงเวลา " + displayTimeRange + " น. (" + hours + " ชั่วโมง) เรียบร้อยแล้ว"
+      reservationId: reserveCode,
+      reserveCode: reserveCode,
+      rowCount: items.length,
+      message: "บันทึกการจองรหัส " + reserveCode + " เรียบร้อยแล้ว (" + items.length + " รอบเวลา)"
     };
   } catch (err) {
     return { success: false, message: "เกิดข้อผิดพลาดในการบันทึกการจอง: " + err.message };
@@ -2799,63 +3093,279 @@ function addReservation(data) {
 }
 
 /**
- * ลบข้อมูลการจอง
+ * ข้อ 3: เมื่อทำการเปิด modal "จองคิว" ให้ทำการอ่านข้อมูลใน sheet ตัวแปร Sheet_Name_Reservation ก่อน
+ * ถ้าวันที่ที่จะจอง และ พนักงานที่ให้บริการ และ ช่วงเวลานั้นๆ ถูกเลือกไปก่อนแล้ว (มีข้อมูลใน sheet นี้และไม่ถูกยกเลิก)
+ * จะส่งรายการกลับไปเพื่อให้ client นำไปแสดงผล active เป็น สีเทา ในช่วงเวลานั้นๆ
  */
-function deleteReservation(reservationId) {
+function getReservationsForDate(dateStr, staffId) {
+  try {
+    initSheetIfNeeded();
+    var sheet = getReservationSheet();
+    var lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      return { success: true, date: dateStr, staffId: staffId || "", reservations: [] };
+    }
+
+    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(function(h) { 
+      return String(h || "").trim(); 
+    });
+
+    var idxCode = headers.indexOf("reserve_code");
+    if (idxCode === -1) idxCode = headers.indexOf("รหัสการจอง");
+    if (idxCode === -1) idxCode = 0;
+
+    var idxDate = headers.indexOf("reserve_date");
+    if (idxDate === -1) idxDate = headers.indexOf("วันที่ที่จอง");
+    if (idxDate === -1) idxDate = (headers.indexOf("customer_id") === 3) ? 1 : 2;
+
+    var idxTime = headers.indexOf("reserve_time");
+    if (idxTime === -1) idxTime = headers.indexOf("เวลาที่จอง");
+    if (idxTime === -1) idxTime = (headers.indexOf("customer_id") === 3) ? 2 : 3;
+
+    var idxCust = headers.indexOf("customer_id");
+    if (idxCust === -1) idxCust = headers.indexOf("รหัสลูกค้า");
+    if (idxCust === -1) idxCust = (headers.indexOf("reserve_date") === 1) ? 3 : 1;
+
+    var idxStaff = headers.indexOf("staff_id");
+    if (idxStaff === -1) idxStaff = 4;
+
+    var idxCancel = headers.indexOf("cancel_flag");
+    if (idxCancel === -1) idxCancel = headers.indexOf("สถานะการจอง");
+    if (idxCancel === -1) idxCancel = 5;
+
+    var idxCreateDate = headers.indexOf("create_date");
+    if (idxCreateDate === -1) idxCreateDate = headers.indexOf("วันที่สร้าง");
+
+    var idxCreatedBy = headers.indexOf("created_by");
+    if (idxCreatedBy === -1) idxCreatedBy = headers.indexOf("ผู้สร้าง");
+
+    var idxUpdateDate = headers.indexOf("update_date");
+    if (idxUpdateDate === -1) idxUpdateDate = headers.indexOf("อัปเดตล่าสุด");
+
+    var idxUpdatedBy = headers.indexOf("updated_by");
+    if (idxUpdatedBy === -1) idxUpdatedBy = headers.indexOf("ผู้อัปเดต");
+
+    var data = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
+    var cleanTargetDate = String(dateStr || "").trim();
+    var cleanTargetStaff = staffId ? String(staffId).trim().replace(/^jmc/i, "JMS").toUpperCase() : "";
+    var matchedReservations = [];
+
+    for (var i = 0; i < data.length; i++) {
+      var row = data[i];
+      var rowDateRaw = row[idxDate];
+      var rowDateStr = "";
+      if (rowDateRaw instanceof Date) {
+        rowDateStr = Utilities.formatDate(rowDateRaw, "Asia/Bangkok", "yyyy-MM-dd");
+      } else {
+        rowDateStr = String(rowDateRaw || "").trim().slice(0, 10);
+      }
+
+      if (rowDateStr !== cleanTargetDate) continue;
+
+      var cancelVal = (idxCancel < row.length) ? row[idxCancel] : false;
+      var isCanceled = (cancelVal === true || String(cancelVal).toLowerCase() === "true" || String(cancelVal).trim() === "ยกเลิก" || String(cancelVal).trim().toUpperCase() === "Y");
+      if (isCanceled) continue;
+
+      var rowStaff = (idxStaff < row.length) ? String(row[idxStaff] || "").trim() : "";
+      var normRowStaff = rowStaff.replace(/^jmc/i, "JMS").toUpperCase();
+      if (cleanTargetStaff && normRowStaff !== cleanTargetStaff) {
+        continue;
+      }
+
+      var code = String(row[idxCode] || "").trim();
+      var timeRaw = String(row[idxTime] || "").trim();
+      var custId = (idxCust < row.length) ? String(row[idxCust] || "").trim() : "";
+
+      var createDateVal = "-";
+      if (idxCreateDate !== -1 && idxCreateDate < row.length && row[idxCreateDate]) {
+        var cr = row[idxCreateDate];
+        createDateVal = (cr instanceof Date) ? Utilities.formatDate(cr, "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss") : String(cr).trim();
+      }
+
+      var createdByVal = (idxCreatedBy !== -1 && idxCreatedBy < row.length && row[idxCreatedBy]) ? String(row[idxCreatedBy]).trim() : "-";
+
+      var updateDateVal = "-";
+      if (idxUpdateDate !== -1 && idxUpdateDate < row.length && row[idxUpdateDate]) {
+        var up = row[idxUpdateDate];
+        updateDateVal = (up instanceof Date) ? Utilities.formatDate(up, "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss") : String(up).trim();
+      }
+
+      var updatedByVal = (idxUpdatedBy !== -1 && idxUpdatedBy < row.length && row[idxUpdatedBy]) ? String(row[idxUpdatedBy]).trim() : "-";
+
+      matchedReservations.push({
+        reserveCode: code,
+        reserveDate: rowDateStr,
+        reserveTime: timeRaw,
+        customerId: custId,
+        staffId: rowStaff,
+        cancelFlag: false,
+        createDate: createDateVal,
+        createdBy: createdByVal,
+        updateDate: updateDateVal,
+        updatedBy: updatedByVal
+      });
+    }
+
+    return {
+      success: true,
+      date: dateStr,
+      staffId: staffId || "",
+      reservations: matchedReservations
+    };
+  } catch (err) {
+    Logger.log("Error in getReservationsForDate: " + err.message);
+    return { success: false, message: err.message, date: dateStr, staffId: staffId || "", reservations: [] };
+  }
+}
+
+/**
+ * 1.1: ดึงข้อมูลการจองเฉพาะพนักงาน (staff_id) และวันที่ (reserve_date) ที่ระบุ
+ */
+function getReservationsForStaffAndDate(dateStr, staffId) {
+  return getReservationsForDate(dateStr, staffId);
+}
+
+/**
+ * ลบ/ยกเลิกข้อมูลการจอง (อัปเดต cancel_flag = true พร้อมบันทึก update_date และ updated_by)
+ */
+function deleteReservation(reservationId, operatorUsername) {
   try {
     var sheet = getReservationSheet();
     var cleanId = String(reservationId || "").trim();
-    var data = sheet.getDataRange().getValues();
-    var targetRow = -1;
-    var delDate = "";
-    var delTime = "";
+    var opUser = String(operatorUsername || "admin").trim();
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
 
+    var data = sheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return { success: false, message: "ไม่พบข้อมูลการจองในระบบ" };
+    }
+
+    var headers = data[0].map(function(h) { return String(h || "").trim(); });
+    var idxCode = headers.indexOf("reserve_code");
+    if (idxCode === -1) idxCode = headers.indexOf("รหัสการจอง");
+    if (idxCode === -1) idxCode = 0;
+
+    var idxCancel = headers.indexOf("cancel_flag");
+    if (idxCancel === -1) idxCancel = headers.indexOf("สถานะการจอง");
+    if (idxCancel === -1) idxCancel = 5;
+
+    var idxUpdateDate = headers.indexOf("update_date");
+    if (idxUpdateDate === -1) idxUpdateDate = headers.indexOf("อัปเดตล่าสุด");
+    if (idxUpdateDate === -1) idxUpdateDate = 8;
+
+    var idxUpdatedBy = headers.indexOf("updated_by");
+    if (idxUpdatedBy === -1) idxUpdatedBy = headers.indexOf("ผู้อัปเดต");
+    if (idxUpdatedBy === -1) idxUpdatedBy = 9;
+
+    var targetRows = [];
     for (var i = 1; i < data.length; i++) {
-      if (String(data[i][0]).trim() === cleanId) {
-        targetRow = i + 1;
-        var rDateVal = data[i][2];
-        delDate = (rDateVal instanceof Date) ? Utilities.formatDate(rDateVal, "Asia/Bangkok", "yyyy-MM-dd") : String(rDateVal || "").slice(0, 10);
-        delTime = formatTimeSlot(data[i][3]);
-        break;
+      if (String(data[i][idxCode] || "").trim() === cleanId) {
+        targetRows.push(i + 1);
       }
     }
 
-    if (targetRow === -1) {
+    if (targetRows.length === 0) {
       return { success: false, message: "ไม่พบข้อมูลการจองรหัส " + cleanId };
     }
 
-    sheet.deleteRow(targetRow);
-
-    // ปรับปรุง usage_quota ใน Sheet_Name_Setting_Reservation_Timetable ให้ลดลง 1
-    if (delDate && delTime) {
-      try {
-        var dParts = delDate.split("-");
-        var pMonth = normalizePeriodMonth(delDate.slice(0, 7));
-        var pDay = normalizeDayMonth(dParts[2]);
-        var ttSheet = getSettingTimetableSheet();
-        var ttLastRow = ttSheet.getLastRow();
-        if (ttLastRow > 1) {
-          var ttData = ttSheet.getRange(2, 1, ttLastRow - 1, 6).getValues();
-          for (var t = 0; t < ttData.length; t++) {
-            var rMonth = normalizePeriodMonth(ttData[t][0]);
-            var rDay = normalizeDayMonth(ttData[t][1]);
-            var rTime = formatTimeSlot(ttData[t][2]);
-            if (rMonth === pMonth && rDay === pDay && rTime === delTime) {
-              var currUsage = parseInt(ttData[t][3], 10) || 0;
-              var newUsage = Math.max(0, currUsage - 1);
-              ttSheet.getRange(t + 2, 4).setValue(newUsage);
-              ttSheet.getRange(t + 2, 9).setValue(Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss"));
-              ttSheet.getRange(t + 2, 10).setValue("system");
-              break;
-            }
-          }
-        }
-      } catch (e) {}
+    for (var k = 0; k < targetRows.length; k++) {
+      var rNum = targetRows[k];
+      sheet.getRange(rNum, idxCancel + 1).setValue(true);
+      if (idxUpdateDate !== -1 && idxUpdateDate < headers.length) {
+        sheet.getRange(rNum, idxUpdateDate + 1).setValue(nowStr);
+      }
+      if (idxUpdatedBy !== -1 && idxUpdatedBy < headers.length) {
+        sheet.getRange(rNum, idxUpdatedBy + 1).setValue(opUser);
+      }
     }
 
-    return { success: true, message: "ลบข้อมูลการจองรหัส " + cleanId + " เรียบร้อยแล้ว" };
+    return { success: true, message: "ยกเลิกข้อมูลการจองรหัส " + cleanId + " เรียบร้อยแล้ว (" + targetRows.length + " รายการ)" };
   } catch (err) {
-    return { success: false, message: "เกิดข้อผิดพลาดในการลบการจอง: " + err.message };
+    return { success: false, message: "เกิดข้อผิดพลาดในการยกเลิกการจอง: " + err.message };
+  }
+}
+
+/**
+ * อัปเดตข้อมูลการจอง (Update Reservation)
+ * อัปเดตข้อมูลใน Sheet_Name_Reservation พร้อมบันทึก update_date และ updated_by
+ */
+function updateReservation(payload) {
+  try {
+    initSheetIfNeeded();
+    var sheet = getReservationSheet();
+    var cleanCode = String(payload.reserveCode || payload.reservationId || "").trim();
+    if (!cleanCode) {
+      return { success: false, message: "ไม่พบรหัสการจองที่ต้องการแก้ไข" };
+    }
+
+    var opUser = String(payload.operatorUsername || "admin").trim();
+    var nowStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss");
+
+    var data = sheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return { success: false, message: "ไม่พบข้อมูลการจองในระบบ" };
+    }
+
+    var headers = data[0].map(function(h) { return String(h || "").trim(); });
+    var idxCode = headers.indexOf("reserve_code");
+    if (idxCode === -1) idxCode = headers.indexOf("รหัสการจอง");
+    if (idxCode === -1) idxCode = 0;
+
+    var idxCust = headers.indexOf("customer_id");
+    if (idxCust === -1) idxCust = headers.indexOf("รหัสลูกค้า");
+    if (idxCust === -1) idxCust = 3;
+
+    var idxStaff = headers.indexOf("staff_id");
+    if (idxStaff === -1) idxStaff = 4;
+
+    var idxCancel = headers.indexOf("cancel_flag");
+    if (idxCancel === -1) idxCancel = headers.indexOf("สถานะการจอง");
+    if (idxCancel === -1) idxCancel = 5;
+
+    var idxUpdateDate = headers.indexOf("update_date");
+    if (idxUpdateDate === -1) idxUpdateDate = headers.indexOf("อัปเดตล่าสุด");
+    if (idxUpdateDate === -1) idxUpdateDate = 8;
+
+    var idxUpdatedBy = headers.indexOf("updated_by");
+    if (idxUpdatedBy === -1) idxUpdatedBy = headers.indexOf("ผู้อัปเดต");
+    if (idxUpdatedBy === -1) idxUpdatedBy = 9;
+
+    var updatedCount = 0;
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][idxCode] || "").trim() === cleanCode) {
+        var rNum = i + 1;
+        if (payload.customerId && idxCust !== -1 && idxCust < headers.length) {
+          sheet.getRange(rNum, idxCust + 1).setValue(String(payload.customerId).trim());
+        }
+        if (payload.staffId && idxStaff !== -1 && idxStaff < headers.length) {
+          sheet.getRange(rNum, idxStaff + 1).setValue(String(payload.staffId).trim());
+        }
+        if (typeof payload.cancelFlag !== "undefined" && idxCancel !== -1 && idxCancel < headers.length) {
+          var isCancel = (payload.cancelFlag === true || String(payload.cancelFlag).toLowerCase() === "true");
+          sheet.getRange(rNum, idxCancel + 1).setValue(isCancel);
+        }
+        if (idxUpdateDate !== -1 && idxUpdateDate < headers.length) {
+          sheet.getRange(rNum, idxUpdateDate + 1).setValue(nowStr);
+        }
+        if (idxUpdatedBy !== -1 && idxUpdatedBy < headers.length) {
+          sheet.getRange(rNum, idxUpdatedBy + 1).setValue(opUser);
+        }
+        updatedCount++;
+      }
+    }
+
+    if (updatedCount === 0) {
+      return { success: false, message: "ไม่พบรายการจองรหัส " + cleanCode };
+    }
+
+    return {
+      success: true,
+      reserveCode: cleanCode,
+      rowCount: updatedCount,
+      message: "อัปเดตข้อมูลการจองรหัส " + cleanCode + " เรียบร้อยแล้ว (" + updatedCount + " รายการ)"
+    };
+  } catch (err) {
+    return { success: false, message: "เกิดข้อผิดพลาดในการอัปเดตการจอง: " + err.message };
   }
 }
 
@@ -3823,7 +4333,7 @@ function toggleSettingServicePriceStatus(serviceId, currentStatus, operatorUsern
  * คอลัมน์ (Schema 10 คอลัมน์):
  * 1. period_month: ปี-เดือน เช่น "2026-09"
  * 2. day_month: วันที่ เช่น "01", "02", ..., "30"
- * 3. staff_id: รหัสพนักงาน เช่น "JMC001" (ดึงจาก Sheet_Name_Staff เฉพาะ is_active = true)
+ * 3. staff_id: รหัสพนักงาน เช่น "JMS001" (ดึงจาก Sheet_Name_Staff เฉพาะ is_active = true)
  * 4. period_from: เวลาเริ่มต้น เช่น "09:00", "10:00" (ดึงจาก Sheet_Name_Setting_Selection_Reservation_Time)
  * 5. period_to: เวลาสิ้นสุด เช่น "10:00", "11:00" (ดึงจาก Sheet_Name_Setting_Selection_Reservation_Time)
  * 6. is_active: เปิดใช้งาน (true = "เปิดใช้งาน", false = "ปิดการใช้งาน", วันเสาร์-อาทิตย์ = false, จันทร์-ศุกร์ default = true)
@@ -3843,7 +4353,7 @@ function setupSettingTimetableSheetSchema() {
     var headers = [
       "period_month", // 1. ปี-เดือน เช่น "2026-09"
       "day_month",    // 2. วันที่ เช่น "01", "02", ..., "30"
-      "staff_id",     // 3. รหัสพนักงาน เช่น "JMC001"
+      "staff_id",     // 3. รหัสพนักงาน เช่น "JMS001"
       "period_from",  // 4. เวลาเริ่มต้น เช่น "09:00"
       "period_to",    // 5. เวลาสิ้นสุด เช่น "10:00"
       "is_active",    // 6. สถานะเปิด/ปิดใช้งาน (true: เปิดใช้งาน, false: ปิดการใช้งาน)
@@ -3863,7 +4373,7 @@ function setupSettingTimetableSheetSchema() {
     if (needMigration) {
       var oldData = sheet.getRange(2, 1, lastRow - 1, currentHeaders.length).getValues();
       var defaultStaffList = getActiveStaffList();
-      var defaultStaffId = (defaultStaffList && defaultStaffList.length > 0) ? defaultStaffList[0].staffId : "JMC001";
+      var defaultStaffId = (defaultStaffList && defaultStaffList.length > 0) ? defaultStaffList[0].staffId : "JMS001";
       var migratedRows = [];
 
       for (var r = 0; r < oldData.length; r++) {
