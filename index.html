@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JM Thai Massage Management System</title>
+  <title>JM Thai Massage</title>
   
   <!-- Google Fonts: Prompt & Sarabun -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -942,24 +942,25 @@
     .calendar-weekdays {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      background-color: #F8F9FA;
-      border-bottom: 1px solid var(--spa-border);
+      background-color: #FAF8F5;
+      border-bottom: 2px solid var(--spa-accent-light);
       text-align: center;
-      font-weight: 600;
-      font-size: 0.86rem;
+      font-weight: 700;
+      font-size: 0.9rem;
       color: var(--spa-primary);
     }
 
     .calendar-weekday {
-      padding: 10px 4px;
+      padding: 11px 4px;
+      letter-spacing: 0.02em;
     }
 
     .calendar-weekday.sun {
-      color: #DC2626;
+      color: #B91C1C;
     }
 
     .calendar-weekday.sat {
-      color: #2563EB;
+      color: #334155;
     }
 
     .calendar-grid {
@@ -970,49 +971,50 @@
     }
 
     .calendar-day-cell {
-      min-height: 125px;
+      min-height: 120px;
       background: #FFFFFF;
-      padding: 8px 6px;
+      padding: 8px 8px 10px 8px;
       position: relative;
-      transition: background-color 0.15s ease, box-shadow 0.15s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
       display: flex;
       flex-direction: column;
     }
 
     .calendar-day-cell:hover {
-      background-color: #F8FAF9;
-      box-shadow: inset 0 0 0 2px var(--spa-accent);
+      background-color: #FFFFFF;
+      box-shadow: inset 0 0 0 2px var(--spa-primary);
       z-index: 2;
     }
 
     .calendar-day-cell.other-month {
-      background-color: #FCFCFC;
-      color: #A0AEC0;
-      cursor: not-allowed;
+      background-color: #FAFAFA !important;
+      color: #CBD5E1 !important;
+      cursor: default !important;
       opacity: 0.65;
     }
 
     .calendar-day-cell.other-month:hover {
-      background-color: #FCFCFC;
-      box-shadow: none;
+      background-color: #FAFAFA !important;
+      box-shadow: none !important;
     }
 
     .calendar-day-cell.today {
-      background-color: #FEFDF9;
-      border: 1px solid rgba(197, 160, 89, 0.4);
+      background-color: #FAF8F5 !important;
+      box-shadow: inset 0 0 0 2px var(--spa-accent) !important;
     }
 
-    /* สไตล์สำหรับช่องวันที่ที่ปิดใช้งานทุกรอบเวลา (1.1.1.1: Background สีเทา) */
+    /* สไตล์สำหรับช่องวันที่ที่ปิดใช้งานทุกรอบเวลา (1.3: เสาร์-อาทิตย์ หรือ is_active=false ทั้งหมด) */
     .calendar-day-cell.day-all-inactive {
-      background-color: #E2E8F0 !important;
-      border: 1px solid #CBD5E1 !important;
-      cursor: pointer;
+      background-color: #FFFFFF !important;
+      cursor: default !important;
+      user-select: none;
     }
 
     .calendar-day-cell.day-all-inactive:hover {
-      background-color: #CBD5E1 !important;
+      background-color: #FFFFFF !important;
       box-shadow: none !important;
+      transform: none !important;
     }
 
     .calendar-day-cell.day-all-inactive .day-number {
@@ -1020,43 +1022,44 @@
       background: transparent !important;
     }
 
-    /* สไตล์สำหรับช่องวันที่ในอดีต (disabled ไม่ให้จอง ไม่แสดงเครื่องหมาย disabled และใช้พื้นหลัง #4a4b4d ทั้งตอน cursor point และตอน hover) */
+    /* สไตล์สำหรับช่องวันที่ในอดีต (1.2: แสดงเป็นพื้นสีขาว ปกติ ไม่สามารถกดจองได้) */
     .calendar-day-cell.day-disabled-past {
-      background-color: #4a4b4d !important;
-      border: 1px solid #3d3e40 !important;
-      cursor: not-allowed !important;
+      background-color: #FFFFFF !important;
+      cursor: default !important;
       user-select: none;
     }
 
     .calendar-day-cell.day-disabled-past:hover {
-      background-color: #4a4b4d !important;
-      border-color: #3d3e40 !important;
+      background-color: #FFFFFF !important;
       box-shadow: none !important;
       z-index: 1 !important;
     }
 
     .calendar-day-cell.day-disabled-past .day-number {
-      color: #E2E8F0 !important;
+      color: #94A3B8 !important;
       background: transparent !important;
+      font-weight: 500 !important;
     }
 
     .day-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 2px;
+      width: 100%;
     }
 
     .day-number {
-      font-size: 0.92rem;
-      font-weight: 600;
-      color: #2D3748;
-      width: 26px;
-      height: 26px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1B3B36;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      transition: all 0.2s ease;
     }
 
     .calendar-day-cell.today .day-number {
@@ -1066,25 +1069,27 @@
     }
 
     .calendar-day-cell.sun .day-number {
-      color: #DC2626;
+      color: #B91C1C;
     }
 
     .calendar-day-cell.sat .day-number {
-      color: #2563EB;
+      color: #334155;
     }
 
     .calendar-day-cell.today.sun .day-number,
     .calendar-day-cell.today.sat .day-number {
-      color: #FFFFFF;
+      color: #FFFFFF !important;
     }
 
+    .day-body-content,
     .day-badges-list {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
       flex: 1;
-      overflow-y: auto;
-      max-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      margin-top: -16px;
+      padding: 0 0 2px 0;
     }
 
     .slot-badge-item {
@@ -1351,46 +1356,81 @@
       width: 100%;
     }
 
-    /* สไตล์สำหรับข้อความ “จองได้” ประจำวัน (1.1.1.2) */
+    /* สไตล์สำหรับข้อความ “จองได้” ประจำวัน (1.4, 1.5) */
     .badge-booking-available {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      padding: 6px 10px;
-      font-size: 0.8rem;
+      gap: 6px;
+      padding: 7px 18px;
+      font-size: 0.84rem;
       font-weight: 700;
-      color: #0284C7;
-      background-color: #F0F9FF;
-      border: 1px solid #BAE6FD;
-      border-radius: 7px;
+      color: #065F46;
+      background-color: #ECFDF5;
+      border: 1.5px solid #A7F3D0;
+      border-radius: 20px;
       text-align: center;
-      width: 100%;
-      box-shadow: 0 1px 2px rgba(2, 132, 199, 0.08);
-      transition: all 0.15s ease;
+      box-shadow: 0 1px 3px rgba(6, 95, 70, 0.08);
+      transition: all 0.2s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .badge-booking-available i {
+      color: #10B981;
+      font-size: 0.86rem;
+      transition: color 0.2s ease;
     }
 
     .calendar-day-cell:hover .badge-booking-available {
-      background-color: #0284C7;
+      background-color: #1B3B36;
       color: #FFFFFF;
-      border-color: #0284C7;
-      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+      border-color: #1B3B36;
+      box-shadow: 0 4px 12px rgba(27, 59, 54, 0.25);
+      transform: scale(1.04);
     }
 
+    .calendar-day-cell:hover .badge-booking-available i {
+      color: #C5A880;
+    }
+
+    /* สไตล์สำหรับข้อความ “ปิดให้บริการ” (1.3, 1.5) */
     .badge-day-closed {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      padding: 6px 10px;
+      gap: 6px;
+      padding: 6px 14px;
       font-size: 0.78rem;
       font-weight: 600;
       color: #64748B;
-      background-color: #EDF2F7;
-      border: 1px solid #CBD5E1;
-      border-radius: 7px;
+      background-color: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 20px;
       text-align: center;
-      width: 100%;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .badge-day-closed i {
+      color: #94A3B8;
+      font-size: 0.8rem;
+    }
+
+    .calendar-day-cell:hover .badge-day-closed {
+      background-color: #F1F5F9;
+      border-color: #CBD5E1;
+      color: #475569;
+    }
+
+    .badge-today {
+      background: linear-gradient(135deg, #1B3B36, #2C5E55);
+      color: #C5A880;
+      font-weight: 700;
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(197, 168, 128, 0.4);
     }
 
     .available-wrapper {
@@ -1525,6 +1565,307 @@
         text-align: center;
       }
     }
+
+    /* ==========================================================================
+       สไตล์บัตรคิว (Reservation Ticket Cards - Sheet_Name_Reservation_Ticket)
+       ========================================================================== */
+    .ticket-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+      gap: 20px;
+    }
+    @media (max-width: 576px) {
+      .ticket-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .ticket-card {
+      background: #FFFFFF;
+      border: 1.5px solid #1B3B36;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(27, 59, 54, 0.08);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .ticket-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(27, 59, 54, 0.16);
+      border-color: #1B3B36;
+    }
+    .ticket-card-header {
+      background: linear-gradient(135deg, #1B3B36 0%, #244E47 100%);
+      color: #FFFFFF;
+      padding: 13px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #C5A880;
+    }
+    .ticket-header-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #FFFFFF;
+    }
+    .ticket-code-badge {
+      background: rgba(255, 255, 255, 0.18);
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 0.75rem;
+      font-family: monospace;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+    .ticket-status-badge {
+      background: #ECFDF5;
+      color: #065F46;
+      border: 1px solid #A7F3D0;
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    .ticket-status-badge i {
+      color: #10B981;
+    }
+    .ticket-status-badge.status-cancelled {
+      background: #FEF2F2;
+      color: #991B1B;
+      border-color: #FECACA;
+    }
+    .ticket-status-badge.status-cancelled i {
+      color: #EF4444;
+    }
+    .ticket-status-badge.status-pending {
+      background: #FFFBEB;
+      color: #92400E;
+      border-color: #FDE68A;
+    }
+    .ticket-status-badge.status-pending i {
+      color: #F59E0B;
+    }
+    .ticket-card-body {
+      padding: 16px 18px;
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .ticket-info-row {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .ticket-info-label {
+      font-size: 0.8rem;
+      color: #64748B;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ticket-info-value {
+      font-size: 0.92rem;
+      color: #1E293B;
+      font-weight: 600;
+    }
+    .ticket-time-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .ticket-time-chip {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      color: #1B3B36;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .ticket-time-chip i {
+      color: #D97706;
+      font-size: 0.8rem;
+    }
+    .ticket-service-badge {
+      background: #ECFDF5;
+      border: 1px solid #A7F3D0;
+      color: #065F46;
+      font-size: 0.78rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .ticket-card-footer {
+      background: #F8FAFC;
+      border-top: 1px dashed #CBD5E1;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ticket-footer-brand {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #1B3B36;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.2px;
+    }
+    .btn-ticket-detail {
+      background: #1B3B36;
+      color: #FFFFFF;
+      border: 1px solid #1B3B36;
+      font-weight: 600;
+      font-size: 0.82rem;
+      padding: 5px 15px;
+      border-radius: 20px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-ticket-detail:hover {
+      background: #132b27;
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(27, 59, 54, 0.25);
+    }
+
+    /* ==========================================================================
+       สไตล์ปฏิทินเลือกเดือนและปี (Calendar Month-Year Picker)
+       ========================================================================== */
+    .ticket-month-picker-container {
+      position: relative;
+      display: inline-block;
+    }
+    .ticket-month-picker-btn {
+      background: #FFFFFF;
+      border: 1.5px solid #CBD5E1 !important;
+      border-radius: 8px;
+      color: #1B3B36;
+      font-size: 0.88rem;
+      min-width: 195px;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .ticket-month-picker-btn:hover, .ticket-month-picker-btn:focus {
+      border-color: #1B3B36 !important;
+      background: #F8FAFC;
+      color: #1B3B36;
+      box-shadow: 0 0 0 2px rgba(27, 59, 54, 0.15);
+    }
+    .ticket-calendar-popup {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 1060;
+      background: #FFFFFF;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 16px;
+      width: 300px;
+      box-shadow: 0 12px 30px rgba(27, 59, 54, 0.18) !important;
+      animation: ticketCalFadeIn 0.15s ease-out;
+    }
+    @keyframes ticketCalFadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .ticket-calendar-year-nav {
+      padding-bottom: 10px;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .ticket-calendar-year-nav .btn {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      color: #4A5568;
+    }
+    .ticket-calendar-year-nav .btn:hover:not(:disabled) {
+      background: #E2E8F0;
+      color: #1B3B36;
+    }
+    .ticket-calendar-months-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .cal-month-btn {
+      border: 1.5px solid #E2E8F0;
+      background: #F8FAFC;
+      color: #2D3748;
+      border-radius: 10px;
+      padding: 9px 4px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.2;
+    }
+    .cal-month-btn:hover:not(.disabled) {
+      background: #EBF5F0;
+      color: #1B3B36;
+      border-color: #1B3B36;
+      transform: translateY(-1px);
+    }
+    .cal-month-btn.selected {
+      background: #1B3B36 !important;
+      color: #FFFFFF !important;
+      border-color: #C5A880 !important;
+      box-shadow: 0 3px 8px rgba(27, 59, 54, 0.25);
+    }
+    .cal-month-btn.current:not(.selected) {
+      border: 1.5px solid #1B3B36;
+      font-weight: 700;
+      color: #1B3B36;
+      background: #F0FDF4;
+    }
+    .cal-month-btn.disabled {
+      background: #F8FAFC !important;
+      color: #CBD5E1 !important;
+      border-color: #F1F5F9 !important;
+      cursor: not-allowed !important;
+      opacity: 0.45;
+    }
+    .cal-month-sub {
+      font-size: 0.68rem;
+      font-weight: 400;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+    .cal-month-btn.selected .cal-month-sub {
+      color: #E2E8F0;
+    }
   </style>
 </head>
 <body>
@@ -1538,8 +1879,8 @@
         <div class="brand-logo-badge">
           <i class="fa-solid fa-spa"></i>
         </div>
-        <h2>JM Thai Massage Management System</h2>
-        <p>ระบบบริหารจัดการข้อมูลร้านนวดแผนไทยเจเอ็ม</p>
+        <h2>JM Thai Massage</h2>
+        <p>เจเอ็ม นวดแผนไทย</p>
       </div>
 
       <div class="login-body">
@@ -1576,15 +1917,13 @@
         </button>
 
         <!-- Brand Title: ปรับ responsive ถ้าหน้าจอเล็ก ให้แสดงเฉพาะ logo (สำคัญมาก) -->
-        <a href="javascript:void(0)" class="brand-title" title="JM Thai Massage Management System">
+        <a href="javascript:void(0)" class="brand-title" title="JM Thai Massage">
           <div class="brand-logo-circle">
             <i class="fa-solid fa-spa"></i>
           </div>
-          <!-- จอใหญ่ Desktop (>= 992px): แสดงชื่อเต็มระบบ -->
-          <span class="brand-title-text d-none d-lg-inline">JM Thai Massage Management System</span>
-          <!-- จอกลาง Tablet (576px - 991px): แสดงชื่อย่อลงมาเพื่อไม่ให้เบียดเมนู -->
-          <span class="brand-title-text-short d-none d-sm-inline d-lg-none">JM Thai Massage</span>
-          <!-- จอเล็ก Mobile (< 576px): ทั้งสองข้อความจะถูกซ่อน แสดงเฉพาะ logo (สำคัญมาก) -->
+          <!-- จอใหญ่และแท็บเล็ต (>= 576px): แสดงชื่อระบบ -->
+          <span class="brand-title-text d-none d-sm-inline">JM Thai Massage</span>
+          <!-- จอเล็ก Mobile (< 576px): ข้อความจะถูกซ่อน แสดงเฉพาะ logo (สำคัญมาก) -->
         </a>
       </div>
 
@@ -1649,7 +1988,15 @@
             </a>
           </li>
 
-          <!-- เมนู 5: ตามตัวแปร Menu_Name_Setting (การตั้งค่า) มี Submenu -->
+          <!-- เมนู 5: ตามตัวแปร Sheet_Name_Reservation_Ticket (บัตรคิว) [ใหม่] -->
+          <li class="sidebar-menu-item" id="nav-item-reservation-ticket">
+            <a href="javascript:void(0)" class="sidebar-link" id="menu-reservation-ticket" onclick="switchSection('reservation-ticket')">
+              <i class="fa-solid fa-ticket"></i>
+              <span id="sidebar-menu-reservation-ticket-text">บัตรคิว</span>
+            </a>
+          </li>
+
+          <!-- เมนู 6: ตามตัวแปร Menu_Name_Setting (การตั้งค่า) มี Submenu -->
           <li class="sidebar-menu-item" id="nav-item-setting">
             <a href="javascript:void(0)" class="sidebar-link" id="menu-setting" onclick="toggleSubmenu('setting-submenu', this)">
               <i class="fa-solid fa-sliders"></i>
@@ -1854,24 +2201,21 @@
               </div>
             </div>
 
-            <!-- Calendar Legend / Quota Guide -->
+            <!-- Calendar Legend -->
             <div class="calendar-legend-bar">
               <div class="d-flex align-items-center gap-3 flex-wrap">
                 <span class="legend-item">
-                  <span class="slot-quota-badge q-available" style="font-size:0.68rem; padding: 2px 6px;">จองได้</span> จองได้
+                  <span class="badge-booking-available" style="font-size:0.75rem; padding: 3px 10px; cursor: default;"><i class="fa-solid fa-circle-check me-1"></i>จองได้</span> เปิดให้จอง
                 </span>
                 <span class="legend-item">
-                  <span class="slot-quota-badge q-full" style="font-size:0.68rem; padding: 2px 6px;"><i class="fa-solid fa-users me-1"></i>เต็ม</span> เต็มโควต้า
+                  <span class="badge-day-closed" style="font-size:0.75rem; padding: 3px 10px; cursor: default;"><i class="fa-solid fa-ban me-1 text-muted"></i>ปิดให้บริการ</span> ปิดให้บริการ
                 </span>
                 <span class="legend-item">
-                  <span class="slot-quota-badge q-closed" style="font-size:0.68rem; padding: 2px 6px;"><i class="fa-regular fa-clock me-1 text-danger"></i>ปิดรับจอง</span> ปิดรับจอง (ก่อนเริ่ม 15 นาที)
-                </span>
-                <span class="legend-item">
-                  <span class="badge" style="background-color: #4a4b4d; color: #FFFFFF; border: 1px solid #3d3e40; font-size:0.68rem; padding: 3px 7px;">ไม่ให้จอง</span> วันในอดีต (สีเทา #4a4b4d)
+                  <span class="badge bg-white text-secondary border border-secondary-subtle px-2 py-1" style="font-size:0.72rem; border-radius:12px;">วันที่ผ่านมาแล้ว</span> (พื้นสีขาว ไม่สามารถกดจองได้)
                 </span>
               </div>
-              <div class="text-muted" style="font-size: 0.78rem;">
-                <i class="fa-solid fa-hand-pointer me-1 text-warning"></i> คลิกที่รอบเวลาเพื่อจอง หรือคลิกที่ช่องวันที่เพื่อดูคิวทั้งหมด
+              <div class="text-muted" style="font-size: 0.8rem;">
+                <i class="fa-solid fa-hand-pointer me-1 text-warning"></i> คลิกที่ช่องวันที่เพื่อทำการจองคิว
               </div>
             </div>
 
@@ -1893,6 +2237,107 @@
                 <i class="fa-solid fa-spinner fa-spin fa-2x mb-2 text-warning"></i>
                 <div>กำลังโหลดข้อมูลปฏิทิน...</div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION: บัตรคิว (Sheet_Name_Reservation_Ticket) -->
+        <section id="section-reservation-ticket" class="content-section">
+          <div class="page-title-box">
+            <div class="page-title">
+              <h3 id="reservation-ticket-page-title"><i class="fa-solid fa-ticket me-2 text-warning"></i>บัตรคิว</h3>
+              <p>บัตรแสดงข้อมูลการจองคิวบริการนวดแผนไทย ตรวจสอบวันที่ ผู้ให้บริการ และรอบเวลาที่จอง</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+              <button class="btn btn-outline-secondary" id="btn-refresh-reservation-ticket" onclick="loadReservationTickets(currentTicketPeriodMonth, true)" title="รีเฟรชข้อมูลบัตรคิว">
+                <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
+              </button>
+            </div>
+          </div>
+
+          <!-- Ticket Control Bar (Calendar Month/Year Navigation & Picker) -->
+          <div class="card mb-4 border-0 shadow-sm" style="border-radius: 14px; background: #FFFFFF; border: 1.5px solid #E2E8F0 !important;">
+            <div class="card-body p-3">
+              <div class="row g-3 align-items-center justify-content-between">
+                <!-- Left: Calendar Month Navigation & Calendar Picker -->
+                <div class="col-12 col-md-auto d-flex align-items-center gap-2 flex-wrap">
+                  <span class="fw-bold text-dark text-nowrap me-1">
+                    <i class="fa-regular fa-calendar-days text-primary me-1"></i> เลือกเดือน / ปี:
+                  </span>
+                  
+                  <div class="ticket-calendar-nav d-flex align-items-center gap-2 flex-wrap">
+                    <!-- ปุ่มเดือนก่อนหน้า -->
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-2" id="btn-ticket-prev-month" onclick="changeTicketMonth(-1)" title="เดือนก่อนหน้า">
+                      <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+
+                    <!-- กล่องเลือกปฏิทินเดือน/ปี (Calendar Month-Year Picker Trigger & Popup) -->
+                    <div class="ticket-month-picker-container position-relative">
+                      <button type="button" class="btn btn-sm btn-outline-dark ticket-month-picker-btn d-flex align-items-center gap-2 px-3 fw-bold" id="btn-ticket-calendar-toggle" onclick="toggleTicketCalendarPicker()">
+                        <i class="fa-solid fa-calendar-days text-warning"></i>
+                        <span id="ticket-current-month-label">ตุลาคม พ.ศ. 2569</span>
+                        <i class="fa-solid fa-chevron-down ms-1 text-muted small"></i>
+                      </button>
+
+                      <!-- ป๊อปอัปปฏิทินเลือกเดือนและปี (Calendar Popup) -->
+                      <div class="ticket-calendar-popup shadow-lg" id="ticket-calendar-popup" style="display: none;">
+                        <!-- ส่วนหัวปฏิทิน: สลับปี -->
+                        <div class="ticket-calendar-year-nav d-flex justify-content-between align-items-center mb-3">
+                          <button type="button" class="btn btn-sm btn-light border px-2 py-1" id="btn-cal-prev-year" onclick="changeTicketCalendarYear(-1)" title="ปีก่อนหน้า">
+                            <i class="fa-solid fa-chevron-left"></i>
+                          </button>
+                          <div class="fw-bold fs-6 text-dark" id="ticket-cal-year-display">
+                            พ.ศ. 2569 (2026)
+                          </div>
+                          <button type="button" class="btn btn-sm btn-light border px-2 py-1" id="btn-cal-next-year" onclick="changeTicketCalendarYear(1)" title="ปีถัดไป">
+                            <i class="fa-solid fa-chevron-right"></i>
+                          </button>
+                        </div>
+
+                        <!-- ตารางกริด 12 เดือน (12-Month Calendar Grid) -->
+                        <div class="ticket-calendar-months-grid" id="ticket-calendar-months-grid">
+                          <!-- เรนเดอร์ 12 เดือนผ่าน JavaScript -->
+                        </div>
+
+                        <!-- ส่วนท้ายปฏิทิน: ปุ่มลัดเดือนปัจจุบันและข้อความแจ้งเตือน -->
+                        <div class="ticket-calendar-footer mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
+                          <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-3 py-1" onclick="goToCurrentTicketMonth()">
+                            <i class="fa-solid fa-calendar-day me-1"></i> เดือนปัจจุบัน
+                          </button>
+                          <span class="text-muted small" style="font-size: 0.73rem;">
+                            <i class="fa-solid fa-clock-rotate-left me-1 text-secondary"></i> ย้อนหลังได้ไม่เกิน 1 ปี
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- ปุ่มเดือนถัดไป -->
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-2" id="btn-ticket-next-month" onclick="changeTicketMonth(1)" title="เดือนถัดไป">
+                      <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+
+                    <!-- ปุ่มลัดเดือนปัจจุบันใน Toolbar -->
+                    <button type="button" class="btn btn-sm btn-outline-primary ms-1" onclick="goToCurrentTicketMonth()" title="กลับไปเดือนปัจจุบัน">
+                      <i class="fa-solid fa-calendar-day me-1"></i> เดือนปัจจุบัน
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Right: Summary status -->
+                <div class="col-12 col-md-auto d-flex align-items-center gap-2 flex-wrap">
+                  <span class="badge bg-light text-dark border px-3 py-2 rounded-pill" style="font-size: 0.85rem;" id="ticket-count-badge">
+                    <i class="fa-solid fa-ticket me-1 text-warning"></i> บัตรคิวทั้งหมด: <span id="ticket-count-num" class="fw-bold text-success">0</span> ใบ
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ticket Cards Grid Container -->
+          <div id="reservation-ticket-list-container">
+            <div class="text-center py-5 text-muted">
+              <i class="fa-solid fa-spinner fa-spin fa-2x mb-3 text-warning"></i>
+              <div>กำลังโหลดข้อมูลบัตรคิว...</div>
             </div>
           </div>
         </section>
@@ -2088,7 +2533,7 @@
     <!-- 2.3 FOOTER (ส่วนล่าง) -->
     <footer class="app-footer">
       <div>
-        © 2026 <b>JM Thai Massage Management System</b>. ระบบบริหารจัดการข้อมูลร้านนวดแผนไทยเจเอ็ม
+        © 2026 <b>JM Thai Massage</b>. เจเอ็ม นวดแผนไทย
       </div>
       <div>
         <span class="status-indicator">
@@ -2136,6 +2581,10 @@
     let Sheet_Name_Staff = "ข้อมูลพนักงาน";
     let sheetNameReservation = "จองคิว";
     let Sheet_Name_Reservation = "จองคิว";
+    let sheetNameReservationTicket = "บัตรคิว";
+    let Sheet_Name_Reservation_Ticket = "บัตรคิว";
+    let currentTicketPeriodMonth = "";
+    let reservationTicketsCache = [];
     let sheetNameSettingTime = "ตั้งค่าตัวเลือกเวลาการจอง";
     let sheetNameSettingTimetable = "ตั้งค่าตารางการจอง";
     let menuNameSetting = "การตั้งค่า";
@@ -2219,6 +2668,12 @@
                 Sheet_Name_Reservation = sheetNameReservation;
                 $('#sidebar-menu-reservation-text').text(sheetNameReservation);
                 $('#reservation-page-title').html('<i class="fa-solid fa-calendar-days me-2 text-warning"></i>' + escapeHtml(sheetNameReservation));
+              }
+              if (config.sheetNameReservationTicket || config.Sheet_Name_Reservation_Ticket) {
+                sheetNameReservationTicket = config.sheetNameReservationTicket || config.Sheet_Name_Reservation_Ticket;
+                Sheet_Name_Reservation_Ticket = sheetNameReservationTicket;
+                $('#sidebar-menu-reservation-ticket-text').text(sheetNameReservationTicket);
+                $('#reservation-ticket-page-title').html('<i class="fa-solid fa-ticket me-2 text-warning"></i>' + escapeHtml(sheetNameReservationTicket));
               }
               if (config.sheetNameSettingTime || config.Sheet_Name_Setting_Selection_Reservation_Time) {
                 sheetNameSettingTime = config.sheetNameSettingTime || config.Sheet_Name_Setting_Selection_Reservation_Time;
@@ -2317,6 +2772,7 @@
         $('#nav-item-customer').show();
         $('#nav-item-staff').show();
         $('#nav-item-reservation').show();
+        $('#nav-item-reservation-ticket').show();
         $('#nav-item-setting').show();
       } else if (flag === 2) {
         // พนักงาน -> แสดงเฉพาะข้อมูลพนักงาน และข้อมูลการจอง (ซ่อนผู้ดูแลระบบ, ข้อมูลลูกค้า และตั้งค่าระบบ)
@@ -2324,6 +2780,7 @@
         $('#nav-item-customer').hide();
         $('#nav-item-staff').show();
         $('#nav-item-reservation').show();
+        $('#nav-item-reservation-ticket').show();
         $('#nav-item-setting').hide();
       } else if (flag === 1) {
         // ลูกค้า -> ซ่อนผู้ดูแลระบบ, ข้อมูลพนักงาน และตั้งค่าระบบ, แสดงข้อมูลลูกค้า และข้อมูลการจอง
@@ -2331,13 +2788,15 @@
         $('#nav-item-customer').show();
         $('#nav-item-staff').hide();
         $('#nav-item-reservation').show();
+        $('#nav-item-reservation-ticket').show();
         $('#nav-item-setting').hide();
       } else {
-        // Fallback: แสดงเฉพาะเมนูข้อมูลการจอง
+        // Fallback: แสดงเฉพาะเมนูข้อมูลการจองและบัตรคิว
         $('#nav-item-admin').hide();
         $('#nav-item-customer').hide();
         $('#nav-item-staff').hide();
         $('#nav-item-reservation').show();
+        $('#nav-item-reservation-ticket').show();
         $('#nav-item-setting').hide();
       }
 
@@ -2507,6 +2966,8 @@
         loadStaffTableData(false);
       } else if (section === 'reservation') {
         loadCalendarData(currentCalendarYear, currentCalendarMonth, false);
+      } else if (section === 'reservation-ticket') {
+        initReservationTicketView();
       } else if (section === 'setting-time') {
         loadSettingTimeTableData(false);
       } else if (section === 'setting-service-price') {
@@ -4807,6 +5268,8 @@
             for (let md = 1; md <= daysInMonthMock; md++) {
             const dStrMock = md < 10 ? "0" + md : String(md);
             const fullDateMock = `${year}-${mStrMock}-${dStrMock}`;
+            const dObjMock = new Date(year, monthNum - 1, md);
+            const isWeekendMock = (dObjMock.getDay() === 0 || dObjMock.getDay() === 6);
             const isDay5 = (md === 5); // จำลองวันที่ 5 ปิดให้บริการทั้งหมด เพื่อทดสอบเงื่อนไข 1.1.1.1
             const isDay10 = (md === 10); // จำลองวันที่ 10 ปิดบางช่วงเวลา เพื่อทดสอบเงื่อนไข 1.1.1.2
 
@@ -4825,7 +5288,7 @@
             mockStaffStaffList.forEach((stf) => {
               slotsListMock.forEach((sl, sIdx) => {
                 let slotActive = true;
-                if (isDay5) {
+                if (isWeekendMock || isDay5) {
                   slotActive = false;
                 } else if (isDay10 && sIdx === 0) {
                   slotActive = false;
@@ -4844,12 +5307,10 @@
                 if (mockReservations[fullDateMock] && mockReservations[fullDateMock][sl]) {
                   usageQ = mockReservations[fullDateMock][sl].length;
                 }
-                const isFull = (usageQ >= 5);
 
                 if (slotActive) {
                   activeCnt++;
-                  if (isFull) fullCnt++;
-                  else availCnt++;
+                  availCnt++;
                 } else {
                   inactiveCnt++;
                 }
@@ -4866,7 +5327,7 @@
                   usageQuota: usageQ, 
                   quotaTotal: 5, 
                   isActive: slotActive, 
-                  isFull: isFull 
+                  isFull: false 
                 };
                 tSlots.push(slotObj);
                 if (!tSlotMap[sl]) {
@@ -4876,7 +5337,6 @@
             });
 
             const allInact = (slotsListMock.length > 0 && activeCnt === 0);
-            const allF = (activeCnt > 0 && availCnt === 0);
 
             mockTimetable[fullDateMock] = {
               dateStr: fullDateMock,
@@ -4887,10 +5347,10 @@
               activeCount: activeCnt,
               inactiveCount: inactiveCnt,
               availableCount: availCnt,
-              fullCount: fullCnt,
+              fullCount: 0,
               allInactive: allInact,
-              isAllFull: allF,
-              isAvailable: !allInact && !allF
+              isAllFull: false,
+              isAvailable: !allInact && (activeCnt > 0)
             };
           }
         }
@@ -5032,6 +5492,8 @@
       for (let d = 1; d <= daysInMonth; d++) {
         const isToday = (year === todayY && month === todayM && d === todayD);
         const dayOfWeek = (firstDayOfWeek + d - 1) % 7;
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+
         let dayClass = 'calendar-day-cell';
         if (isToday) dayClass += ' today';
         if (dayOfWeek === 0) dayClass += ' sun';
@@ -5042,9 +5504,7 @@
         const dateStr = `${year}-${mStr}-${dStr}`;
         const isPastDate = (dateStr < todayStr);
 
-        // เงื่อนไขข้อ 1: เมื่อวันที่ในแต่ละช่อง น้อยกว่า วันที่ปัจจุบัน (dateStr < todayStr)
-        // ให้ทำการ แสดง background สีเทา (#4a4b4d ทั้งตอน cursor point และ ตอน hover) ในช่องวันที่นั้นๆ เพื่อไม่ให้จอง (disabled) (ไม่ต้องแสดง modal)
-        // และ ไม่ต้องแสดงเครื่องหมาย disabled
+        // ข้อ 1.2: ถ้า ช่องการจอง ใน calendar เป็นวันที่ ที่ผ่านมาแล้ว ให้แสดง เป็น พื้นสีขาว ปกติ (คือไม่สามารถกดจองได้)
         if (isPastDate) {
           dayClass += ' day-disabled-past';
           gridHtml += `
@@ -5052,6 +5512,7 @@
               <div class="day-header">
                 <span class="day-number">${d}</span>
               </div>
+              <div class="day-body-content"></div>
             </div>
           `;
           continue;
@@ -5060,133 +5521,62 @@
         // ดึงข้อมูลตารางการจองประจำวันจาก Sheet_Name_Setting_Reservation_Timetable
         const dayTimetable = (data.timetableByDate && data.timetableByDate[dateStr]) ? data.timetableByDate[dateStr] : null;
         let isAllInactive = false;
-        let isAllFull = false;
-        let isAvailable = true;
+        let isAvailable = false;
 
         if (dayTimetable && dayTimetable.totalSlots > 0) {
-          isAllInactive = (dayTimetable.allInactive === true);
-          isAllFull = (dayTimetable.isAllFull === true);
-          isAvailable = (dayTimetable.isAvailable === true);
+          // ถ้ามีข้อมูลในตาราง และ is_active เป็น false ทั้งหมด (activeCount === 0)
+          isAllInactive = (dayTimetable.allInactive === true || dayTimetable.activeCount === 0);
+          isAvailable = (dayTimetable.activeCount > 0);
+        } else if (isWeekend) {
+          // ข้อ 1.3: ช่วงการตั้งค่าที่เป็น เสาร์ อาทิตย์ มี is_active เท่ากับ false (ทั้งหมด) ให้แสดงข้อความ “ปิดให้บริการ”
+          isAllInactive = true;
+          isAvailable = false;
+        } else {
+          isAllInactive = false;
+          isAvailable = false;
         }
-
-        // เงื่อนไขข้อ 1.1.1.1: ถ้าค่า is_active มีค่าเป็น false ทั้งหมดทุกช่วงเวลา ก็แสดงสีเทาเช่นกัน
-        if (isAllInactive) {
-          dayClass += ' day-all-inactive';
-        }
-
-        const dateReservations = (data.reservationsByDate && data.reservationsByDate[dateStr]) 
-          ? data.reservationsByDate[dateStr] 
-          : {};
-
-        // รวมการจองในแต่ละ slot โดย map เวลาให้ตรง format
-        const bookedSlots = [];
-        slots.forEach(slot => {
-          let list = [];
-          if (dateReservations[slot]) {
-            list = dateReservations[slot];
-          } else {
-            for (const k in dateReservations) {
-              if (formatTimeSlot(k) === slot) {
-                list = dateReservations[k];
-                break;
-              }
-            }
-          }
-          if (list && list.length > 0) {
-            bookedSlots.push({ slot: slot, count: list.length });
-          }
-        });
 
         let badgesHtml = '';
-        let cellClickHandler = `openDateDetailModal('${dateStr}')`;
-        let cellTitle = `คลิกเพื่อดูรายละเอียดรอบเวลาวันที่ ${d}`;
+        let cellClickHandler = '';
+        let cellTitle = '';
 
-        if (!dayTimetable || dayTimetable.totalSlots === 0) {
-          // เงื่อนไข: หากไม่พบข้อมูลในตารางประจำวัน (column day_month) ให้แสดงป้าย "ไม่พบข้อมูล"
-          cellClickHandler = `openDateDetailModal('${dateStr}')`;
+        if (isAllInactive) {
+          // ข้อ 1.3: เสาร์ อาทิตย์ หรือวันที่ตั้งค่า is_active = false ทั้งหมด ให้แสดงข้อความ “ปิดให้บริการ” (ไม่ต้องแสดง modal เมื่อคลิก)
+          dayClass += ' day-all-inactive';
+          cellClickHandler = '';
+          cellTitle = `วันที่ ${d} ปิดให้บริการ`;
           badgesHtml = `
-            <div class="no-booking-wrapper">
-              <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1" style="font-size:0.75rem; border-radius:6px; font-weight:600;" title="ไม่พบข้อมูลตารางการจองในวันที่ ${d}">
-                <i class="fa-solid fa-circle-question me-1 text-secondary"></i> ไม่พบข้อมูล
-              </span>
-            </div>
+            <span class="badge-day-closed" title="ปิดให้บริการในวันที่ ${d}">
+              <i class="fa-solid fa-ban me-1 text-muted"></i> ปิดให้บริการ
+            </span>
           `;
-        } else if (isAllInactive) {
-          // เงื่อนไขข้อ 1.1.1.1: ปิดให้บริการทั้งหมดทุกช่วงเวลา แสดง background สีเทา และป้ายปิดให้บริการ
-          cellClickHandler = `openDateDetailModal('${dateStr}')`;
+        } else if (!dayTimetable || dayTimetable.totalSlots === 0) {
+          // วันธรรมดาแต่ไม่พบข้อมูลตารางการจอง (ไม่ต้องแสดง modal เมื่อคลิก)
+          cellClickHandler = '';
+          cellTitle = `วันที่ ${d} ไม่พบข้อมูลตารางการจอง`;
           badgesHtml = `
-            <div class="no-booking-wrapper">
-              <span class="badge-day-closed" title="ปิดให้บริการทุกรอบเวลาในวันที่ ${d}">
-                <i class="fa-solid fa-ban me-1 text-secondary"></i> ปิดให้บริการ
-              </span>
-            </div>
+            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1" style="font-size:0.75rem; border-radius:12px; font-weight:600;" title="ไม่พบข้อมูลตารางการจองในวันที่ ${d}">
+              <i class="fa-solid fa-circle-question me-1 text-secondary"></i> ไม่พบข้อมูล
+            </span>
           `;
-        } else if (isAllFull) {
-          // เงื่อนไขข้อ 2: ตรวจสอบโควต้าแล้วจองเต็มทุกรอบ
-          cellClickHandler = `openDateDetailModal('${dateStr}')`;
-          badgesHtml = `
-            <div class="available-wrapper mb-1">
-              <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size:0.72rem; border-radius:6px; font-weight:600;" title="รอบเวลาทั้งหมดในวันนี้จองเต็มแล้ว">
-                <i class="fa-solid fa-users me-1 text-danger"></i> จองเต็มทุกรอบ
-              </span>
-            </div>
-          `;
-          if (bookedSlots.length > 0) {
-            bookedSlots.forEach(item => {
-              const slotTt = (dayTimetable && dayTimetable.slotMap) ? dayTimetable.slotMap[item.slot] : null;
-              const slotQuota = slotTt ? slotTt.quotaTotal : 5;
-              const slotUsage = slotTt ? slotTt.usageQuota : item.count;
-              badgesHtml += `
-                <div class="slot-badge-item full" onclick="handleSlotClick(event, '${dateStr}', '${item.slot}', 'full')" title="รอบ ${escapeHtml(item.slot)} น. (เต็มแล้ว ${slotUsage}/${slotQuota} คน)">
-                  <span class="slot-time"><i class="fa-regular fa-clock" style="font-size:0.62rem;"></i> ${escapeHtml(item.slot)}</span>
-                  <span class="slot-quota-badge q-full"><i class="fa-solid fa-users me-1"></i>เต็ม</span>
-                </div>
-              `;
-            });
-          }
         } else {
-          // เงื่อนไข: ถ้ามีรอบเวลาเปิดใช้งานและยังไม่เต็ม ให้แสดงข้อความว่า “จองได้” และเมื่อคลิกให้เปิด Modal จองคิว
+          // ข้อ 1.1 & 1.4: เอาการตรวจสอบ โควต้าการจอง ออก และช่องไหนใน calendar ที่เปิดให้จองได้ ให้แสดงข้อความว่า “จองได้” อยู่ตรงกลางช่อง
           cellClickHandler = `openBookingModal('${dateStr}')`;
           cellTitle = `คลิกเพื่อเลือกจองคิววันที่ ${d}`;
           badgesHtml = `
-            <div class="available-wrapper mb-1">
-              <span class="badge-booking-available" onclick="event.stopPropagation(); openBookingModal('${dateStr}')" style="cursor: pointer;" title="มีรอบเวลาเปิดให้จองได้ (คลิกเพื่อจองคิว)">
-                <i class="fa-solid fa-circle-check me-1 text-info"></i> จองได้
-              </span>
-            </div>
+            <span class="badge-booking-available" onclick="event.stopPropagation(); openBookingModal('${dateStr}')" title="คลิกเพื่อเลือกจองคิววันที่ ${d}">
+              <i class="fa-solid fa-circle-check me-1"></i> จองได้
+            </span>
           `;
-
-          // หากมีรายการที่จองแล้วในวันนั้น (Booked slots) ให้แสดงรายการจองด้วย
-          if (bookedSlots.length > 0) {
-            bookedSlots.forEach(item => {
-              const slotTt = (dayTimetable && dayTimetable.slotMap) ? dayTimetable.slotMap[item.slot] : null;
-              const slotQuota = slotTt ? slotTt.quotaTotal : 5;
-              const slotUsage = slotTt ? slotTt.usageQuota : item.count;
-              const isFull = (slotTt && slotTt.isFull) || (slotUsage >= slotQuota);
-
-              let itemClass = 'slot-badge-item booked';
-              let quotaBadgeHtml = `<span class="slot-quota-badge q-booked">${slotUsage}/${slotQuota}</span>`;
-              if (isFull) {
-                itemClass = 'slot-badge-item full';
-                quotaBadgeHtml = `<span class="slot-quota-badge q-full"><i class="fa-solid fa-users me-1"></i>เต็ม</span>`;
-              }
-              badgesHtml += `
-                <div class="${itemClass}" onclick="handleSlotClick(event, '${dateStr}', '${item.slot}', '${isFull ? 'full' : 'booked'}')" title="รอบ ${escapeHtml(item.slot)} น. (${isFull ? 'เต็มแล้ว' : 'จองแล้ว'} ${slotUsage}/${slotQuota} คน)">
-                  <span class="slot-time"><i class="fa-regular fa-clock" style="font-size:0.62rem;"></i> ${escapeHtml(item.slot)}</span>
-                  ${quotaBadgeHtml}
-                </div>
-              `;
-            });
-          }
         }
 
         gridHtml += `
-          <div class="${dayClass}" onclick="${cellClickHandler}" title="${cellTitle}">
+          <div class="${dayClass}" ${cellClickHandler ? `onclick="${cellClickHandler}"` : ''} title="${cellTitle}">
             <div class="day-header">
               <span class="day-number">${d}</span>
-              ${isToday ? '<span class="badge bg-warning text-dark" style="font-size:0.65rem; font-weight: 600;">วันนี้</span>' : ''}
+              ${isToday ? '<span class="badge-today">วันนี้</span>' : ''}
             </div>
-            <div class="day-badges-list">
+            <div class="day-body-content">
               ${badgesHtml}
             </div>
           </div>
@@ -5262,19 +5652,13 @@
       }
 
       const isDayAllInactive = (dayTimetable && dayTimetable.allInactive === true);
+      if (isDayAllInactive) {
+        return;
+      }
 
       // แบนเนอร์สถานะสิทธิ์
       let bannerHtml = '';
-      if (isDayAllInactive) {
-        bannerHtml = `
-          <div class="alert alert-secondary py-2 px-3 mb-3 d-flex align-items-center gap-2 text-start" style="font-size:0.85rem; border-radius:10px;">
-            <i class="fa-solid fa-ban text-secondary fa-lg"></i>
-            <div>
-              <strong>ปิดให้บริการทั้งวัน:</strong> ทุกรอบเวลาในวันที่นี้ถูกปิดการใช้งานในตารางการจอง (ไม่อนุญาตให้ทำการจอง)
-            </div>
-          </div>
-        `;
-      } else if (perm.isTooFar) {
+      if (perm.isTooFar) {
         bannerHtml = `
           <div class="alert alert-warning py-2 px-3 mb-3 d-flex align-items-center gap-2 text-start" style="font-size:0.85rem; border-radius:10px;">
             <i class="fa-solid fa-calendar-xmark text-warning fa-lg"></i>
@@ -5288,7 +5672,7 @@
           <div class="alert alert-success py-2 px-3 mb-3 d-flex align-items-center gap-2 text-start" style="font-size:0.85rem; border-radius:10px;">
             <i class="fa-solid fa-circle-check text-success fa-lg"></i>
             <div>
-              <strong>สามารถจัดการการจองได้:</strong> เปิดให้จองและจัดการข้อมูลได้ (จำกัดตามโควต้าของแต่ละรอบ)
+              <strong>สามารถจัดการการจองได้:</strong> เปิดให้จองและจัดการข้อมูลได้ตามรอบเวลาที่กำหนด
             </div>
           </div>
         `;
@@ -5316,9 +5700,6 @@
 
         const slotTimetable = (dayTimetable && dayTimetable.slotMap) ? dayTimetable.slotMap[slot] : null;
         const isSlotInactive = (slotTimetable && slotTimetable.isActive === false) || isDayAllInactive;
-        const maxQuota = slotTimetable ? slotTimetable.quotaTotal : 5;
-        const usageQuota = (slotTimetable && slotTimetable.usageQuota !== undefined) ? slotTimetable.usageQuota : count;
-        const isFull = (slotTimetable && slotTimetable.isFull) || (usageQuota >= maxQuota);
 
         // เงื่อนไขข้อ 3 & 3.1 สำหรับวันนี้: ตัดรอบเมื่อเหลือน้อยกว่า 15 นาที
         const isDateToday = (dateStr === cmpTodayStr);
@@ -5338,26 +5719,19 @@
         let quotaBadge = '';
         let actionBtn = '';
 
-        const isLastSlotOfDay = (timeSlots.length > 1 && slotIdx === timeSlots.length - 1);
         if (isSlotInactive) {
-          quotaBadge = '<span class="slot-quota-badge q-closed px-2 py-1" style="font-size:0.75rem;"><i class="fa-solid fa-ban me-1 text-danger"></i>ปิดการใช้งาน</span>';
+          quotaBadge = '<span class="badge bg-secondary-subtle text-secondary border px-2 py-1" style="font-size:0.75rem;"><i class="fa-solid fa-ban me-1 text-danger"></i>ปิดการใช้งาน</span>';
           actionBtn = `<button class="btn btn-sm btn-outline-secondary" disabled style="font-size:0.75rem; cursor:not-allowed;" title="รอบเวลานี้ถูกปิดการใช้งานในตารางการจอง"><i class="fa-solid fa-ban me-1 text-danger"></i> ปิดการใช้งาน</button>`;
         } else if (isClosedByTime) {
-          quotaBadge = '<span class="slot-quota-badge q-closed px-2 py-1" style="font-size:0.75rem;"><i class="fa-regular fa-clock me-1 text-danger"></i>ปิดรับจอง (ก่อนเริ่ม 15 นาที)</span>';
+          quotaBadge = '<span class="badge bg-danger-subtle text-danger border px-2 py-1" style="font-size:0.75rem;"><i class="fa-regular fa-clock me-1 text-danger"></i>ปิดรับจอง (ก่อนเริ่ม 15 นาที)</span>';
           actionBtn = `<button class="btn btn-sm btn-outline-danger" disabled style="font-size:0.75rem; cursor:not-allowed;" title="ปิดรับจองเมื่อเหลือน้อยกว่า 15 นาทีก่อนเริ่มรอบ"><i class="fa-regular fa-clock me-1 text-danger"></i> ปิดรับจอง</button>`;
-        } else if (isLastSlotOfDay) {
-          quotaBadge = `<span class="badge bg-secondary text-white px-2 py-1">รอบสิ้นสุดวัน</span>`;
-          actionBtn = `<button class="btn btn-sm btn-outline-secondary" disabled style="font-size:0.75rem; cursor:not-allowed;" title="รอบเวลานี้เป็นเวลารอบสุดท้ายของวัน ใช้สำหรับเป็นเวลาสิ้นสุดการบริการ (ไม่สามารถเลือกเป็นเวลาเริ่มต้นได้)"><i class="fa-solid fa-flag-checkered me-1"></i> รอบสิ้นสุดวัน</button>`;
-        } else if (isFull) {
-          quotaBadge = `<span class="slot-quota-badge q-full px-2 py-1" style="font-size:0.75rem;"><i class="fa-solid fa-users me-1"></i>เต็ม (${usageQuota}/${maxQuota})</span>`;
-          actionBtn = `<button class="btn btn-sm btn-outline-danger" disabled style="font-size:0.75rem; cursor:not-allowed;" title="ครบโควต้า ${maxQuota} คนแล้ว"><i class="fa-solid fa-users me-1"></i> เต็มแล้ว</button>`;
-        } else if (usageQuota > 0) {
-          quotaBadge = `<span class="badge bg-success text-white px-2 py-1">ว่าง (${usageQuota}/${maxQuota})</span>`;
+        } else if (count > 0) {
+          quotaBadge = `<span class="badge bg-info-subtle text-info-emphasis border px-2 py-1" style="font-size:0.75rem;"><i class="fa-solid fa-user-check me-1"></i>จองแล้ว (${count})</span>`;
           if (isDateEditable && !isDatePast && !isDayAllInactive) {
             actionBtn = `<button class="btn btn-sm btn-outline-primary" onclick="openBookingModal('${dateStr}', '${slot}')" style="font-size:0.75rem;"><i class="fa-solid fa-plus me-1"></i> จองรอบนี้</button>`;
           }
         } else {
-          quotaBadge = `<span class="badge bg-secondary text-white px-2 py-1">ว่าง (0/${maxQuota})</span>`;
+          quotaBadge = `<span class="badge bg-success-subtle text-success border px-2 py-1" style="font-size:0.75rem;"><i class="fa-solid fa-check me-1"></i>เปิดรับจอง</span>`;
           if (isDateEditable && !isDatePast && !isDayAllInactive) {
             actionBtn = `<button class="btn btn-sm btn-outline-primary" onclick="openBookingModal('${dateStr}', '${slot}')" style="font-size:0.75rem;"><i class="fa-solid fa-plus me-1"></i> จองรอบนี้</button>`;
           }
@@ -5370,13 +5744,14 @@
                 <table class="table table-sm table-bordered align-middle mb-0 text-start" style="font-size:0.82rem;">
                   <thead class="table-light">
                     <tr>
-                      <th style="width: 140px;">รหัสการจอง</th>
+                      <th style="width: 135px;">รหัสการจอง</th>
                       <th>ลูกค้า</th>
+                      <th>บริการ</th>
                       <th>เบอร์โทร</th>
-                      <th style="width: 110px;">พนักงาน</th>
+                      <th style="width: 105px;">พนักงาน</th>
                       <th style="min-width: 130px;">สร้าง / อัปเดต</th>
-                      <th style="width: 85px;" class="text-center">สถานะ</th>
-                      ${isDateEditable && !isDatePast ? '<th style="width: 80px;" class="text-center">จัดการ</th>' : ''}
+                      <th style="width: 80px;" class="text-center">สถานะ</th>
+                      ${isDateEditable && !isDatePast ? '<th style="width: 75px;" class="text-center">จัดการ</th>' : ''}
                     </tr>
                   </thead>
                   <tbody>
@@ -5386,6 +5761,12 @@
                         <td>
                           <strong>${escapeHtml(b.customerNickname || b.customerId || '-')}</strong>
                           ${b.customerFullName ? `<small class="text-muted d-block">${escapeHtml(b.customerFullName)}</small>` : ''}
+                        </td>
+                        <td>
+                          <span class="badge bg-light text-dark border px-2 py-1">
+                            <i class="fa-solid fa-spa text-success me-1"></i>${escapeHtml(b.serviceName || (b.serviceId ? ('บริการ #' + b.serviceId) : '-'))}
+                          </span>
+                          ${b.servicePrice ? `<div class="text-muted font-monospace mt-1" style="font-size:0.7rem;">฿${parseFloat(b.servicePrice).toLocaleString('th-TH', { minimumFractionDigits: 2 })}</div>` : ''}
                         </td>
                         <td>${escapeHtml(b.customerPhone || '-')}</td>
                         <td>
@@ -5434,7 +5815,7 @@
           } else {
             bookingsListHtml = `
               <div class="text-muted text-start mt-1 ps-1" style="font-size: 0.8rem;">
-                <i class="fa-regular fa-circle me-1"></i> ยังไม่มีรายการจองในรอบเวลานี้ (โควต้าสูงสุด ${maxQuota} คน)
+                <i class="fa-regular fa-circle me-1"></i> ยังไม่มีรายการจองในรอบเวลานี้
               </div>
             `;
           }
@@ -5463,9 +5844,6 @@
             <span class="text-muted" style="font-size: 0.85rem;">
               <i class="fa-solid fa-list-check me-1 text-warning"></i> สรุปการจองทั้งหมดวันนี้: <strong>${totalBookedInDay} คน</strong>
             </span>
-            <span class="text-muted" style="font-size: 0.8rem;">
-              (จำกัดตามโควต้าของแต่ละช่วงเวลา)
-            </span>
           </div>
           <div style="max-height: 55vh; overflow-y: auto; padding-right: 4px;">
             ${slotsDetailHtml}
@@ -5473,7 +5851,7 @@
           ${isDateEditable && !isDatePast ? `
             <div class="mt-3 p-2 bg-light rounded text-center text-muted border" style="font-size: 0.8rem;">
               <i class="fa-solid fa-circle-info text-primary me-1"></i>
-              คลิกปุ่ม <strong>"จองรอบนี้"</strong> เพื่อเพิ่มการจอง (ระบบจะปิดรับจองเมื่อเหลือน้อยกว่า 15 นาทีก่อนเริ่มรอบ และจำกัดตามโควต้าที่ตั้งไว้)
+              คลิกปุ่ม <strong>"จองรอบนี้"</strong> เพื่อเพิ่มการจอง (ระบบจะปิดรับจองเมื่อเหลือน้อยกว่า 15 นาทีก่อนเริ่มรอบ)
             </div>
           ` : ''}
         </div>
@@ -6703,6 +7081,9 @@
             displayTime: it.timeLabel || `${it.periodFrom}–${it.periodTo}`,
             staffId: payload.staffId,
             staffNickname: payload.staffNickname,
+            serviceId: it.serviceId || '1',
+            serviceName: it.serviceNameTh || '',
+            servicePrice: it.price || 0,
             date: payload.date,
             status: 'ยืนยันแล้ว',
             cancelFlag: false,
@@ -6814,6 +7195,30 @@
         });
       }
 
+      // สร้างตัวเลือกบริการ (service_id)
+      let serviceOptions = '';
+      if (canEditAny) {
+        const activeServices = (currentServicePriceData || []).filter(s => 
+          (s.isActive === true || String(s.isActive).toLowerCase() === 'true') && 
+          String(s.deleteFlag || 'N').toUpperCase() !== 'Y'
+        );
+        const effectiveServices = (activeServices.length > 0) ? activeServices : [
+          { serviceId: 1, serviceNameTh: 'นวดแผนไทย', price: 300 },
+          { serviceId: 2, serviceNameTh: 'นวดเท้า', price: 300 },
+          { serviceId: 3, serviceNameTh: 'นวดน้ำมันอโรม่า', price: 500 },
+          { serviceId: 4, serviceNameTh: 'นวดคอบ่าไหล่', price: 350 }
+        ];
+
+        serviceOptions = '<option value="">-- เลือกบริการ --</option>';
+        effectiveServices.forEach(s => {
+          const sId = String(s.serviceId);
+          const isSelected = (sId === String(targetBooking.serviceId || '')) ? 'selected' : '';
+          const sName = s.serviceNameTh || s.serviceName || `บริการที่ ${sId}`;
+          const sPrice = parseFloat(s.price || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 });
+          serviceOptions += `<option value="${escapeHtml(sId)}" ${isSelected}>${escapeHtml(sName)} (${sPrice} บาท)</option>`;
+        });
+      }
+
       const isCanceled = (targetBooking.cancelFlag === true || String(targetBooking.cancelFlag).toLowerCase() === 'true');
       const opUser = (currentUser && currentUser.username) ? currentUser.username : 'admin';
 
@@ -6879,6 +7284,18 @@
             `}
           </div>
 
+          <div class="swal-form-group mb-2">
+            <label class="swal-form-label"><i class="fa-solid fa-spa text-success me-1"></i>บริการ (service_id)</label>
+            ${canEditAny ? `
+              <select id="swal-edit-res-service" class="swal-input-custom">
+                ${serviceOptions}
+              </select>
+            ` : `
+              <input type="text" class="swal-input-custom" value="${escapeHtml(targetBooking.serviceName || (targetBooking.serviceId ? ('บริการ #' + targetBooking.serviceId) : '-'))}" readonly disabled>
+              <input type="hidden" id="swal-edit-res-service" value="${escapeHtml(targetBooking.serviceId || '')}">
+            `}
+          </div>
+
           <div class="swal-form-group mt-3">
             <label class="swal-form-label"><i class="fa-solid fa-ban me-1 text-danger"></i>สถานะการยกเลิก (cancel_flag)</label>
             <div class="form-check form-switch mt-1">
@@ -6915,6 +7332,7 @@
         preConfirm: () => {
           const custVal = $('#swal-edit-res-customer').val();
           const staffVal = $('#swal-edit-res-staff').val();
+          const serviceVal = $('#swal-edit-res-service').val();
           const cancelVal = $('#swal-edit-res-cancel').is(':checked');
 
           if (!custVal) {
@@ -6925,6 +7343,10 @@
             Swal.showValidationMessage('กรุณาเลือกพนักงาน');
             return false;
           }
+          if (!serviceVal) {
+            Swal.showValidationMessage('กรุณาเลือกบริการ');
+            return false;
+          }
 
           return {
             reserveCode: targetBooking.reserveCode || targetBooking.reservationId,
@@ -6932,6 +7354,7 @@
             date: matchedDate,
             customerId: custVal,
             staffId: staffVal,
+            serviceId: serviceVal,
             cancelFlag: cancelVal,
             operatorUsername: opUser
           };
@@ -6999,6 +7422,14 @@
                   b.customerFullName = `${cust.firstname || ''} ${cust.lastname || ''}`.trim() || b.customerFullName;
                   b.customerPhone = cust.phone || b.customerPhone;
                   b.staffId = payload.staffId;
+                  if (payload.serviceId) {
+                    b.serviceId = payload.serviceId;
+                    const servFound = (currentServicePriceData || []).find(sp => String(sp.serviceId) === String(payload.serviceId));
+                    if (servFound) {
+                      b.serviceName = servFound.serviceNameTh || servFound.serviceName;
+                      b.servicePrice = servFound.price;
+                    }
+                  }
                   b.cancelFlag = payload.cancelFlag;
                   b.status = payload.cancelFlag ? 'ยกเลิกแล้ว' : 'ยืนยันแล้ว';
                   b.updateDate = nowStrMock;
@@ -7107,6 +7538,752 @@
               }
             });
           }
+        }
+      });
+    }
+
+    // =============================================================
+    // MODULE: บัตรคิว (Reservation Tickets - Sheet_Name_Reservation_Ticket)
+    // =============================================================
+
+    /**
+     * แปลงรูปแบบวันที่เป็น วัน เดือน (ภาษาไทย) ปี พ.ศ. (เช่น "วันพฤหัสบดีที่ 8 ตุลาคม พ.ศ. 2569")
+     */
+    function formatThaiDateDisplay(dateStr) {
+      if (!dateStr) return "-";
+      const clean = String(dateStr).trim();
+      let year, month, day;
+
+      if (/^\d{4}-\d{1,2}-\d{1,2}/.test(clean)) {
+        const parts = clean.split('-');
+        year = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10) - 1;
+        day = parseInt(parts[2], 10);
+      } else if (/^\d{1,2}\/\d{1,2}\/\d{4}/.test(clean)) {
+        const parts = clean.split('/');
+        day = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10) - 1;
+        year = parseInt(parts[2], 10);
+      } else {
+        const d = new Date(clean);
+        if (isNaN(d.getTime())) return clean;
+        year = d.getFullYear();
+        month = d.getMonth();
+        day = d.getDate();
+      }
+
+      const d = new Date(year, month, day);
+      const dayOfWeekNames = [
+        "วันอาทิตย์", "วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัสบดี", "วันศุกร์", "วันเสาร์"
+      ];
+      const thaiMonthNames = [
+        "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+        "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+      ];
+
+      const dayName = dayOfWeekNames[d.getDay()] || "";
+      const monthName = thaiMonthNames[month] || "";
+      const thaiYear = year > 2400 ? year : (year + 543);
+
+      return `${dayName ? dayName + 'ที่ ' : ''}${day} ${monthName} พ.ศ. ${thaiYear}`;
+    }
+
+    // -------------------------------------------------------------
+    // สถานะและการคำนวณช่วงเวลาปฏิทินบัตรคิว (Calendar Month-Year Picker State)
+    // -------------------------------------------------------------
+    const sysCurrentDate = new Date();
+    const sysCurrentYear = sysCurrentDate.getFullYear();
+    const sysCurrentMonth = sysCurrentDate.getMonth() + 1; // 1-12
+
+    // กำหนดค่า default เป็นเดือนและปีปัจจุบัน
+    let ticketCalendarSelectedYear = sysCurrentYear;
+    let ticketCalendarSelectedMonth = sysCurrentMonth;
+    let ticketCalendarViewingYear = sysCurrentYear; // ปีที่กำลังเปิดดูใน Popup ปฏิทิน
+
+    // คำนวณช่วงเวลาย้อนหลังไม่เกิน 1 ปี:
+    // ตัวอย่างเช่น ปัจจุบัน 2026-10 -> ย้อนหลัง 1 ปี คือ 2025-10
+    const minAllowedTicketYear = sysCurrentYear - 1;
+    const minAllowedTicketMonth = sysCurrentMonth;
+
+    /**
+     * ตรวจสอบว่าเดือน/ปีนั้นอยู่ในเงื่อนไขย้อนหลังไม่เกิน 1 ปี หรือไม่
+     */
+    function isTicketMonthAllowed(year, month) {
+      if (year < minAllowedTicketYear) return false;
+      if (year === minAllowedTicketYear && month < minAllowedTicketMonth) return false;
+      return true;
+    }
+
+    /**
+     * เริ่มต้นการทำงานของหน้าจอบัตรคิว (Default เป็นเดือนปีปัจจุบัน)
+     */
+    function initReservationTicketView() {
+      // ตั้งค่าเริ่มต้นเป็นเดือนและปีปัจจุบันเสมอ
+      ticketCalendarSelectedYear = sysCurrentYear;
+      ticketCalendarSelectedMonth = sysCurrentMonth;
+      ticketCalendarViewingYear = sysCurrentYear;
+
+      selectTicketMonth(sysCurrentYear, sysCurrentMonth, false);
+    }
+
+    /**
+     * เลือกเดือนและปีสำหรับบัตรคิว และดึงข้อมูล
+     */
+    function selectTicketMonth(year, month, shouldReload) {
+      ticketCalendarSelectedYear = year;
+      ticketCalendarSelectedMonth = month;
+      ticketCalendarViewingYear = year;
+
+      const mPad = month < 10 ? '0' + month : String(month);
+      const periodStr = `${year}-${mPad}`;
+      currentTicketPeriodMonth = periodStr;
+
+      const thaiMonths = [
+        "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+        "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+      ];
+      const thaiYear = year + 543;
+
+      // อัปเดตข้อความบนปุ่มเลือกปฏิทิน
+      $('#ticket-current-month-label').text(`${thaiMonths[month - 1]} พ.ศ. ${thaiYear}`);
+
+      // อัปเดตสถานะปุ่มนำทางเดือนก่อนหน้า / ถัดไป
+      updateTicketMonthNavButtons();
+
+      if (shouldReload !== false) {
+        loadReservationTickets(periodStr, true);
+      } else {
+        loadReservationTickets(periodStr, false);
+      }
+    }
+
+    /**
+     * อัปเดตสถานะปุ่ม Prev/Next Month
+     */
+    function updateTicketMonthNavButtons() {
+      // หากเดือนปัจจุบันที่เลือกตรงกับเดือนต่ำสุด (ย้อนหลังครบ 1 ปี) ให้ disable ปุ่มก่อนหน้า
+      if (ticketCalendarSelectedYear === minAllowedTicketYear && ticketCalendarSelectedMonth === minAllowedTicketMonth) {
+        $('#btn-ticket-prev-month').prop('disabled', true).addClass('opacity-50');
+      } else {
+        $('#btn-ticket-prev-month').prop('disabled', false).removeClass('opacity-50');
+      }
+    }
+
+    /**
+     * สลับเดือนก่อนหน้า (-1) หรือถัดไป (+1)
+     */
+    function changeTicketMonth(step) {
+      let newY = ticketCalendarSelectedYear;
+      let newM = ticketCalendarSelectedMonth + step;
+
+      if (newM > 12) {
+        newY += 1;
+        newM = 1;
+      } else if (newM < 1) {
+        newY -= 1;
+        newM = 12;
+      }
+
+      // ตรวจสอบเงื่อนไขย้อนหลังไม่เกิน 1 ปี
+      if (!isTicketMonthAllowed(newY, newM)) {
+        Swal.fire({
+          icon: 'info',
+          title: 'จำกัดการดูย้อนหลัง',
+          text: 'ระบบอนุญาตให้ดูข้อมูลบัตรคิวย้อนหลังได้ไม่เกิน 1 ปีครับ',
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      selectTicketMonth(newY, newM, true);
+    }
+
+    /**
+     * ปุ่มลัดกลับสู่เดือนและปีปัจจุบัน
+     */
+    function goToCurrentTicketMonth() {
+      selectTicketMonth(sysCurrentYear, sysCurrentMonth, true);
+      closeTicketCalendarPicker();
+    }
+
+    /**
+     * สลับเปิด / ปิด Popup ปฏิทินเลือกเดือนและปี
+     */
+    function toggleTicketCalendarPicker() {
+      const $popup = $('#ticket-calendar-popup');
+      if ($popup.is(':visible')) {
+        closeTicketCalendarPicker();
+      } else {
+        ticketCalendarViewingYear = ticketCalendarSelectedYear;
+        renderTicketCalendarMonths();
+        $popup.fadeIn(150);
+      }
+    }
+
+    /**
+     * ปิด Popup ปฏิทิน
+     */
+    function closeTicketCalendarPicker() {
+      $('#ticket-calendar-popup').fadeOut(100);
+    }
+
+    /**
+     * เปลี่ยนปีที่แสดงใน Popup ปฏิทิน (-1 หรือ +1)
+     */
+    function changeTicketCalendarYear(step) {
+      const nextYear = ticketCalendarViewingYear + step;
+      if (nextYear < minAllowedTicketYear) {
+        return;
+      }
+      ticketCalendarViewingYear = nextYear;
+      renderTicketCalendarMonths();
+    }
+
+    /**
+     * เรนเดอร์ตาราง 12 เดือนใน Calendar Popup
+     */
+    function renderTicketCalendarMonths() {
+      const $grid = $('#ticket-calendar-months-grid');
+      $grid.empty();
+
+      const thaiYear = ticketCalendarViewingYear + 543;
+      $('#ticket-cal-year-display').html(`พ.ศ. ${thaiYear} (${ticketCalendarViewingYear})`);
+
+      // ควบคุมการ Disable ปุ่มปีก่อนหน้าหากถึงขีดจำกัดย้อนหลัง 1 ปี
+      if (ticketCalendarViewingYear <= minAllowedTicketYear) {
+        $('#btn-cal-prev-year').prop('disabled', true).addClass('opacity-50');
+      } else {
+        $('#btn-cal-prev-year').prop('disabled', false).removeClass('opacity-50');
+      }
+
+      const thaiMonthsShort = [
+        "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+        "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."
+      ];
+      const thaiMonthsFull = [
+        "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+        "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+      ];
+
+      for (let m = 1; m <= 12; m++) {
+        const allowed = isTicketMonthAllowed(ticketCalendarViewingYear, m);
+        const isSelected = (ticketCalendarViewingYear === ticketCalendarSelectedYear && m === ticketCalendarSelectedMonth);
+        const isCurrent = (ticketCalendarViewingYear === sysCurrentYear && m === sysCurrentMonth);
+
+        let btnClass = 'cal-month-btn';
+        if (isSelected) btnClass += ' selected';
+        else if (isCurrent) btnClass += ' current';
+        if (!allowed) btnClass += ' disabled';
+
+        const titleText = allowed ? `${thaiMonthsFull[m - 1]} พ.ศ. ${thaiYear}` : `${thaiMonthsFull[m - 1]} (ดูย้อนหลังได้ไม่เกิน 1 ปี)`;
+
+        const $btn = $(`
+          <button type="button" class="${btnClass}" ${!allowed ? 'disabled' : ''} title="${titleText}">
+            <span>${thaiMonthsShort[m - 1]}</span>
+            <span class="cal-month-sub">${thaiMonthsFull[m - 1].substring(0, 4)}</span>
+          </button>
+        `);
+
+        if (allowed) {
+          $btn.on('click', function(e) {
+            e.stopPropagation();
+            selectTicketMonth(ticketCalendarViewingYear, m, true);
+            closeTicketCalendarPicker();
+          });
+        }
+
+        $grid.append($btn);
+      }
+    }
+
+    // ปิดปฏิทินเมื่อคลิกพื้นที่อื่นภายนอก
+    $(document).on('click', function(e) {
+      if (!$(e.target).closest('.ticket-month-picker-container').length) {
+        closeTicketCalendarPicker();
+      }
+    });
+
+    /**
+     * โหลดข้อมูลบัตรคิวจาก Google Apps Script (หรือ Mock ข้อมูลกรณี Local Preview)
+     */
+    function loadReservationTickets(periodMonth, forceRefresh) {
+      if (!currentUser) return;
+
+      const targetPeriod = periodMonth || currentTicketPeriodMonth || `${sysCurrentYear}-${sysCurrentMonth < 10 ? '0' + sysCurrentMonth : sysCurrentMonth}`;
+      currentTicketPeriodMonth = targetPeriod;
+
+      const $container = $('#reservation-ticket-list-container');
+      $container.html(`
+        <div class="text-center py-5 text-muted">
+          <i class="fa-solid fa-spinner fa-spin fa-2x mb-3 text-warning"></i>
+          <div>กำลังค้นหาข้อมูลบัตรคิวประจำเดือน ${escapeHtml(targetPeriod)}...</div>
+        </div>
+      `);
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              renderReservationTickets(res.tickets || [], res.periodMonth || targetPeriod);
+            } else {
+              $container.html(`
+                <div class="alert alert-danger mx-auto my-4 text-center" style="max-width: 500px; border-radius: 12px;">
+                  <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                  ${escapeHtml(res ? res.message : 'ไม่สามารถโหลดข้อมูลบัตรคิวได้')}
+                </div>
+              `);
+            }
+          })
+          .withFailureHandler(function(err) {
+            $container.html(`
+              <div class="alert alert-danger mx-auto my-4 text-center" style="max-width: 500px; border-radius: 12px;">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                เกิดข้อผิดพลาดในการโหลดบัตรคิว: ${escapeHtml(err.message || err)}
+              </div>
+            `);
+          })
+          .getReservationTickets(targetPeriod, currentUser.username, currentUser.username);
+      } else {
+        // จำลองข้อมูลสำหรับ Local Preview
+        setTimeout(function() {
+          const mockTickets = generateMockReservationTickets(targetPeriod, currentUser.username);
+          renderReservationTickets(mockTickets, targetPeriod);
+        }, 300);
+      }
+    }
+
+    /**
+     * ฟังก์ชันสร้าง Mock ข้อมูลบัตรคิวสำหรับ Local Preview
+     */
+    function generateMockReservationTickets(periodMonth, username) {
+      const cleanUser = String(username || "JM0001").trim();
+      const p = String(periodMonth || "2026-10").trim();
+      
+      // ตัวอย่างบัตรคิวในเดือน 2026-10
+      if (p === "2026-10") {
+        return [
+          {
+            reserveCode: `JM202610050001S001`,
+            reserveDate: `2026-10-05`,
+            formattedThaiDate: formatThaiDateDisplay(`2026-10-05`),
+            customerId: cleanUser,
+            customerNickname: `สมชาย`,
+            staffId: `JMS001`,
+            staffNickname: `พลอย`,
+            staffFullName: `หมอพลอย ใจดี`,
+            timeSlots: [`09:00–10:00`, `10:00–11:00`],
+            services: [
+              { serviceId: `1`, serviceName: `นวดแผนไทย`, price: 300 }
+            ],
+            status: `ยืนยันแล้ว`,
+            createDate: `01/10/2026 10:30`,
+            createdBy: cleanUser
+          },
+          {
+            reserveCode: `JM202610120001S002`,
+            reserveDate: `2026-10-12`,
+            formattedThaiDate: formatThaiDateDisplay(`2026-10-12`),
+            customerId: cleanUser,
+            customerNickname: `สมชาย`,
+            staffId: `JMS002`,
+            staffNickname: `แก้ว`,
+            staffFullName: `หมอแก้ว สดใส`,
+            timeSlots: [`13:00–14:00`],
+            services: [
+              { serviceId: `2`, serviceName: `นวดเท้า`, price: 300 }
+            ],
+            status: `ยืนยันแล้ว`,
+            createDate: `02/10/2026 14:15`,
+            createdBy: cleanUser
+          },
+          {
+            reserveCode: `JM202610200001S003`,
+            reserveDate: `2026-10-20`,
+            formattedThaiDate: formatThaiDateDisplay(`2026-10-20`),
+            customerId: cleanUser,
+            customerNickname: `สมชาย`,
+            staffId: `JMS003`,
+            staffNickname: `น้ำ`,
+            staffFullName: `หมอน้ำ ชื่นใจ`,
+            timeSlots: [`15:00–16:00`, `16:00–17:00`],
+            services: [
+              { serviceId: `3`, serviceName: `นวดน้ำมันอโรม่า`, price: 500 },
+              { serviceId: `4`, serviceName: `นวดคอบ่าไหล่`, price: 350 }
+            ],
+            status: `ยืนยันแล้ว`,
+            createDate: `05/10/2026 09:00`,
+            createdBy: cleanUser
+          }
+        ];
+      } else if (p.indexOf("2026-") === 0) {
+        // จำลอง 1 บัตรคิวสำหรับเดือนอื่นในปี 2026
+        return [
+          {
+            reserveCode: `JM${p.replace(/-/g, '')}150001S001`,
+            reserveDate: `${p}-15`,
+            formattedThaiDate: formatThaiDateDisplay(`${p}-15`),
+            customerId: cleanUser,
+            customerNickname: `สมชาย`,
+            staffId: `JMS001`,
+            staffNickname: `พลอย`,
+            staffFullName: `หมอพลอย ใจดี`,
+            timeSlots: [`10:00–11:00`],
+            services: [
+              { serviceId: `1`, serviceName: `นวดแผนไทย`, price: 300 }
+            ],
+            status: `ยืนยันแล้ว`,
+            createDate: `${p}-01 10:00`,
+            createdBy: cleanUser
+          }
+        ];
+      }
+      return [];
+    }
+
+    /**
+     * เรนเดอร์การ์ดแสดงข้อมูลบัตรคิวในหน้าจอ (Ticket Cards)
+     */
+    function renderReservationTickets(tickets, periodMonth) {
+      reservationTicketsCache = tickets || [];
+      const $container = $('#reservation-ticket-list-container');
+      $('#ticket-count-num').text(reservationTicketsCache.length);
+
+      if (!reservationTicketsCache || reservationTicketsCache.length === 0) {
+        $container.html(`
+          <div class="text-center py-5 my-4 text-muted bg-white border rounded-4 shadow-sm" style="border-color: #E2E8F0 !important;">
+            <div class="mb-3">
+              <i class="fa-solid fa-ticket fa-3x text-secondary opacity-50"></i>
+            </div>
+            <h5 class="fw-bold text-dark mb-1">ไม่พบบัตรคิวการจอง</h5>
+            <p class="small text-muted mb-3">ไม่พบรายการจองคิวในเดือน ${escapeHtml(periodMonth)} ที่ตรงกับรหัสผู้ใช้งานของคุณ</p>
+            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="switchSection('reservation')">
+              <i class="fa-solid fa-calendar-plus me-1"></i> จองคิวใหม่ที่นี่
+            </button>
+          </div>
+        `);
+        return;
+      }
+
+      let cardsHtml = `<div class="ticket-grid">`;
+
+      reservationTicketsCache.forEach(ticket => {
+        // 5.1 วันที่ที่จอง: วัน เดือน (ไทย) ปี พ.ศ.
+        const thaiDateStr = ticket.formattedThaiDate || formatThaiDateDisplay(ticket.reserveDate);
+
+        // 5.3 ผู้ให้บริการ (nick_name): ไม่แสดงรหัสพนักงาน
+        const rawNick = String(ticket.staffNickname || '-').trim();
+        const staffNick = (rawNick === '-' || !rawNick) ? '-' : (rawNick.startsWith('หมอ') ? rawNick : ('หมอ' + rawNick));
+
+        // 5.2 รอบเวลา (ถ้าเจอหลายรอบ ใน reserve_code เดียวกัน ให้ loop แสดงค่า ต่อกันไปทางขวา)
+        let timeBadgesHtml = '';
+        if (ticket.timeSlots && ticket.timeSlots.length > 0) {
+          timeBadgesHtml = ticket.timeSlots.map(timeStr => `
+            <span class="ticket-time-chip" title="รอบเวลาที่จอง">
+              <i class="fa-regular fa-clock"></i> ${escapeHtml(timeStr)}
+            </span>
+          `).join('');
+        } else {
+          timeBadgesHtml = '<span class="text-muted small">- ไม่ได้ระบุรอบเวลา -</span>';
+        }
+
+        // 5.4 บริการ (ถ้ามี)
+        let servicesHtml = '';
+        if (ticket.services && ticket.services.length > 0) {
+          servicesHtml = `
+            <div class="ticket-info-row">
+              <span class="ticket-info-label">
+                <i class="fa-solid fa-hands text-warning"></i> บริการ
+              </span>
+              <div class="d-flex flex-wrap gap-1">
+                ${ticket.services.map(s => `
+                  <span class="ticket-service-badge"><i class="fa-solid fa-check me-1"></i>${escapeHtml(s.serviceName || s.serviceId)}</span>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        // 2. สถานะการจอง (ย้ายจาก footer มาแทนตำแหน่งรหัสการจองใน header)
+        const statusStr = String(ticket.status || 'ยืนยันแล้ว').trim();
+        let statusBadgeClass = 'ticket-status-badge';
+        let statusIcon = 'fa-circle-check';
+        if (statusStr === 'ยกเลิก') {
+          statusBadgeClass += ' status-cancelled';
+          statusIcon = 'fa-circle-xmark';
+        } else if (statusStr === 'รอดำเนินการ' || statusStr === 'รอชำระ') {
+          statusBadgeClass += ' status-pending';
+          statusIcon = 'fa-clock';
+        }
+        const statusBadgeHtml = `<span class="${statusBadgeClass}"><i class="fa-solid ${statusIcon}"></i> ${escapeHtml(statusStr)}</span>`;
+
+        cardsHtml += `
+          <div class="ticket-card" id="ticket-card-${escapeHtml(ticket.reserveCode)}">
+            <!-- 1 & 2 Header: ด้านซ้ายแสดง "JM Thai Massage" ด้านขวาแสดงสถานะการจอง -->
+            <div class="ticket-card-header">
+              <div class="ticket-header-title">
+                <i class="fa-solid fa-spa text-warning fs-5"></i>
+                <span>JM Thai Massage</span>
+              </div>
+              ${statusBadgeHtml}
+            </div>
+
+            <!-- 5. Body: เรียงลำดับใหม่ 5.1 วันที่ที่จอง -> 5.2 รอบเวลา -> 5.3 ผู้ให้บริการ -> 5.4 บริการ -->
+            <div class="ticket-card-body">
+              <!-- 5.1 วันที่ที่จอง (นำจาก header มาแสดงเป็นลำดับบนสุด) -->
+              <div class="ticket-info-row">
+                <span class="ticket-info-label">
+                  <i class="fa-regular fa-calendar-check text-success"></i> วันที่ที่จอง
+                </span>
+                <div class="ticket-info-value">
+                  <span class="fs-6 fw-bold text-dark">${escapeHtml(thaiDateStr)}</span>
+                </div>
+              </div>
+
+              <!-- 5.2 รอบเวลา: นำค่าจาก reserve_time มาแสดง (วน loop แสดงค่าต่อกันไปทางขวา) -->
+              <div class="ticket-info-row">
+                <span class="ticket-info-label">
+                  <i class="fa-regular fa-clock text-primary"></i> รอบเวลา
+                </span>
+                <div class="ticket-time-container">
+                  ${timeBadgesHtml}
+                </div>
+              </div>
+
+              <!-- 5.3 ผู้ให้บริการ: นำค่า nick_name มาแสดง (ไม่แสดงรหัสพนักงาน) -->
+              <div class="ticket-info-row">
+                <span class="ticket-info-label">
+                  <i class="fa-solid fa-user-nurse text-success"></i> ผู้ให้บริการ
+                </span>
+                <div class="ticket-info-value">
+                  <span class="fs-6 fw-bold text-dark">${escapeHtml(staffNick)}</span>
+                </div>
+              </div>
+
+              <!-- 5.4 บริการ -->
+              ${servicesHtml}
+            </div>
+
+            <!-- Footer: ด้านซ้ายแสดง "เจเอ็ม นวดแผนไทย" ด้านขวามีปุ่ม "รายละเอียด" -->
+            <div class="ticket-card-footer">
+              <div class="ticket-footer-brand">
+                <i class="fa-solid fa-spa text-warning me-1"></i>เจเอ็ม นวดแผนไทย
+              </div>
+              <button type="button" class="btn btn-ticket-detail" onclick="showReservationTicketDetail('${escapeHtml(ticket.reserveCode)}')">
+                <i class="fa-solid fa-circle-info"></i> รายละเอียด
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      cardsHtml += `</div>`;
+      $container.html(cardsHtml);
+    }
+
+    /**
+     * 2.3: แสดง Modal รายละเอียดบัตรคิว เมื่อคลิกปุ่ม "รายละเอียด"
+     * ปรับปรุง: แสดง "รอบเวลา กับ บริการ และราคา" อยู่ตำแหน่งเดียวกันในรูปแบบตาราง พร้อมคำนวณยอดรวมค่าบริการตามจำนวนรอบเวลาจริง
+     */
+    function showReservationTicketDetail(reserveCode) {
+      const ticket = reservationTicketsCache.find(t => String(t.reserveCode) === String(reserveCode));
+      if (!ticket) {
+        Swal.fire({
+          icon: 'error',
+          title: 'ไม่พบข้อมูลบัตรคิว',
+          text: 'ไม่พบรายละเอียดของบัตรคิวรหัส ' + reserveCode,
+          confirmButtonColor: '#1B3B36'
+        });
+        return;
+      }
+
+      const thaiDateStr = ticket.formattedThaiDate || formatThaiDateDisplay(ticket.reserveDate);
+      const rawNick = String(ticket.staffNickname || '-').trim();
+      const staffNick = (rawNick === '-' || !rawNick) ? '-' : (rawNick.startsWith('หมอ') ? rawNick : ('หมอ' + rawNick));
+
+      // 4. ผู้รับบริการ: เอาชื่อเล่นของลูกค้า nick_name มาแสดง พร้อมรหัสลูกค้า เช่น สมชาย (JM0001)
+      const custNick = String(ticket.customerNickname || '').trim();
+      const custId = String(ticket.customerId || '-').trim();
+      let customerDisplay = custId;
+      if (custNick && custNick !== '-' && custNick !== custId) {
+        customerDisplay = `${custNick} (${custId})`;
+      } else if (currentUser && (currentUser.username === custId || currentUser.customerId === custId) && currentUser.nickname) {
+        customerDisplay = `${currentUser.nickname} (${custId})`;
+      }
+
+      // 1. ดึงรายการรอบเวลาคู่กับบริการ (slotItems)
+      let slotItems = [];
+      if (ticket.slotItems && ticket.slotItems.length > 0) {
+        slotItems = ticket.slotItems.map(item => ({ ...item }));
+      } else if (ticket.timeSlots && ticket.timeSlots.length > 0) {
+        const fallbackServ = (ticket.services && ticket.services.length > 0) 
+          ? ticket.services[0] 
+          : { serviceId: '1', serviceName: 'นวดแผนไทย', price: 300 };
+        slotItems = ticket.timeSlots.map(t => ({
+          timeSlot: t,
+          serviceId: fallbackServ.serviceId || '1',
+          serviceName: fallbackServ.serviceName || fallbackServ.serviceNameTh || 'นวดแผนไทย',
+          price: fallbackServ.price || 300
+        }));
+      }
+
+      // ตรวจสอบและอัปเดตราคาหากเป็น 0 จาก window.currentServicePriceData หรือ ticket.services
+      let totalPrice = 0;
+      slotItems.forEach(item => {
+        let pVal = parseFloat(item.price);
+        if ((isNaN(pVal) || pVal === 0) && window.currentServicePriceData && window.currentServicePriceData.length > 0) {
+          const found = window.currentServicePriceData.find(sp => 
+            String(sp.serviceId) === String(item.serviceId) ||
+            String(sp.serviceNameTh) === String(item.serviceName)
+          );
+          if (found && !isNaN(parseFloat(found.price))) {
+            pVal = parseFloat(found.price);
+            item.price = pVal;
+            if (found.serviceNameTh && (!item.serviceName || item.serviceName === '-')) {
+              item.serviceName = found.serviceNameTh;
+            }
+          }
+        }
+        if ((isNaN(pVal) || pVal === 0) && ticket.services && ticket.services.length > 0) {
+          const foundServ = ticket.services.find(s => String(s.serviceId) === String(item.serviceId));
+          if (foundServ && !isNaN(parseFloat(foundServ.price))) {
+            pVal = parseFloat(foundServ.price);
+            item.price = pVal;
+          }
+        }
+        if (!isNaN(pVal) && pVal > 0) {
+          totalPrice += pVal;
+        }
+      });
+
+      // ถ้าคำนวณแล้ว totalPrice ยังเป็น 0 แต่ ticket.totalPrice มีค่า
+      if (totalPrice === 0 && ticket.totalPrice && parseFloat(ticket.totalPrice) > 0) {
+        totalPrice = parseFloat(ticket.totalPrice);
+      }
+
+      // สร้าง HTML ข้อมูลการรับบริการและราคา แบ่งเป็น 2 rows และ 2 columns แสดง loop ในแต่ละรอบเวลาที่จอง
+      let slotLoopsHtml = '';
+      if (slotItems && slotItems.length > 0) {
+        slotLoopsHtml = slotItems.map((item, idx) => {
+          const itemPrice = parseFloat(item.price) || 0;
+          const priceDisplay = itemPrice > 0 ? `(${Number(itemPrice).toLocaleString('th-TH')} บาท)` : '';
+          const sName = item.serviceName || 'บริการ';
+          const isNotFirst = idx > 0;
+          const topBorderStyle = isNotFirst ? 'border-top: 2px solid #CBD5E1 !important;' : '';
+
+          return `
+            <!-- Loop รอบที่ ${idx + 1} -->
+            <tr>
+              <td style="width: 110px; background-color: #F8FAFC; color: #475569; font-weight: 600; ${topBorderStyle}" class="py-2 ps-3 align-middle">
+                <i class="fa-regular fa-clock me-1 text-warning"></i>รอบเวลา
+              </td>
+              <td class="py-2 ps-3 bg-white" style="${topBorderStyle}">
+                <span class="ticket-time-chip font-monospace">
+                  <i class="fa-regular fa-clock me-1 text-primary"></i>${escapeHtml(item.timeSlot || '-')}
+                </span>
+                ${slotItems.length > 1 ? `<span class="badge bg-light text-muted border ms-2" style="font-size:0.72rem;">รอบที่ ${idx + 1}</span>` : ''}
+              </td>
+            </tr>
+            <tr>
+              <td style="width: 110px; background-color: #F8FAFC; color: #475569; font-weight: 600;" class="py-2 ps-3 align-middle">
+                <i class="fa-solid fa-hands me-1 text-warning"></i>บริการ
+              </td>
+              <td class="py-2 ps-3 bg-white text-dark">
+                <span class="fw-semibold">
+                  <i class="fa-solid fa-check text-success me-1"></i>${escapeHtml(sName)}${priceDisplay ? ` <span class="text-secondary small fw-normal ms-1">${escapeHtml(priceDisplay)}</span>` : ''}
+                </span>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        slotLoopsHtml = `
+          <tr>
+            <td style="width: 110px; background-color: #F8FAFC; color: #475569; font-weight: 600;" class="py-2 ps-3 align-middle">
+              <i class="fa-regular fa-clock me-1 text-warning"></i>รอบเวลา
+            </td>
+            <td class="py-2 ps-3 bg-white text-muted">-</td>
+          </tr>
+          <tr>
+            <td style="width: 110px; background-color: #F8FAFC; color: #475569; font-weight: 600;" class="py-2 ps-3 align-middle">
+              <i class="fa-solid fa-hands me-1 text-warning"></i>บริการ
+            </td>
+            <td class="py-2 ps-3 bg-white text-muted">-</td>
+          </tr>
+        `;
+      }
+
+      const totalPriceDisplay = `${Number(totalPrice).toLocaleString('th-TH')} บาท`;
+
+      Swal.fire({
+        title: `<div style="color: #1B3B36; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                  <i class="fa-solid fa-ticket text-warning"></i> รายละเอียดบัตรคิว
+                </div>`,
+        html: `
+          <div class="text-start" style="font-size: 0.92rem; line-height: 1.6;">
+            <div class="p-3 mb-3" style="background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 12px;">
+              <div class="row g-2 mb-2">
+                <div class="col-sm-4 text-muted"><i class="fa-solid fa-barcode me-1 text-secondary"></i> รหัสการจอง:</div>
+                <div class="col-sm-8 fw-bold font-monospace text-dark">${escapeHtml(ticket.reserveCode)}</div>
+
+                <div class="col-sm-4 text-muted"><i class="fa-regular fa-calendar-check me-1 text-primary"></i> วันที่ทำการจอง:</div>
+                <div class="col-sm-8 fw-bold text-dark">${escapeHtml(thaiDateStr)}</div>
+
+                <div class="col-sm-4 text-muted"><i class="fa-solid fa-user-nurse me-1 text-success"></i> ผู้ให้บริการ:</div>
+                <div class="col-sm-8 fw-bold text-dark">${escapeHtml(staffNick)}</div>
+
+                <div class="col-sm-4 text-muted"><i class="fa-solid fa-user me-1 text-info"></i> ผู้รับบริการ:</div>
+                <div class="col-sm-8 fw-bold text-dark">${escapeHtml(customerDisplay)}</div>
+
+                <div class="col-sm-4 text-muted"><i class="fa-solid fa-circle-check me-1 text-success"></i> สถานะ:</div>
+                <div class="col-sm-8"><span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">${escapeHtml(ticket.status || 'ยืนยันแล้ว')}</span></div>
+              </div>
+
+              <!-- ข้อมูลการรับบริการและราคา (แบ่งเป็น 2 rows และ 2 columns แสดง loop ในแต่ละรอบเวลาที่จอง) -->
+              <div class="mt-3 pt-2 border-top">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <span class="fw-bold text-dark" style="font-size: 0.9rem;">
+                    <i class="fa-solid fa-hands me-1 text-warning"></i> ข้อมูลการรับบริการและราคา:
+                  </span>
+                  <span class="badge bg-white text-secondary border font-monospace" style="font-size: 0.76rem;">
+                    ${slotItems.length} รอบ (${slotItems.length} ชั่วโมง)
+                  </span>
+                </div>
+                <div class="table-responsive border rounded-3 bg-white shadow-sm" style="max-height: 320px; overflow-y: auto;">
+                  <table class="table table-bordered align-middle mb-0 text-start" style="font-size: 0.88rem; border-color: #E2E8F0;">
+                    <tbody>
+                      ${slotLoopsHtml}
+                    </tbody>
+                    ${(totalPrice > 0) ? `
+                    <tfoot style="position: sticky; bottom: 0; background-color: #F8FAFC; z-index: 2; box-shadow: 0 -2px 6px rgba(0,0,0,0.05);">
+                      <tr style="border-top: 2.5px solid #CBD5E1 !important;">
+                        <td style="width: 110px; background-color: #F8FAFC; color: #334155; font-weight: 700; border-top: 2.5px solid #CBD5E1 !important;" class="py-2 ps-3 align-middle">
+                          <i class="fa-solid fa-calculator me-1 text-secondary"></i>ยอดรวม
+                        </td>
+                        <td class="py-2 ps-3 bg-white text-dark align-middle" style="border-top: 2.5px solid #CBD5E1 !important;">
+                          <span class="fw-bold text-success fs-6">
+                            <i class="fa-solid fa-baht-sign text-secondary me-1" style="font-size: 0.82rem;"></i>${escapeHtml(totalPriceDisplay)}
+                          </span>
+                          ${slotItems.length > 1 ? `<span class="badge bg-light text-muted border ms-2" style="font-size:0.75rem;">(ทั้งหมด ${slotItems.length} รอบ)</span>` : ''}
+                        </td>
+                      </tr>
+                    </tfoot>
+                    ` : ''}
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert alert-info py-2 px-3 small d-flex align-items-center gap-2 mb-0" style="border-radius: 8px;">
+              <i class="fa-solid fa-circle-info text-primary fs-5"></i>
+              <div>รายละเอียดเพิ่มเติมจะเปิดให้จัดการในลำดับถัดไปตามที่กำหนด</div>
+            </div>
+          </div>
+        `,
+        confirmButtonText: '<i class="fa-solid fa-check me-1"></i> ตกลง',
+        confirmButtonColor: '#1B3B36',
+        width: '560px',
+        customClass: {
+          popup: 'swal2-border-radius'
         }
       });
     }
