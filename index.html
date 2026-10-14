@@ -1022,6 +1022,22 @@
       background: transparent !important;
     }
 
+    /* สไตล์สำหรับช่องวันที่ที่คิวเต็มแล้ว (1.1: จองเต็มทุกช่วงเวลา) */
+    .calendar-day-cell.day-full {
+      background-color: #FFFDFD !important;
+      cursor: pointer;
+    }
+
+    .calendar-day-cell.day-full:hover {
+      background-color: #FEF2F2 !important;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12) !important;
+      border-color: #FECACA !important;
+    }
+
+    .calendar-day-cell.day-full .day-number {
+      color: #991B1B !important;
+    }
+
     /* สไตล์สำหรับช่องวันที่ในอดีต (1.2: แสดงเป็นพื้นสีขาว ปกติ ไม่สามารถกดจองได้) */
     .calendar-day-cell.day-disabled-past {
       background-color: #FFFFFF !important;
@@ -1421,6 +1437,37 @@
       background-color: #F1F5F9;
       border-color: #CBD5E1;
       color: #475569;
+    }
+
+    /* สไตล์สำหรับข้อความ “คิวเต็ม” (1.1: จองเต็มแล้ว) */
+    .badge-day-full {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #991B1B;
+      background-color: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 20px;
+      text-align: center;
+      user-select: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(220, 38, 38, 0.08);
+      cursor: pointer;
+    }
+
+    .badge-day-full i {
+      color: #DC2626;
+      font-size: 0.8rem;
+    }
+
+    .calendar-day-cell:hover .badge-day-full {
+      background-color: #FEE2E2;
+      border-color: #FCA5A5;
+      color: #7F1D1D;
     }
 
     .badge-today {
@@ -1988,11 +2035,11 @@
             </a>
           </li>
 
-          <!-- เมนู 5: ตามตัวแปร Sheet_Name_Reservation_Ticket (บัตรคิว) [ใหม่] -->
+          <!-- เมนู 5: ตามตัวแปร Sheet_Name_Reservation_History (ประวัติการจอง) -->
           <li class="sidebar-menu-item" id="nav-item-reservation-ticket">
             <a href="javascript:void(0)" class="sidebar-link" id="menu-reservation-ticket" onclick="switchSection('reservation-ticket')">
-              <i class="fa-solid fa-ticket"></i>
-              <span id="sidebar-menu-reservation-ticket-text">บัตรคิว</span>
+              <i class="fa-solid fa-clock-rotate-left"></i>
+              <span id="sidebar-menu-reservation-ticket-text">ประวัติการจอง</span>
             </a>
           </li>
 
@@ -2208,6 +2255,9 @@
                   <span class="badge-booking-available" style="font-size:0.75rem; padding: 3px 10px; cursor: default;"><i class="fa-solid fa-circle-check me-1"></i>จองได้</span> เปิดให้จอง
                 </span>
                 <span class="legend-item">
+                  <span class="badge-day-full" style="font-size:0.75rem; padding: 3px 10px; cursor: default;"><i class="fa-solid fa-circle-xmark me-1 text-danger"></i>คิวเต็ม</span> จองเต็มแล้ว
+                </span>
+                <span class="legend-item">
                   <span class="badge-day-closed" style="font-size:0.75rem; padding: 3px 10px; cursor: default;"><i class="fa-solid fa-ban me-1 text-muted"></i>ปิดให้บริการ</span> ปิดให้บริการ
                 </span>
                 <span class="legend-item">
@@ -2241,15 +2291,15 @@
           </div>
         </section>
 
-        <!-- SECTION: บัตรคิว (Sheet_Name_Reservation_Ticket) -->
+        <!-- SECTION: ประวัติการจอง (Sheet_Name_Reservation_History) -->
         <section id="section-reservation-ticket" class="content-section">
           <div class="page-title-box">
             <div class="page-title">
-              <h3 id="reservation-ticket-page-title"><i class="fa-solid fa-ticket me-2 text-warning"></i>บัตรคิว</h3>
-              <p>บัตรแสดงข้อมูลการจองคิวบริการนวดแผนไทย ตรวจสอบวันที่ ผู้ให้บริการ และรอบเวลาที่จอง</p>
+              <h3 id="reservation-ticket-page-title"><i class="fa-solid fa-clock-rotate-left me-2 text-warning"></i>ประวัติการจอง</h3>
+              <p>ประวัติและข้อมูลการจองคิวบริการนวดแผนไทย ตรวจสอบวันที่ ผู้ให้บริการ และรอบเวลาที่จอง</p>
             </div>
             <div class="d-flex gap-2 flex-wrap align-items-center">
-              <button class="btn btn-outline-secondary" id="btn-refresh-reservation-ticket" onclick="loadReservationTickets(currentTicketPeriodMonth, true)" title="รีเฟรชข้อมูลบัตรคิว">
+              <button class="btn btn-outline-secondary" id="btn-refresh-reservation-ticket" onclick="loadReservationTickets(currentTicketPeriodMonth, true)" title="รีเฟรชข้อมูลประวัติการจอง">
                 <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
               </button>
             </div>
@@ -2326,7 +2376,7 @@
                 <!-- Right: Summary status -->
                 <div class="col-12 col-md-auto d-flex align-items-center gap-2 flex-wrap">
                   <span class="badge bg-light text-dark border px-3 py-2 rounded-pill" style="font-size: 0.85rem;" id="ticket-count-badge">
-                    <i class="fa-solid fa-ticket me-1 text-warning"></i> บัตรคิวทั้งหมด: <span id="ticket-count-num" class="fw-bold text-success">0</span> ใบ
+                    <i class="fa-solid fa-clock-rotate-left me-1 text-warning"></i> ประวัติการจองทั้งหมด: <span id="ticket-count-num" class="fw-bold text-success">0</span> รายการ
                   </span>
                 </div>
               </div>
@@ -2337,7 +2387,7 @@
           <div id="reservation-ticket-list-container">
             <div class="text-center py-5 text-muted">
               <i class="fa-solid fa-spinner fa-spin fa-2x mb-3 text-warning"></i>
-              <div>กำลังโหลดข้อมูลบัตรคิว...</div>
+              <div>กำลังโหลดข้อมูลประวัติการจอง...</div>
             </div>
           </div>
         </section>
@@ -2581,8 +2631,10 @@
     let Sheet_Name_Staff = "ข้อมูลพนักงาน";
     let sheetNameReservation = "จองคิว";
     let Sheet_Name_Reservation = "จองคิว";
-    let sheetNameReservationTicket = "บัตรคิว";
-    let Sheet_Name_Reservation_Ticket = "บัตรคิว";
+    let sheetNameReservationHistory = "ประวัติการจอง";
+    let Sheet_Name_Reservation_History = "ประวัติการจอง";
+    let sheetNameReservationTicket = "ประวัติการจอง";
+    let Sheet_Name_Reservation_Ticket = "ประวัติการจอง";
     let currentTicketPeriodMonth = "";
     let reservationTicketsCache = [];
     let sheetNameSettingTime = "ตั้งค่าตัวเลือกเวลาการจอง";
@@ -2669,11 +2721,13 @@
                 $('#sidebar-menu-reservation-text').text(sheetNameReservation);
                 $('#reservation-page-title').html('<i class="fa-solid fa-calendar-days me-2 text-warning"></i>' + escapeHtml(sheetNameReservation));
               }
-              if (config.sheetNameReservationTicket || config.Sheet_Name_Reservation_Ticket) {
-                sheetNameReservationTicket = config.sheetNameReservationTicket || config.Sheet_Name_Reservation_Ticket;
-                Sheet_Name_Reservation_Ticket = sheetNameReservationTicket;
-                $('#sidebar-menu-reservation-ticket-text').text(sheetNameReservationTicket);
-                $('#reservation-ticket-page-title').html('<i class="fa-solid fa-ticket me-2 text-warning"></i>' + escapeHtml(sheetNameReservationTicket));
+              if (config.sheetNameReservationHistory || config.Sheet_Name_Reservation_History || config.sheetNameReservationTicket || config.Sheet_Name_Reservation_Ticket) {
+                sheetNameReservationHistory = config.sheetNameReservationHistory || config.Sheet_Name_Reservation_History || config.sheetNameReservationTicket || config.Sheet_Name_Reservation_Ticket;
+                Sheet_Name_Reservation_History = sheetNameReservationHistory;
+                sheetNameReservationTicket = sheetNameReservationHistory;
+                Sheet_Name_Reservation_Ticket = sheetNameReservationHistory;
+                $('#sidebar-menu-reservation-ticket-text').text(sheetNameReservationHistory);
+                $('#reservation-ticket-page-title').html('<i class="fa-solid fa-clock-rotate-left me-2 text-warning"></i>' + escapeHtml(sheetNameReservationHistory));
               }
               if (config.sheetNameSettingTime || config.Sheet_Name_Setting_Selection_Reservation_Time) {
                 sheetNameSettingTime = config.sheetNameSettingTime || config.Sheet_Name_Setting_Selection_Reservation_Time;
@@ -5337,6 +5391,7 @@
             });
 
             const allInact = (slotsListMock.length > 0 && activeCnt === 0);
+            const isDayFullMock = !allInact && (activeCnt > 0 && availCnt === 0);
 
             mockTimetable[fullDateMock] = {
               dateStr: fullDateMock,
@@ -5349,8 +5404,8 @@
               availableCount: availCnt,
               fullCount: 0,
               allInactive: allInact,
-              isAllFull: false,
-              isAvailable: !allInact && (activeCnt > 0)
+              isAllFull: isDayFullMock,
+              isAvailable: !allInact && !isDayFullMock && (activeCnt > 0)
             };
           }
         }
@@ -5521,18 +5576,23 @@
         // ดึงข้อมูลตารางการจองประจำวันจาก Sheet_Name_Setting_Reservation_Timetable
         const dayTimetable = (data.timetableByDate && data.timetableByDate[dateStr]) ? data.timetableByDate[dateStr] : null;
         let isAllInactive = false;
+        let isDayFull = false;
         let isAvailable = false;
 
         if (dayTimetable && dayTimetable.totalSlots > 0) {
           // ถ้ามีข้อมูลในตาราง และ is_active เป็น false ทั้งหมด (activeCount === 0)
           isAllInactive = (dayTimetable.allInactive === true || dayTimetable.activeCount === 0);
-          isAvailable = (dayTimetable.activeCount > 0);
+          // ข้อ 1.1: ตรวจสอบว่าจองเต็มแล้วหรือยัง (isAllFull = true หรือ availableCount === 0)
+          isDayFull = !isAllInactive && (dayTimetable.isAllFull === true || (dayTimetable.activeCount > 0 && dayTimetable.availableCount === 0));
+          isAvailable = !isAllInactive && !isDayFull && (dayTimetable.activeCount > 0);
         } else if (isWeekend) {
           // ข้อ 1.3: ช่วงการตั้งค่าที่เป็น เสาร์ อาทิตย์ มี is_active เท่ากับ false (ทั้งหมด) ให้แสดงข้อความ “ปิดให้บริการ”
           isAllInactive = true;
+          isDayFull = false;
           isAvailable = false;
         } else {
           isAllInactive = false;
+          isDayFull = false;
           isAvailable = false;
         }
 
@@ -5550,6 +5610,16 @@
               <i class="fa-solid fa-ban me-1 text-muted"></i> ปิดให้บริการ
             </span>
           `;
+        } else if (isDayFull) {
+          // ข้อ 1.1: วันที่ได้มีการจองเต็มแล้ว แสดงข้อความ “คิวเต็ม”
+          dayClass += ' day-full';
+          cellClickHandler = `showDayFullAlert('${dateStr}', ${d})`;
+          cellTitle = `วันที่ ${d} คิวการจองเต็มแล้ว`;
+          badgesHtml = `
+            <span class="badge-day-full" onclick="event.stopPropagation(); showDayFullAlert('${dateStr}', ${d})" title="วันที่ ${d} คิวการจองเต็มแล้ว">
+              <i class="fa-solid fa-circle-xmark me-1"></i> คิวเต็ม
+            </span>
+          `;
         } else if (!dayTimetable || dayTimetable.totalSlots === 0) {
           // วันธรรมดาแต่ไม่พบข้อมูลตารางการจอง (ไม่ต้องแสดง modal เมื่อคลิก)
           cellClickHandler = '';
@@ -5560,7 +5630,7 @@
             </span>
           `;
         } else {
-          // ข้อ 1.1 & 1.4: เอาการตรวจสอบ โควต้าการจอง ออก และช่องไหนใน calendar ที่เปิดให้จองได้ ให้แสดงข้อความว่า “จองได้” อยู่ตรงกลางช่อง
+          // ช่องไหนใน calendar ที่เปิดให้จองได้ ให้แสดงข้อความว่า “จองได้” อยู่ตรงกลางช่อง
           cellClickHandler = `openBookingModal('${dateStr}')`;
           cellTitle = `คลิกเพื่อเลือกจองคิววันที่ ${d}`;
           badgesHtml = `
@@ -5597,6 +5667,35 @@
       }
 
       $('#calendar-grid').html(gridHtml);
+    }
+
+    /**
+     * ข้อ 1.1: แจ้งเตือนเมื่อคลิกวันที่ที่มีการจองคิวเต็มแล้ว (SweetAlert2)
+     */
+    function showDayFullAlert(dateStr, d) {
+      const parts = dateStr.split('-');
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      const dayNum = d || parseInt(parts[2], 10);
+      const thaiM = (m >= 1 && m <= 12) ? THAI_MONTH_NAMES[m - 1] : '';
+      const dateDisplay = `วันที่ ${dayNum} ${thaiM} ${y + 543}`;
+
+      Swal.fire({
+        icon: 'warning',
+        title: 'คิวเต็มแล้ว',
+        html: `
+          <div class="text-center py-2">
+            <p class="mb-2" style="font-size: 1.02rem; color: #1E293B;">รอบเวลาการให้บริการใน</p>
+            <strong style="color: #991B1B; font-size: 1.15rem;">${escapeHtml(dateDisplay)}</strong>
+            <p class="text-muted mt-2 mb-0" style="font-size: 0.9rem;">
+              ถูกจองเต็มทุกรอบเวลาแล้ว ไม่สามารถทำรายการจองเพิ่มได้<br>
+              กรุณาเลือกวันอื่นที่เปิดให้จอง
+            </p>
+          </div>
+        `,
+        confirmButtonText: '<i class="fa-solid fa-check me-1"></i> ตกลง',
+        confirmButtonColor: '#1B3B36'
+      });
     }
 
     /**
@@ -6284,6 +6383,15 @@
     function openBookingModal(dateStr, slot) {
       if (!calendarDataCache) return;
 
+      // ข้อ 1.1: ตรวจสอบว่าวันที่เลือกคิวเต็มแล้วหรือไม่
+      const dayTimetable = (calendarDataCache.timetableByDate && calendarDataCache.timetableByDate[dateStr]) 
+        ? calendarDataCache.timetableByDate[dateStr] 
+        : null;
+      if (dayTimetable && (dayTimetable.isAllFull === true || (dayTimetable.activeCount > 0 && dayTimetable.availableCount === 0))) {
+        showDayFullAlert(dateStr);
+        return;
+      }
+
       const finishOpen = function() {
         fetchActiveServicePrices(function() {
           // เปิด modal ทันทีโดยไม่ต้องรอโหลด Sheet_Name_Reservation
@@ -6343,17 +6451,18 @@
         return;
       }
 
+      // ข้อ 1.1: ตรวจสอบว่าคิวเต็มแล้วหรือไม่
+      if (dayTimetable && (dayTimetable.isAllFull === true || (dayTimetable.activeCount > 0 && dayTimetable.availableCount === 0))) {
+        showDayFullAlert(dateStr);
+        return;
+      }
+
       // ดึงข้อมูลรอบเวลาแยกตามพนักงานจาก Sheet_Name_Setting_Reservation_Timetable พร้อมตรวจสอบสิทธิ์การจอง
       const staffSlotsList = getStaffSlotsForBooking(dateStr, existingReservations);
       const hasAnyAvailableSlot = staffSlotsList.some(st => st.slots.some(s => !s.isDisabled));
 
       if (!hasAnyAvailableSlot) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'ไม่มีรอบเวลาที่เปิดให้บริการ',
-          text: `วันที่ ${dateStr} ไม่พบรอบเวลาที่เปิดใช้งานในตารางการจอง (${Sheet_Name_Setting_Reservation_Timetable})`,
-          confirmButtonColor: '#1B3B36'
-        });
+        showDayFullAlert(dateStr);
         return;
       }
 
@@ -6976,6 +7085,7 @@
           const totalHours = items.length;
           const totalPrice = items.reduce((sum, it) => sum + it.price, 0);
 
+          const selCustObj = (currentCustomerData || []).find(c => String(c.customerId).trim() === String(selectedCustomer).trim()) || {};
           const staffNick = $('#swal-book-staff-nickname').val() || getStaffNickname(selectedStaffId);
           const opUser = (currentUser && currentUser.username) ? currentUser.username : 'admin';
 
@@ -6991,6 +7101,10 @@
             endTime: maxTo,
             hours: totalHours,
             customerId: selectedCustomer,
+            customerNickname: selCustObj.nickname || '',
+            customerFirstName: selCustObj.firstname || '',
+            customerLastName: selCustObj.lastname || '',
+            customerPhone: selCustObj.phone || '',
             status: 'ยืนยันแล้ว', // ข้อ 1.6 นำฟิลด์สถานะออก กำหนด default เป็น ยืนยันแล้ว
             items: items,
             totalPrice: totalPrice,
@@ -7072,17 +7186,23 @@
             reservationId: reserveCode,
             reserveCode: reserveCode,
             customerId: payload.customerId,
-            customerNickname: cust.nickname || 'ลูกค้า',
+            custNickName: cust.nickname || payload.customerNickname || 'ลูกค้า',
+            customerNickname: cust.nickname || payload.customerNickname || 'ลูกค้า',
+            custFirstName: cust.firstname || payload.customerFirstName || '',
+            custLastName: cust.lastname || payload.customerLastName || '',
             customerFullName: `${cust.firstname || ''} ${cust.lastname || ''}`.trim(),
-            customerPhone: cust.phone || '-',
+            custPhoneNumber: cust.phone || payload.customerPhone || '-',
+            customerPhone: cust.phone || payload.customerPhone || '-',
             timeSlot: slotKey,
             startTime: it.periodFrom,
             endTime: it.periodTo,
             displayTime: it.timeLabel || `${it.periodFrom}–${it.periodTo}`,
             staffId: payload.staffId,
+            staffNickName: payload.staffNickname,
             staffNickname: payload.staffNickname,
             serviceId: it.serviceId || '1',
             serviceName: it.serviceNameTh || '',
+            serviceNameTh: it.serviceNameTh || '',
             servicePrice: it.price || 0,
             date: payload.date,
             status: 'ยืนยันแล้ว',
@@ -7804,7 +7924,7 @@
     });
 
     /**
-     * โหลดข้อมูลบัตรคิวจาก Google Apps Script (หรือ Mock ข้อมูลกรณี Local Preview)
+     * โหลดข้อมูลประวัติการจองจาก Google Apps Script (หรือ Mock ข้อมูลกรณี Local Preview)
      */
     function loadReservationTickets(periodMonth, forceRefresh) {
       if (!currentUser) return;
@@ -7816,7 +7936,7 @@
       $container.html(`
         <div class="text-center py-5 text-muted">
           <i class="fa-solid fa-spinner fa-spin fa-2x mb-3 text-warning"></i>
-          <div>กำลังค้นหาข้อมูลบัตรคิวประจำเดือน ${escapeHtml(targetPeriod)}...</div>
+          <div>กำลังค้นหาข้อมูลประวัติการจองประจำเดือน ${escapeHtml(targetPeriod)}...</div>
         </div>
       `);
 
@@ -7829,7 +7949,7 @@
               $container.html(`
                 <div class="alert alert-danger mx-auto my-4 text-center" style="max-width: 500px; border-radius: 12px;">
                   <i class="fa-solid fa-triangle-exclamation me-2"></i>
-                  ${escapeHtml(res ? res.message : 'ไม่สามารถโหลดข้อมูลบัตรคิวได้')}
+                  ${escapeHtml(res ? res.message : 'ไม่สามารถโหลดข้อมูลประวัติการจองได้')}
                 </div>
               `);
             }
@@ -7838,11 +7958,11 @@
             $container.html(`
               <div class="alert alert-danger mx-auto my-4 text-center" style="max-width: 500px; border-radius: 12px;">
                 <i class="fa-solid fa-triangle-exclamation me-2"></i>
-                เกิดข้อผิดพลาดในการโหลดบัตรคิว: ${escapeHtml(err.message || err)}
+                เกิดข้อผิดพลาดในการโหลดประวัติการจอง: ${escapeHtml(err.message || err)}
               </div>
             `);
           })
-          .getReservationTickets(targetPeriod, currentUser.username, currentUser.username);
+          .getReservationTickets(targetPeriod, currentUser.username, currentUser.username, currentUser.personFlag);
       } else {
         // จำลองข้อมูลสำหรับ Local Preview
         setTimeout(function() {
@@ -7863,18 +7983,28 @@
       if (p === "2026-10") {
         return [
           {
-            reserveCode: `JM202610050001S001`,
-            reserveDate: `2026-10-05`,
-            formattedThaiDate: formatThaiDateDisplay(`2026-10-05`),
+            reserveCode: `JM202610080001S001`,
+            reserveDate: `2026-10-08`,
+            formattedThaiDate: formatThaiDateDisplay(`2026-10-08`),
             customerId: cleanUser,
-            customerNickname: `สมชาย`,
+            customerNickname: `นิด`,
+            custNickName: `นิด`,
+            customerPhone: `0825469587`,
+            custPhoneNumber: `0825469587`,
             staffId: `JMS001`,
-            staffNickname: `พลอย`,
-            staffFullName: `หมอพลอย ใจดี`,
+            staffNickname: `น้อย`,
+            staffNickName: `น้อย`,
+            staffFullName: `หมอน้อย ชำนาญนวด`,
             timeSlots: [`09:00–10:00`, `10:00–11:00`],
             services: [
-              { serviceId: `1`, serviceName: `นวดแผนไทย`, price: 300 }
+              { serviceId: `1`, serviceName: `นวดแผนไทย`, serviceNameTh: `นวดแผนไทย`, price: 300, timeSlot: `09:00–10:00` },
+              { serviceId: `1`, serviceName: `นวดแผนไทย`, serviceNameTh: `นวดแผนไทย`, price: 300, timeSlot: `10:00–11:00` }
             ],
+            slotItems: [
+              { timeSlot: `09:00–10:00`, serviceId: `1`, serviceName: `นวดแผนไทย`, serviceNameTh: `นวดแผนไทย`, price: 300 },
+              { timeSlot: `10:00–11:00`, serviceId: `1`, serviceName: `นวดแผนไทย`, serviceNameTh: `นวดแผนไทย`, price: 300 }
+            ],
+            totalPrice: 600,
             status: `ยืนยันแล้ว`,
             createDate: `01/10/2026 10:30`,
             createdBy: cleanUser
@@ -7885,13 +8015,21 @@
             formattedThaiDate: formatThaiDateDisplay(`2026-10-12`),
             customerId: cleanUser,
             customerNickname: `สมชาย`,
+            custNickName: `สมชาย`,
+            customerPhone: `0891234567`,
+            custPhoneNumber: `0891234567`,
             staffId: `JMS002`,
             staffNickname: `แก้ว`,
+            staffNickName: `แก้ว`,
             staffFullName: `หมอแก้ว สดใส`,
             timeSlots: [`13:00–14:00`],
             services: [
-              { serviceId: `2`, serviceName: `นวดเท้า`, price: 300 }
+              { serviceId: `2`, serviceName: `นวดเท้า`, serviceNameTh: `นวดเท้า`, price: 300, timeSlot: `13:00–14:00` }
             ],
+            slotItems: [
+              { timeSlot: `13:00–14:00`, serviceId: `2`, serviceName: `นวดเท้า`, serviceNameTh: `นวดเท้า`, price: 300 }
+            ],
+            totalPrice: 300,
             status: `ยืนยันแล้ว`,
             createDate: `02/10/2026 14:15`,
             createdBy: cleanUser
@@ -7902,14 +8040,23 @@
             formattedThaiDate: formatThaiDateDisplay(`2026-10-20`),
             customerId: cleanUser,
             customerNickname: `สมชาย`,
+            custNickName: `สมชาย`,
+            customerPhone: `0891234567`,
+            custPhoneNumber: `0891234567`,
             staffId: `JMS003`,
             staffNickname: `น้ำ`,
+            staffNickName: `น้ำ`,
             staffFullName: `หมอน้ำ ชื่นใจ`,
             timeSlots: [`15:00–16:00`, `16:00–17:00`],
             services: [
-              { serviceId: `3`, serviceName: `นวดน้ำมันอโรม่า`, price: 500 },
-              { serviceId: `4`, serviceName: `นวดคอบ่าไหล่`, price: 350 }
+              { serviceId: `3`, serviceName: `นวดน้ำมันอโรม่า`, serviceNameTh: `นวดน้ำมันอโรม่า`, price: 500, timeSlot: `15:00–16:00` },
+              { serviceId: `4`, serviceName: `นวดคอบ่าไหล่`, serviceNameTh: `นวดคอบ่าไหล่`, price: 350, timeSlot: `16:00–17:00` }
             ],
+            slotItems: [
+              { timeSlot: `15:00–16:00`, serviceId: `3`, serviceName: `นวดน้ำมันอโรม่า`, serviceNameTh: `นวดน้ำมันอโรม่า`, price: 500 },
+              { timeSlot: `16:00–17:00`, serviceId: `4`, serviceName: `นวดคอบ่าไหล่`, serviceNameTh: `นวดคอบ่าไหล่`, price: 350 }
+            ],
+            totalPrice: 850,
             status: `ยืนยันแล้ว`,
             createDate: `05/10/2026 09:00`,
             createdBy: cleanUser
@@ -7952,10 +8099,10 @@
         $container.html(`
           <div class="text-center py-5 my-4 text-muted bg-white border rounded-4 shadow-sm" style="border-color: #E2E8F0 !important;">
             <div class="mb-3">
-              <i class="fa-solid fa-ticket fa-3x text-secondary opacity-50"></i>
+              <i class="fa-solid fa-clock-rotate-left fa-3x text-secondary opacity-50"></i>
             </div>
-            <h5 class="fw-bold text-dark mb-1">ไม่พบบัตรคิวการจอง</h5>
-            <p class="small text-muted mb-3">ไม่พบรายการจองคิวในเดือน ${escapeHtml(periodMonth)} ที่ตรงกับรหัสผู้ใช้งานของคุณ</p>
+            <h5 class="fw-bold text-dark mb-1">ไม่พบข้อมูลประวัติการจอง</h5>
+            <p class="small text-muted mb-3">ไม่พบรายการประวัติการจองในเดือน ${escapeHtml(periodMonth)}</p>
             <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="switchSection('reservation')">
               <i class="fa-solid fa-calendar-plus me-1"></i> จองคิวใหม่ที่นี่
             </button>
@@ -7970,8 +8117,8 @@
         // 5.1 วันที่ที่จอง: วัน เดือน (ไทย) ปี พ.ศ.
         const thaiDateStr = ticket.formattedThaiDate || formatThaiDateDisplay(ticket.reserveDate);
 
-        // 5.3 ผู้ให้บริการ (nick_name): ไม่แสดงรหัสพนักงาน
-        const rawNick = String(ticket.staffNickname || '-').trim();
+        // 1. ผู้ให้บริการ: ดึงข้อมูล จาก sheet ค่าตัวแปล Sheet_Name_Reservation โดยนำค่า column “staff_nick_name” มาแสดง
+        const rawNick = String(ticket.staffNickName || ticket.staffNickname || '-').trim();
         const staffNick = (rawNick === '-' || !rawNick) ? '-' : (rawNick.startsWith('หมอ') ? rawNick : ('หมอ' + rawNick));
 
         // 5.2 รอบเวลา (ถ้าเจอหลายรอบ ใน reserve_code เดียวกัน ให้ loop แสดงค่า ต่อกันไปทางขวา)
@@ -7986,21 +8133,34 @@
           timeBadgesHtml = '<span class="text-muted small">- ไม่ได้ระบุรอบเวลา -</span>';
         }
 
-        // 5.4 บริการ (ถ้ามี)
+        // 2. “บริการ” นำค่าจาก column “service_name_th” จาก sheet ค่าตัวแปล Sheet_Name_Reservation มาแสดง
+        // ถ้ามี service_name_th เหมือนกัน ให้แสดงบริการเดียว ตัด duplicate ออกในการแสดงผลเฉพาะใน card หน้านี้ (ไม่เกี่ยวกับส่วน modal)
         let servicesHtml = '';
         if (ticket.services && ticket.services.length > 0) {
-          servicesHtml = `
-            <div class="ticket-info-row">
-              <span class="ticket-info-label">
-                <i class="fa-solid fa-hands text-warning"></i> บริการ
-              </span>
-              <div class="d-flex flex-wrap gap-1">
-                ${ticket.services.map(s => `
-                  <span class="ticket-service-badge"><i class="fa-solid fa-check me-1"></i>${escapeHtml(s.serviceName || s.serviceId)}</span>
-                `).join('')}
+          const uniqueServiceNames = [];
+          const seenServiceNames = new Set();
+          ticket.services.forEach(s => {
+            const sName = String(s.serviceNameTh || s.serviceName || s.serviceId || 'นวดแผนไทย').trim();
+            if (sName && !seenServiceNames.has(sName)) {
+              seenServiceNames.add(sName);
+              uniqueServiceNames.push(sName);
+            }
+          });
+
+          if (uniqueServiceNames.length > 0) {
+            servicesHtml = `
+              <div class="ticket-info-row">
+                <span class="ticket-info-label">
+                  <i class="fa-solid fa-hands text-warning"></i> บริการ
+                </span>
+                <div class="d-flex flex-wrap gap-1">
+                  ${uniqueServiceNames.map(sName => `
+                    <span class="ticket-service-badge"><i class="fa-solid fa-check me-1"></i>${escapeHtml(sName)}</span>
+                  `).join('')}
+                </div>
               </div>
-            </div>
-          `;
+            `;
+          }
         }
 
         // 2. สถานะการจอง (ย้ายจาก footer มาแทนตำแหน่งรหัสการจองใน header)
@@ -8089,65 +8249,63 @@
       if (!ticket) {
         Swal.fire({
           icon: 'error',
-          title: 'ไม่พบข้อมูลบัตรคิว',
-          text: 'ไม่พบรายละเอียดของบัตรคิวรหัส ' + reserveCode,
+          title: 'ไม่พบข้อมูลประวัติการจอง',
+          text: 'ไม่พบรายละเอียดของรหัสการจอง ' + reserveCode,
           confirmButtonColor: '#1B3B36'
         });
         return;
       }
 
       const thaiDateStr = ticket.formattedThaiDate || formatThaiDateDisplay(ticket.reserveDate);
-      const rawNick = String(ticket.staffNickname || '-').trim();
+
+      // 1. ผู้ให้บริการ: ดึงค่าจาก column “staff_nick_name”
+      const rawNick = String(ticket.staffNickName || ticket.staffNickname || '-').trim();
       const staffNick = (rawNick === '-' || !rawNick) ? '-' : (rawNick.startsWith('หมอ') ? rawNick : ('หมอ' + rawNick));
 
-      // 4. ผู้รับบริการ: เอาชื่อเล่นของลูกค้า nick_name มาแสดง พร้อมรหัสลูกค้า เช่น สมชาย (JM0001)
-      const custNick = String(ticket.customerNickname || '').trim();
-      const custId = String(ticket.customerId || '-').trim();
-      let customerDisplay = custId;
-      if (custNick && custNick !== '-' && custNick !== custId) {
-        customerDisplay = `${custNick} (${custId})`;
-      } else if (currentUser && (currentUser.username === custId || currentUser.customerId === custId) && currentUser.nickname) {
-        customerDisplay = `${currentUser.nickname} (${custId})`;
-      }
+      // 2. ผู้รับบริการ: ดึงค่าจาก column “cust_nick_name” และในส่วนของวงเล็บ ให้ดึงค่า column “cust_phone_number” มาแสดง ตัวอย่าง คุณนิด (0825469587)
+      const rawCustNick = String(ticket.custNickName || ticket.customerNickname || '').trim();
+      const custNick = (rawCustNick && !rawCustNick.startsWith('คุณ') && !rawCustNick.startsWith('คุณ ')) 
+        ? ('คุณ' + rawCustNick) 
+        : (rawCustNick || 'ลูกค้า');
+      const custPhone = String(ticket.custPhoneNumber || ticket.customerPhone || '').trim();
+      let customerDisplay = custPhone ? `${custNick} (${custPhone})` : custNick;
 
-      // 1. ดึงรายการรอบเวลาคู่กับบริการ (slotItems)
+      // 3. ดึงรายการรอบเวลาคู่กับบริการและราคา (slotItems)
       let slotItems = [];
       if (ticket.slotItems && ticket.slotItems.length > 0) {
         slotItems = ticket.slotItems.map(item => ({ ...item }));
       } else if (ticket.timeSlots && ticket.timeSlots.length > 0) {
         const fallbackServ = (ticket.services && ticket.services.length > 0) 
           ? ticket.services[0] 
-          : { serviceId: '1', serviceName: 'นวดแผนไทย', price: 300 };
+          : { serviceId: '1', serviceName: 'นวดแผนไทย', serviceNameTh: 'นวดแผนไทย', price: 300 };
         slotItems = ticket.timeSlots.map(t => ({
           timeSlot: t,
           serviceId: fallbackServ.serviceId || '1',
-          serviceName: fallbackServ.serviceName || fallbackServ.serviceNameTh || 'นวดแผนไทย',
+          serviceName: fallbackServ.serviceNameTh || fallbackServ.serviceName || 'นวดแผนไทย',
+          serviceNameTh: fallbackServ.serviceNameTh || fallbackServ.serviceName || 'นวดแผนไทย',
           price: fallbackServ.price || 300
         }));
       }
 
-      // ตรวจสอบและอัปเดตราคาหากเป็น 0 จาก window.currentServicePriceData หรือ ticket.services
+      // 4. ในส่วนของ ยอดรวม ให้ทำการ sum ค่า จาก column “service_price” มาแสดง
       let totalPrice = 0;
       slotItems.forEach(item => {
         let pVal = parseFloat(item.price);
-        if ((isNaN(pVal) || pVal === 0) && window.currentServicePriceData && window.currentServicePriceData.length > 0) {
-          const found = window.currentServicePriceData.find(sp => 
-            String(sp.serviceId) === String(item.serviceId) ||
-            String(sp.serviceNameTh) === String(item.serviceName)
-          );
-          if (found && !isNaN(parseFloat(found.price))) {
-            pVal = parseFloat(found.price);
-            item.price = pVal;
-            if (found.serviceNameTh && (!item.serviceName || item.serviceName === '-')) {
-              item.serviceName = found.serviceNameTh;
+        if (isNaN(pVal) || pVal === 0) {
+          if (window.currentServicePriceData && window.currentServicePriceData.length > 0) {
+            const found = window.currentServicePriceData.find(sp => 
+              String(sp.serviceId) === String(item.serviceId) ||
+              String(sp.serviceNameTh) === String(item.serviceName) ||
+              String(sp.serviceNameTh) === String(item.serviceNameTh)
+            );
+            if (found && !isNaN(parseFloat(found.price))) {
+              pVal = parseFloat(found.price);
+              item.price = pVal;
+              if (found.serviceNameTh && (!item.serviceName || item.serviceName === '-')) {
+                item.serviceName = found.serviceNameTh;
+                item.serviceNameTh = found.serviceNameTh;
+              }
             }
-          }
-        }
-        if ((isNaN(pVal) || pVal === 0) && ticket.services && ticket.services.length > 0) {
-          const foundServ = ticket.services.find(s => String(s.serviceId) === String(item.serviceId));
-          if (foundServ && !isNaN(parseFloat(foundServ.price))) {
-            pVal = parseFloat(foundServ.price);
-            item.price = pVal;
           }
         }
         if (!isNaN(pVal) && pVal > 0) {
@@ -8155,18 +8313,18 @@
         }
       });
 
-      // ถ้าคำนวณแล้ว totalPrice ยังเป็น 0 แต่ ticket.totalPrice มีค่า
+      // ถ้าคำนวณแล้ว totalPrice ยังเป็น 0 แต่ ticket.totalPrice มีค่า ให้ใช้ ticket.totalPrice
       if (totalPrice === 0 && ticket.totalPrice && parseFloat(ticket.totalPrice) > 0) {
         totalPrice = parseFloat(ticket.totalPrice);
       }
 
-      // สร้าง HTML ข้อมูลการรับบริการและราคา แบ่งเป็น 2 rows และ 2 columns แสดง loop ในแต่ละรอบเวลาที่จอง
+      // 3. สร้าง HTML ข้อมูลการรับบริการและราคา: ในส่วนของ “บริการ” ให้ดึงข้อมูลจาก column “service_name_th” และราคาจาก column “service_price” มาแสดง ตัวอย่าง นวดแผนไทย (300 บาท)
       let slotLoopsHtml = '';
       if (slotItems && slotItems.length > 0) {
         slotLoopsHtml = slotItems.map((item, idx) => {
           const itemPrice = parseFloat(item.price) || 0;
           const priceDisplay = itemPrice > 0 ? `(${Number(itemPrice).toLocaleString('th-TH')} บาท)` : '';
-          const sName = item.serviceName || 'บริการ';
+          const sName = String(item.serviceNameTh || item.serviceName || 'นวดแผนไทย').trim();
           const isNotFirst = idx > 0;
           const topBorderStyle = isNotFirst ? 'border-top: 2px solid #CBD5E1 !important;' : '';
 
@@ -8216,7 +8374,7 @@
 
       Swal.fire({
         title: `<div style="color: #1B3B36; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                  <i class="fa-solid fa-ticket text-warning"></i> รายละเอียดบัตรคิว
+                  <i class="fa-solid fa-clock-rotate-left text-warning"></i> รายละเอียดประวัติการจอง
                 </div>`,
         html: `
           <div class="text-start" style="font-size: 0.92rem; line-height: 1.6;">
